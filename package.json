@@ -1,0 +1,30 @@
+{
+  "name": "eslint-plugin-ngrx-sugar",
+  "version": "0.1.0",
+  "description": "ESLint rules for event-oriented NgRx applications.",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "docs",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test test/*.test.cjs",
+    "prepack": "npm run build"
+  },
+  "peerDependencies": {
+    "eslint": "^9.0.0"
+  },
+  "dependencies": {
+    "@typescript-eslint/utils": "^8.60.1"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.60.1",
+    "eslint": "^9.34.0"
+  }
+}
