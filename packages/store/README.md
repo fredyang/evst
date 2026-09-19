@@ -37,3 +37,18 @@ type State = ReducerState<typeof reducer>; // { count: number }
 ## Developing
 
 From the project root, `npm install` installs workspace dependencies and `npm test --workspace @ngrx-sugar/store` builds the package, checks test types, and runs the utility tests. `npm pack --workspace @ngrx-sugar/store` produces an installable archive.
+
+## Creating an event bus
+
+`injectEventBus()` captures the current injection context's store. It is used in a component or service field initializer; the returned methods can then run in event handlers.
+
+```ts
+import { injectEventBus } from '@ngrx-sugar/store';
+
+readonly events = injectEventBus<AppState>();
+
+readonly books = this.events.signal(selectBooks);
+this.events.publish(BooksPageEvents.refreshClicked());
+```
+
+`signal(selector, options?)` returns a Signal and accepts NgRx signal equality options. `observable(selector)` returns an Observable. `publish(event)` sends an event to NgRx. All selector methods support plain and memoized selectors.
