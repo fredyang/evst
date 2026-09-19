@@ -1,0 +1,39 @@
+{
+  "name": "@ngrx-sugar/store",
+  "version": "0.1.0",
+  "description": "Typed event and reducer utilities for NgRx.",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && tsc -p tsconfig.test.json && vitest run",
+    "prepack": "npm run build"
+  },
+  "peerDependencies": {
+    "@ngrx/store": "^22.0.0"
+  },
+  "devDependencies": {
+    "@ngrx/store": "^22.0.0",
+    "@angular/compiler": "^22.0.0",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

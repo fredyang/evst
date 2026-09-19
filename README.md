@@ -1,43 +1,38 @@
 # NgRx Sugar
 
-A standalone ESLint plugin for event-oriented NgRx action names.
+Utilities and an ESLint plugin for event-oriented NgRx applications.
 
-## Installing
+| Package | Purpose |
+| --- | --- |
+| [@ngrx-sugar/store](packages/store/README.md) | `createEventGroup`, `createEventSource`, and `ReducerState` |
+| [@ngrx-sugar/eslint](packages/eslint/README.md) | The `good-action-hygiene` ESLint rule |
 
-Local installation after building this project:
-
-```sh
-npm install
-npm test
-npm pack
-```
-
-The generated `eslint-plugin-ngrx-sugar-0.1.0.tgz` can be installed in a consuming project with `npm install --save-dev /path/to/eslint-plugin-ngrx-sugar-0.1.0.tgz`.
-
-## Configuring ESLint
-
-Flat configuration (`eslint.config.mjs`):
-
-```js
-import tseslint from 'typescript-eslint';
-import ngrxSugar from 'eslint-plugin-ngrx-sugar';
-
-export default [
-  {
-    files: ['**/*.ts'],
-    languageOptions: { parser: tseslint.parser },
-    plugins: { 'ngrx-sugar': ngrxSugar },
-    rules: { 'ngrx-sugar/good-action-hygiene': 'error' },
-  },
-];
-```
-
-The consuming project needs ESLint 9 and `typescript-eslint`. Rule behavior and limitations are described in the [rule guide](docs/rules/good-action-hygiene.md).
+Each package has its own manifest, source, tests, and build output. The root is a private npm workspace.
 
 ## Developing
 
-`npm run build` compiles TypeScript and emits declarations. `npm test` builds the plugin and runs the migrated rule cases with ESLint's RuleTester.
+Commands run from the workspace root:
 
-## Attribution
+```sh
+npm install
+npm run build
+npm test
+```
 
-The rule and test cases were adapted from NgRx's MIT-licensed `good-action-hygiene` rule, including the custom event-naming changes in commit `191ee2f5`. The original copyright notice is retained in [LICENSE](LICENSE).
+A single package can be tested with `npm test --workspace @ngrx-sugar/store` or `npm test --workspace @ngrx-sugar/eslint`.
+
+## Packaging
+
+```sh
+npm run pack:all
+```
+
+This builds both packages and creates separate installable archives. A single package can be packed with `npm pack --workspace @ngrx-sugar/store` or `npm pack --workspace @ngrx-sugar/eslint`.
+
+## Using the utilities locally
+
+The sibling NgRx example workspace uses `file:../ngrx-sugar/packages/store`. The utilities must be built before installation and rebuilt after source changes.
+
+## Licensing
+
+The packages retain their MIT [license](LICENSE). Attribution for the adapted NgRx rule appears in the [ESLint plugin README](packages/eslint/README.md).
