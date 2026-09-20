@@ -1,25 +1,25 @@
 # NgRx Sugar utilities
 
-## Defining a feature
+## Defining state
 
-`defineFeature` combines state handlers, memoized views, and optional effects.
+`defineState` combines state handlers, memoized views, and optional effects.
 The handler callback supplies a state-typed `on` function.
 
 ```ts
 import { createAction, props } from "@ngrx/store";
-import { defineFeature } from "@ngrx-sugar/store";
+import { defineState } from "@ngrx-sugar/store";
 
 const changed = createAction("[Counter] Changed", props<{ amount: number }>());
 
-export const counter = defineFeature({
+export const counter = defineState({
   name: "counter",
   initialState: { count: 0 },
   stateHandlers: (on) => [
     on(changed, (state, { amount }) => ({ count: state.count + amount })),
   ],
-  extraViews: {
-    doubled: ({ count }) => count * 2,
-  },
+  extraViews: ({ count }, view) => ({
+    doubled: view(count, value => value * 2),
+  }),
 });
 
 // Application or route providers, with provideStore() at the application root:
@@ -27,26 +27,37 @@ export const counter = defineFeature({
 // Component selection: events.signal(counter.views.count)
 ```
 
-The returned feature exposes `views`, `provide()`, and `testing`.
-`views._root` selects the entire feature state, and each own
+The returned state definition exposes `views`, `provide()`, and `test`.
+`views.root` selects the entire feature state, and each own
 enumerable property present in `initialState` gets a view with the same name,
 such as `views.count`. State fields should be initialized explicitly.
 
-The optional `extraViews` object contains calculations that receive feature-state
-values, with types inferred from `initialState`. Multiple fields can be
-destructured, such as `({ count, loading }) => loading ? "Loading…" : count`.
-Each calculation is wrapped in a memoized selector internally. It reuses its
-result while the feature-state reference is unchanged and recalculates when that
-reference changes, including changes to unrelated fields. `_root` is reserved,
-and extra views cannot overwrite default views.
-
-`testing.reducer` provides typed access for isolated state transition tests:
+The optional `extraViews` callback receives the generated views and a `view`
+builder. The builder aliases NgRx's `createSelector`, preserving type inference
+and memoization without requiring an import. Its inputs are views; its final
+callback receives their actual values. Returned views are used directly.
 
 ```ts
-const next = counter.testing.reducer(undefined, changed({ amount: 3 }));
+extraViews: ({ books, search }, view) => ({
+  searchResults: view(books, search, (books, search) =>
+    search.ids.map(id => books.entities[id])
+  ),
+})
 ```
 
-The `testing` property is intended for tests by convention; it is not access-restricted.
+This calculation reuses its previous result when only `collection` changes.
+It recalculates when either input view returns a different value, using NgRx's
+default `===` comparison. Updates must remain immutable. Views can also be
+composed by defining a local view and passing it into another builder call.
+`root` is reserved, and extra views cannot overwrite default views.
+
+`test.getNextState` provides typed access for isolated state transition tests:
+
+```ts
+const next = counter.test.getNextState(undefined, changed({ amount: 3 }));
+```
+
+The `test` property is intended for tests by convention; it is not access-restricted.
 
 Typed NgRx `on(...)`
 arrays are also accepted as `stateHandlers`; the callback form avoids explicit
