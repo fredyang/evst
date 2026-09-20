@@ -44,15 +44,75 @@ export function defineState<
     | ((
         on: StateOn<NoInfer<State>>,
       ) => readonly ReducerTypes<NoInfer<State>, any>[]);
-  /** Builds additional named views from the generated views.
-   * The view builder is createSelector: calculations receive input values
-   * and rerun only when an input changes. Returned names must be unique.
+  /**
+   * Builds additional named views from the generated views.
+   * The view builder is createSelector: its inputs are views, and its
+   * calculation receives their actual values with inferred types.
+   * Results are memoized until an input changes.
+   *
+   * The callback runs once during state definition and returns an object
+   * mapping names to views. Names cannot overwrite generated views.
+   * A local derived view can be used as an input to another derived view.
+   * Returned views are exposed on the state's views object; local views
+   * that are not returned remain internal to the callback.
+   *
+   * @example Deriving a view from a state field
+   * ```ts
+   * extraViews: ({ count }, view) => ({
+   *   doubled: view(count, value => value * 2),
+   * })
+   * ```
+   *
+   * @example Deriving one extra view from another
+   * ```ts
+   * extraViews: ({ books, search }, view) => {
+   *   const searchResults = view(books, search, (books, search) =>
+   *     search.ids
+   *       .map(id => books.entities[id])
+   *       .filter(book => book !== undefined)
+   *   );
+   *   const resultCount = view(searchResults, results => results.length);
+   *
+   *   return { searchResults, resultCount };
+   * }
+   * ```
    */
   extraViews?: (
     views: StateViews<NoInfer<State>>,
     view: typeof createSelector,
   ) => ExtraViews;
-  /** Effects belonging to this state, registered when provide() is called. */
+  /**
+   * Effects belonging to this state, registered when provide() is called.
+   * Accepts a functional effect, an effect class, a named effect object,
+   * or an array mixing these forms. Nested and readonly arrays are supported.
+   * Functional effects must be created with functionalEffect() or NgRx's
+   * createEffect() with { functional: true }.
+   *
+   * @example A single effect class
+   * ```ts
+   * effects: BooksEffects
+   * ```
+   *
+   * @example A named effect object
+   * ```ts
+   * effects: { loadBooks: loadBooksEffect }
+   * ```
+   *
+   * @example A single functional effect
+   * ```ts
+   * effects: loadBooksEffect
+   * ```
+   *
+   * @example Mixed forms and nested arrays
+   * ```ts
+   * effects: [
+   *   loadBooksEffect,
+   *   { saveBooks: saveBooksEffect },
+   *   [addBookEffect, removeBookEffect],
+   *   BooksEffects,
+   * ]
+   * ```
+   */
   effects?: EffectInput;
 }) {
   const handlers =
