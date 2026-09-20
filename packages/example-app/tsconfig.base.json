@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "importHelpers": true,
+    "sourceMap": true,
+    "declaration": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "useDefineForClassFields": false,
+    "lib": ["ES2022", "dom"],
+    "target": "ES2022",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@example-app/*": ["./src/app/*"]
+    }
+  },
+  "exclude": ["dist", "node_modules", "**/*/node_modules"],
+  "compileOnSave": false
+}
