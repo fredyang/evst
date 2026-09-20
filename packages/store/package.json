@@ -25,9 +25,11 @@
     "prepack": "npm run build"
   },
   "peerDependencies": {
+    "@ngrx/effects": "^22.0.0",
     "@ngrx/store": "^22.0.0"
   },
   "devDependencies": {
+    "@ngrx/effects": "^22.0.0",
     "@ngrx/store": "^22.0.0",
     "@angular/compiler": "^22.0.0",
     "typescript": "~6.0.3",

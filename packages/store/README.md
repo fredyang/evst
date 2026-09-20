@@ -1,23 +1,80 @@
 # NgRx Sugar utilities
 
+## Defining a feature
+
+`defineFeature` combines state handlers, memoized views, and optional effects.
+The handler callback supplies a state-typed `on` function.
+
+```ts
+import { createAction, props } from "@ngrx/store";
+import { defineFeature } from "@ngrx-sugar/store";
+
+const changed = createAction("[Counter] Changed", props<{ amount: number }>());
+
+export const counter = defineFeature({
+  name: "counter",
+  initialState: { count: 0 },
+  stateHandlers: (on) => [
+    on(changed, (state, { amount }) => ({ count: state.count + amount })),
+  ],
+  extraViews: {
+    doubled: ({ count }) => count * 2,
+  },
+});
+
+// Application or route providers, with provideStore() at the application root:
+// providers: [counter.provide()]
+// Component selection: events.signal(counter.views.count)
+```
+
+The returned feature exposes `views`, `provide()`, and `testing`.
+`views._root` selects the entire feature state, and each own
+enumerable property present in `initialState` gets a view with the same name,
+such as `views.count`. State fields should be initialized explicitly.
+
+The optional `extraViews` object contains calculations that receive feature-state
+values, with types inferred from `initialState`. Multiple fields can be
+destructured, such as `({ count, loading }) => loading ? "Loading…" : count`.
+Each calculation is wrapped in a memoized selector internally. It reuses its
+result while the feature-state reference is unchanged and recalculates when that
+reference changes, including changes to unrelated fields. `_root` is reserved,
+and extra views cannot overwrite default views.
+
+`testing.reducer` provides typed access for isolated state transition tests:
+
+```ts
+const next = counter.testing.reducer(undefined, changed({ amount: 3 }));
+```
+
+The `testing` property is intended for tests by convention; it is not access-restricted.
+
+Typed NgRx `on(...)`
+arrays are also accepted as `stateHandlers`; the callback form avoids explicit
+state annotations.
+
+`effects` accepts an effect class, a functional-effect record, or an array of
+either. `counter.provide(counterEffects)` registers additional effects alongside
+configured effects. Defining view-dependent effects separately and passing
+them to `provide()` avoids circular feature definitions.
+
 Typed event creators and reducer state inference for NgRx 22.
 
 ## Creating events
 
 ```ts
-import { emptyProps, props } from '@ngrx/store';
-import { createEventGroup, createEventSource } from '@ngrx-sugar/store';
+import { emptyProps, props } from "@ngrx/store";
+import { createEventGroup, createEventSource } from "@ngrx-sugar/store";
 
-const events = createEventGroup('Books Page', {
+const events = createEventGroup("Books Page", {
   entered: emptyProps(),
   bookSelected: props<{ id: string }>(),
 });
 
 // { type: '[Books Page] Book Selected', id: '42' }
-events.bookSelected({ id: '42' });
+events.bookSelected({ id: "42" });
 
-const api = createEventSource('Books API');
-const loaded = api.createEvent('loaded', props<{ ids: string[] }>());
+const api = createEventSource("Books API");
+const loaded = api.createEvent("loaded", props<{ ids: string[] }>());
 ```
 
 Keys remain camelCase while action labels split words and preserve acronyms. Keys must start with a lowercase ASCII letter and contain only ASCII letters and digits. Payload creator functions are also supported; their parameters require explicit types.
@@ -25,8 +82,8 @@ Keys remain camelCase while action labels split words and preserve acronyms. Key
 ## Inferring reducer state
 
 ```ts
-import { createReducer } from '@ngrx/store';
-import type { ReducerState } from '@ngrx-sugar/store';
+import { createReducer } from "@ngrx/store";
+import type { ReducerState } from "@ngrx-sugar/store";
 
 const reducer = createReducer({ count: 0 });
 type State = ReducerState<typeof reducer>; // { count: number }
@@ -51,4 +108,4 @@ readonly books = this.events.signal(selectBooks);
 this.events.publish(BooksPageEvents.refreshClicked());
 ```
 
-`signal(selector, options?)` returns a Signal and accepts NgRx signal equality options. `observable(selector)` returns an Observable. `publish(event)` sends an event to NgRx. All selector methods support plain and memoized selectors.
+`signal(view, options?)` returns a Signal and accepts NgRx signal equality options. `observable(view)` returns an Observable. `publish(event)` sends an event to NgRx. All view methods support plain and memoized views.
