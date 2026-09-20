@@ -7,11 +7,10 @@ import {
   type MemoizedSelector,
   type ReducerTypes,
 } from "@ngrx/store";
-import { provideEffects } from "@ngrx/effects";
-import { provideFeature } from "./provide-feature.js";
+import { provideFeature, type EffectInput } from "./provide-feature.js";
 
-/** Effect classes or functional-effect records registered with the state. */
-type Effects = Parameters<typeof provideEffects>;
+/** Effect classes, records, functions, or arrays registered with the state. */
+type Effects = EffectInput[];
 /** Memoized views for each state field, plus the complete state. */
 type StateViews<State> = {
   [Key in keyof State]-?: MemoizedSelector<object, State[Key]>;
@@ -56,7 +55,7 @@ export function defineState<
     view: typeof createSelector,
   ) => ExtraViews;
   /** Effects registered by provide(), alongside any effects passed to that method. */
-  effects?: Effects[number] | Effects;
+  effects?: EffectInput;
 }) {
   const handlers =
     typeof config.stateHandlers === "function"
@@ -86,11 +85,7 @@ export function defineState<
   }
   const views = { ...defaults, ...extras } as StateViews<State> & ExtraViews;
   const configuredEffects =
-    config.effects === undefined
-      ? []
-      : Array.isArray(config.effects)
-        ? config.effects
-        : [config.effects];
+    config.effects === undefined ? [] : [config.effects];
 
   return {
     /** Generated and derived views for reading state, including the complete root view. */

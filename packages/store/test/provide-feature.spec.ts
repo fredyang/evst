@@ -13,9 +13,9 @@ import {
   provideStore,
   Store,
 } from "@ngrx/store";
-import { map } from "rxjs";
+import { map, tap } from "rxjs";
 import { expect, it } from "vitest";
-import { provideFeature } from "../src/index.js";
+import { provideFeature, defineState, functionalEffect } from "../src/index.js";
 
 const clicked = createAction("[Counter] Clicked");
 const counted = createAction("[Counter] Counted");
@@ -46,6 +46,9 @@ class CounterEffects {
 
 it.each([
   ["functional effects", { count }],
+  ["functional effect arrays", [count]],
+  ["individual functional effects", count],
+  ["repeated functional effects", [count, count]],
   ["class effects", CounterEffects],
 ] as const)("registers state and %s", (_, effects) => {
   const injector = createEnvironmentInjector(
@@ -64,6 +67,50 @@ it.each([
     expect(value()).toBe(0);
     store.dispatch(clicked());
     expect(value()).toBe(1);
+  } finally {
+    injector.destroy();
+  }
+});
+
+it("combines configured arrays, named records, and classes through defineState", () => {
+  let observed = 0;
+  const state = defineState({
+    name: "arrayCounter",
+    initialState: { count: 0 },
+    stateHandlers: (on) => [
+      on(counted, (state) => ({ count: state.count + 1 })),
+    ],
+    effects: [
+      functionalEffect((actions = inject(Actions)) =>
+        actions.pipe(
+          ofType(clicked),
+          map(() => counted()),
+        ),
+      ),
+      functionalEffect(
+        (actions = inject(Actions)) =>
+          actions.pipe(
+            ofType(clicked),
+            tap(() => observed++),
+          ),
+        { dispatch: false },
+      ),
+    ],
+  });
+  const injector = createEnvironmentInjector(
+    [
+      { provide: ɵINJECTOR_SCOPE, useValue: "root" },
+      ErrorHandler,
+      provideStore(),
+      state.provide([{ count }, CounterEffects] as const),
+    ],
+    null!,
+  );
+  try {
+    const store = injector.get(Store);
+    store.dispatch(clicked());
+    expect(store.selectSignal(state.views.count)()).toBe(3);
+    expect(observed).toBe(1);
   } finally {
     injector.destroy();
   }

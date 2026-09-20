@@ -63,8 +63,15 @@ Typed NgRx `on(...)`
 arrays are also accepted as `stateHandlers`; the callback form avoids explicit
 state annotations.
 
-`effects` accepts an effect class, a functional-effect record, or an array of
-either. `counter.provide(counterEffects)` registers additional effects alongside
+`effects` accepts an effect class, a named functional-effect record, an individual
+functional effect, or arrays combining these forms. Both `provideFeature()` and
+the returned state's `provide()` method accept the same forms, including readonly arrays.
+For example, `effects: [loadCollection, addBookToCollection]` registers both
+functional effects without a named object. Inline `functionalEffect(...)` calls
+are also accepted as array entries. Named records preserve descriptive effect
+keys for diagnostics; individual functions are registered under the key `effect`.
+
+`counter.provide(counterEffects)` registers additional effects alongside
 configured effects. Defining view-dependent effects separately and passing
 them to `provide()` avoids circular feature definitions.
 
