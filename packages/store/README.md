@@ -133,25 +133,20 @@ called, so a shared view can be used with different injectors. Views remain
 callable memoized selectors with their original projector and cache methods.
 
 
-`injectView(view, options?)` returns a signal and accepts NgRx signal equality
-options. `injectView.observable(view)` returns an observable. Both accept plain
-and memoized views and must run in an injection context, such as a component
-field initializer or a functional guard's initial invocation.
-
 `injectPublish()` captures the current injection context's store and returns a
 function that publishes events. This function can run later in event handlers
 or asynchronous callbacks.
 
 ```ts
 import { Component } from '@angular/core';
-import { injectView, injectPublish } from '@ngrx-sugar/store';
+import { injectPublish } from '@ngrx-sugar/store';
 import { counter } from './counter.state';
 import { CounterEvents } from './counter.events';
 
 @Component({ selector: 'app-counter', template: '{{ count() }}' })
 export class CounterComponent {
-  readonly count = injectView(counter.views.count);
-  readonly count$ = injectView.observable(counter.views.count);
+  readonly count = counter.views.count.signal();
+  readonly count$ = counter.views.count.observable();
   private readonly publish = injectPublish();
 
   increment() {

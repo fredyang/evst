@@ -1,7 +1,7 @@
-import type { Signal } from "@angular/core";
+import { inject, type Signal } from "@angular/core";
 import type { Observable } from "rxjs";
-import { injectView } from "./inject-view.js";
 import {
+  Store,
   createFeatureSelector,
   createReducer,
   createSelector,
@@ -28,8 +28,8 @@ type InjectableViews<Views extends Record<string, MemoizedSelector<object, any>>
 function attachViewMethods<View extends MemoizedSelector<object, any>>(view: View) {
   return Object.assign(view, {
     signal: (options?: SelectSignalOptions<ReturnType<View>>) =>
-      injectView(view, options),
-    observable: () => injectView.observable(view),
+      inject(Store).selectSignal(view, options),
+    observable: () => inject(Store).select(view),
   });
 }
 

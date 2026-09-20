@@ -1,8 +1,8 @@
 import { createEnvironmentInjector, runInInjectionContext, signal } from '@angular/core';
-import { createSelector, Store } from '@ngrx/store';
+import { Store } from '@ngrx/store';
 import { of, type Observable } from 'rxjs';
 import { afterEach, expect, expectTypeOf, it, vi } from 'vitest';
-import { defineState, injectPublish, injectView } from '../src/index.js';
+import { defineState, injectPublish } from '../src/index.js';
 
 const injectors: ReturnType<typeof createEnvironmentInjector>[] = [];
 afterEach(() => {
@@ -21,27 +21,39 @@ function createContext() {
   return { mock, selected, run: <T>(fn: () => T) => runInInjectionContext(injector, fn) };
 }
 
-it('reads plain and memoized views with inferred signal types and equality options', () => {
+it('reads generated and derived views with inferred signal types and equality options', () => {
   const { run, mock, selected } = createContext();
-  const view = (state: { count: number }) => state.count;
+  const feature = defineState({
+    name: 'counter',
+    initialState: { count: 0 },
+    stateHandlers: [],
+    extraViews: ({ count }, view) => ({ doubled: view(count, count => count * 2) }),
+  });
+  const view = feature.views.count;
   const options = { equal: (a: number, b: number) => a === b };
-  const value = run(() => injectView(view, options));
+  const value = run(() => view.signal(options));
   expectTypeOf(value()).toEqualTypeOf<number>();
   expect(value()).toBe(1);
   expect(mock.selectSignal).toHaveBeenCalledWith(view, options);
   selected.set(2);
   expect(value()).toBe(2);
 
-  const memoized = createSelector(view, count => count * 2);
-  const derived = run(() => injectView(memoized));
+  const memoized = feature.views.doubled;
+  const derived = run(() => memoized.signal());
   expectTypeOf(derived()).toEqualTypeOf<number>();
   expect(mock.selectSignal).toHaveBeenCalledWith(memoized, undefined);
 });
 
 it('creates observable views during injection for later subscription', () => {
   const { run, mock } = createContext();
-  const view = (state: { count: number }) => state.count;
-  const value$ = run(() => injectView.observable(view));
+  const feature = defineState({
+    name: 'counter',
+    initialState: { count: 0 },
+    stateHandlers: [],
+    extraViews: ({ count }, view) => ({ doubled: view(count, count => count * 2) }),
+  });
+  const view = feature.views.count;
+  const value$ = run(() => view.observable());
   const next = vi.fn();
   value$.subscribe(value => {
     expectTypeOf(value).toEqualTypeOf<number>();
@@ -66,8 +78,6 @@ it('publishes outside injection context using the captured store', () => {
 
 it('requires an injection context when creating helpers', () => {
   expect(() => injectPublish()).toThrow();
-  expect(() => injectView((state: { count: number }) => state.count)).toThrow();
-  expect(() => injectView.observable((state: { count: number }) => state.count)).toThrow();
 });
 
 it('attaches typed injection methods to root, field, and derived views', () => {
