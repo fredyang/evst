@@ -1,3 +1,6 @@
+import type { Signal } from "@angular/core";
+import type { Observable } from "rxjs";
+import { injectView } from "./inject-view.js";
 import {
   createFeatureSelector,
   createReducer,
@@ -6,12 +9,33 @@ import {
   type ActionCreator,
   type MemoizedSelector,
   type ReducerTypes,
+  type SelectSignalOptions,
 } from "@ngrx/store";
 import { provideFeature, type EffectInput } from "./provide-feature.js";
 
+/** Injection helpers attached to each exposed view. */
+type ViewMethods<Result> = {
+  /** Reads this view as a signal in the current injection context. */
+  signal(options?: SelectSignalOptions<Result>): Signal<Result>;
+  /** Reads this view as an observable in the current injection context. */
+  observable(): Observable<Result>;
+};
+
+type InjectableViews<Views extends Record<string, MemoizedSelector<object, any>>> = {
+  [Key in keyof Views]: Views[Key] & ViewMethods<ReturnType<Views[Key]>>;
+};
+
+function attachViewMethods<View extends MemoizedSelector<object, any>>(view: View) {
+  return Object.assign(view, {
+    signal: (options?: SelectSignalOptions<ReturnType<View>>) =>
+      injectView(view, options),
+    observable: () => injectView.observable(view),
+  });
+}
+
 /** Memoized views for each state field, plus the complete state. */
 type StateViews<State> = {
-  [Key in keyof State]-?: MemoizedSelector<object, State[Key]>;
+  [Key in keyof State]-?: MemoizedSelector<object, State[Key]> & ViewMethods<State[Key]>;
 } & {
   /**
    * Selects the entire state object.
@@ -19,7 +43,7 @@ type StateViews<State> = {
    * Prefer a specific view when only part of the state is needed.
    * The result changes whenever the state reference changes.
    */
-  root: MemoizedSelector<object, State>;
+  root: MemoizedSelector<object, State> & ViewMethods<State>;
 };
 /** Associates events with pure state handlers, inferring state and payload types. */
 type StateOn<State> = <Creators extends readonly ActionCreator[]>(
@@ -130,18 +154,24 @@ export function defineState<
     ...Object.fromEntries(
       Object.keys(config.initialState).map((name) => [
         name,
-        createSelector(selectState, (state) => state[name as keyof State]),
+        attachViewMethods(createSelector(selectState, (state) => state[name as keyof State])),
       ]),
     ),
-    root: selectState,
+    root: attachViewMethods(selectState),
   } as StateViews<State>;
-  const extras = config.extraViews?.(defaults, createSelector) ?? {};
+  const extras: Record<string, MemoizedSelector<object, any>> =
+    config.extraViews?.(defaults, createSelector) ?? {};
   for (const name of Object.keys(extras)) {
     if (Object.hasOwn(defaults, name)) {
       throw new Error(`Extra view "${name}" conflicts with a default view.`);
     }
   }
-  const views = { ...defaults, ...extras } as StateViews<State> & ExtraViews;
+  const views = {
+    ...defaults,
+    ...Object.fromEntries(
+      Object.entries(extras).map(([name, view]) => [name, attachViewMethods(view)]),
+    ),
+  } as StateViews<State> & InjectableViews<ExtraViews>;
   const configuredEffects =
     config.effects === undefined ? [] : [config.effects];
 
