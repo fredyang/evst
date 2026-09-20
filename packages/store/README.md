@@ -64,16 +64,21 @@ arrays are also accepted as `stateHandlers`; the callback form avoids explicit
 state annotations.
 
 `effects` accepts an effect class, a named functional-effect record, an individual
-functional effect, or arrays combining these forms. Both `provideFeature()` and
-the returned state's `provide()` method accept the same forms, including readonly arrays.
+functional effect, or arrays combining these forms, including readonly arrays.
 For example, `effects: [loadCollection, addBookToCollection]` registers both
 functional effects without a named object. Inline `functionalEffect(...)` calls
 are also accepted as array entries. Named records preserve descriptive effect
 keys for diagnostics; individual functions are registered under the key `effect`.
 
-`counter.provide(counterEffects)` registers additional effects alongside
-configured effects. Defining view-dependent effects separately and passing
-them to `provide()` avoids circular feature definitions.
+`counter.provide()` takes no arguments and registers the state and its configured
+effects. All effects belonging to a state are declared in its `effects` option.
+The lower-level `provideFeature()` helper still accepts effects as arguments.
+
+When state and effect modules import each other, view access must be deferred
+until the functional effect runs. Module-level reads can access uninitialized
+bindings. Circular imports remain sensitive to module evaluation order; deferring
+view access does not make every import order safe. Separating shared definitions
+into another module avoids that dependency when needed.
 
 Typed event creators and reducer state inference for NgRx 22.
 

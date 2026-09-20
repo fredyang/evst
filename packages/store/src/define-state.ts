@@ -9,8 +9,6 @@ import {
 } from "@ngrx/store";
 import { provideFeature, type EffectInput } from "./provide-feature.js";
 
-/** Effect classes, records, functions, or arrays registered with the state. */
-type Effects = EffectInput[];
 /** Memoized views for each state field, plus the complete state. */
 type StateViews<State> = {
   [Key in keyof State]-?: MemoizedSelector<object, State[Key]>;
@@ -54,7 +52,7 @@ export function defineState<
     views: StateViews<NoInfer<State>>,
     view: typeof createSelector,
   ) => ExtraViews;
-  /** Effects registered by provide(), alongside any effects passed to that method. */
+  /** Effects belonging to this state, registered when provide() is called. */
   effects?: EffectInput;
 }) {
   const handlers =
@@ -99,14 +97,13 @@ export function defineState<
        */
       getNextState: reducer,
     },
-    /** Registers this state and its configured and additional effects.
+    /** Registers this state and the effects declared in its definition.
      * Requires provideStore() at the application root.
      */
-    provide(...effects: Effects) {
+    provide() {
       return provideFeature(
         { name: config.name, reducer },
         ...configuredEffects,
-        ...effects,
       );
     },
   };

@@ -81,6 +81,7 @@ it("combines configured arrays, named records, and classes through defineState",
       on(counted, (state) => ({ count: state.count + 1 })),
     ],
     effects: [
+      [{ count }, CounterEffects] as const,
       functionalEffect((actions = inject(Actions)) =>
         actions.pipe(
           ofType(clicked),
@@ -102,7 +103,7 @@ it("combines configured arrays, named records, and classes through defineState",
       { provide: ɵINJECTOR_SCOPE, useValue: "root" },
       ErrorHandler,
       provideStore(),
-      state.provide([{ count }, CounterEffects] as const),
+      state.provide(),
     ],
     null!,
   );

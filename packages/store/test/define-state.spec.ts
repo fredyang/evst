@@ -220,8 +220,7 @@ it("rejects collisions with generated views", () => {
   ).toThrow("conflicts with a default view");
 });
 
-it("registers configured and additional effects with feature state", () => {
-  const feature = definition();
+it("registers all effects from the state definition", () => {
   const more = createAction("[Counter] More");
   const extra = createEffect(
     (actions = inject(Actions)) =>
@@ -231,12 +230,24 @@ it("registers configured and additional effects with feature state", () => {
       ),
     { functional: true },
   );
+  const feature = defineState({
+    name: "counter",
+    initialState,
+    stateHandlers: (on) => [
+      on(changed, (state, { amount }) => ({
+        ...state,
+        count: state.count + amount,
+      })),
+    ],
+    effects: [{ increment }, { extra }],
+  });
+  expectTypeOf(feature.provide).parameters.toEqualTypeOf<[]>();
   const injector = createEnvironmentInjector(
     [
       { provide: ɵINJECTOR_SCOPE, useValue: "root" },
       ErrorHandler,
       provideStore(),
-      feature.provide({ extra }),
+      feature.provide(),
     ],
     null!,
   );
