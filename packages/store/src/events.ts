@@ -1,3 +1,4 @@
+import { publishEvent } from "./provide-store-sugar.js";
 import { createAction } from "@ngrx/store";
 import type {
   Action,
@@ -124,14 +125,18 @@ type EventGroupConfig<Events extends Record<string, EventConfig>> = Events & {
     EventPropsCheck<Events[Key]>;
 };
 
+type Publishable<Creator extends (...args: any[]) => Event> = Creator & {
+  /** Publishes an event through the Store registered by provideStoreSugar(). */
+  publish(...args: Parameters<Creator>): void;
+};
+
 /** Event creators keyed by the original definitions, with source-prefixed types. */
 type EventGroup<
   Source extends string,
   Events extends Record<string, EventConfig>,
 > = {
-  [Key in keyof Events]: EventCreator<
-    Events[Key],
-    `[${Source}] ${EventLabel<Key & string>}`
+  [Key in keyof Events]: Publishable<
+    EventCreator<Events[Key], `[${Source}] ${EventLabel<Key & string>}`>
   >;
 };
 
@@ -198,7 +203,13 @@ function createEvent(
   validateEventKey(eventKey);
   const type = `[${source}] ${toEventLabel(eventKey)}`;
 
-  return createAction(type, eventConfig as any);
+  const creator = createAction(type, eventConfig as any) as ActionCreator<
+    string,
+    (...args: any[]) => Event
+  >;
+  return Object.assign(creator, {
+    publish: (...args: any[]): void => publishEvent(creator(...args)),
+  });
 }
 
 function validateEventKey(eventKey: string) {

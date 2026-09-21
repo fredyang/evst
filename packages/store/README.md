@@ -179,3 +179,28 @@ export class CounterComponent {
 
 Observable views must be created during injection, before entering asynchronous
 callbacks; their subscriptions can run later.
+
+## Publishing through event creators
+
+`provideStoreSugar()` enables direct publishing through event creators:
+
+```ts
+// Application providers:
+providers: [provideStore(), provideStoreSugar()]
+
+// Lifecycle hooks, event handlers, or asynchronous callbacks:
+CollectionPageEvents.enter.publish();
+SelectedBookPageEvents.addBook.publish({ book });
+```
+
+Publishing accepts the same typed arguments as creating an event. Event objects
+remain plain data, and creators retain their NgRx action type and reducer/effect
+compatibility. Registration must finish before publishing.
+
+One active Store is supported per loaded Sugar module. A different active Store
+is rejected, and registration is released when its owning injector is destroyed.
+Repeated registrations of the same Store remain active until all owners are destroyed.
+Federated applications can share the root Store and Sugar singleton, with remote
+features registered through `provideState()`. Concurrent SSR applications and
+independent stores should use the retained `injectPublish()` helper instead.
+View `.signal()` and `.observable()` methods still resolve their local injection context.
