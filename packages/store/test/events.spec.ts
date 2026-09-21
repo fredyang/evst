@@ -1,9 +1,9 @@
 import { emptyProps, props } from '@ngrx/store';
 import { describe, it, expect, expectTypeOf } from 'vitest';
-import { createEventGroup } from '../src/index.js';
+import { events } from '../src/index.js';
 
-describe('createEventGroup', () => {
-  const actions = createEventGroup('Auth/API', {
+describe('events', () => {
+  const actions = events('Auth/API', {
     loginSuccess: props<{ user: string }>(),
     loginFailure: props<{ error: string }>(),
     loginRedirect: emptyProps(),
@@ -43,9 +43,9 @@ describe('createEventGroup', () => {
   });
 });
 
-describe('createEventGroup compatibility', () => {
+describe('events compatibility', () => {
   it('supports creator functions and preserves their arguments', () => {
-    const actions = createEventGroup('Auth/API', {
+    const actions = events('Auth/API', {
       // The explicit default-parameter type avoids circular contextual inference.
       // eslint-disable-next-line @typescript-eslint/no-inferrable-types
       loginFailed: (error: Error, attempt: number = 1) => ({
@@ -70,7 +70,7 @@ describe('createEventGroup compatibility', () => {
   });
 
   it('keeps acronym and digit labels consistent with literal types', () => {
-    const actions = createEventGroup('Test', {
+    const actions = events('Test', {
       loadHTTPError: emptyProps(),
       loadHTTP: emptyProps(),
       version2Ready: emptyProps(),
@@ -93,8 +93,8 @@ describe('createEventGroup compatibility', () => {
   });
 
   it('supports empty groups and keys that shadow object properties', () => {
-    expect(createEventGroup('Test', {})).toEqual({});
-    const actions = createEventGroup('Test', {
+    expect(events('Test', {})).toEqual({});
+    const actions = events('Test', {
       constructor: emptyProps(),
       toString: emptyProps(),
     });
@@ -114,7 +114,7 @@ describe('createEventGroup compatibility', () => {
   ])('rejects invalid event key %j at runtime', (key) => {
     // Simulate JavaScript callers bypassing compile-time checks.
     expect(() =>
-      createEventGroup('Test', { [key]: emptyProps() } as any)
+      events('Test', { [key]: emptyProps() } as any)
     ).toThrow('Invalid event key');
   });
 
@@ -122,33 +122,33 @@ describe('createEventGroup compatibility', () => {
     // These calls are checked by tsc but intentionally never executed.
     function checkInvalidDeclarations(
       source: string,
-      events: Record<string, ReturnType<typeof emptyProps>>
+      eventDefinitions: Record<string, ReturnType<typeof emptyProps>>
     ) {
       // @ts-expect-error Sources must be string literals.
-      createEventGroup(source, { login: emptyProps() });
+      events(source, { login: emptyProps() });
       // @ts-expect-error Event keys must be string literals.
-      createEventGroup('Test', events);
-      createEventGroup('Test', {
+      events('Test', eventDefinitions);
+      events('Test', {
         // @ts-expect-error Keys must start lowercase.
         Login: emptyProps(),
       });
-      createEventGroup('Test', {
+      events('Test', {
         // @ts-expect-error Unicode keys are not supported.
         loginÉchec: emptyProps(),
       });
-      createEventGroup('Test', {
+      events('Test', {
         // @ts-expect-error Creator results cannot override the action type.
         login: () => ({ type: 'override' }),
       });
-      createEventGroup('Test', {
+      events('Test', {
         // @ts-expect-error Creator results cannot be arrays.
         login: () => ['user'],
       });
-      createEventGroup('Test', {
+      events('Test', {
         // @ts-expect-error Use emptyProps for empty payloads.
         login: () => ({}),
       });
-      createEventGroup('Test', {
+      events('Test', {
         // @ts-expect-error Creator results must be objects.
         login: () => 'user',
       });
@@ -159,7 +159,7 @@ describe('createEventGroup compatibility', () => {
       // @ts-expect-error Empty actions do not accept payloads.
       actionsForTypes.logout({ user: 'Ada' });
     }
-    const actionsForTypes = createEventGroup('Test', {
+    const actionsForTypes = events('Test', {
       login: props<{ user: string }>(),
       logout: emptyProps(),
     });

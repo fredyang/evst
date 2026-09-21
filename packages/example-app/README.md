@@ -20,23 +20,21 @@ Built with [@angular/cli](https://github.com/angular/angular-cli)
 - [@angular/material](https://material.angular.io) - Angular Material
 - [vitest](https://vitest.dev) - JavaScript test runner with easy setup, isolated browser testing and snapshot testing
 
-### Quick start
+### Running locally
+
+From the `ngrx-sugar` workspace root:
 
 ```bash
-# Go to this project
-cd ngrx-store-example-app
-
-# Install the dependencies
-pnpm install
-
-# Start the app
-pnpm start
+npm install
+npm run build --workspace @ngrx-sugar/store
+npm start --workspace ngrx-store-example-app
 ```
 
-Navigate to [http://localhost:4200/](http://localhost:4200/) in your browser. To log in, the username and password is `test`.
+The app runs at [http://localhost:4200/](http://localhost:4200/). The login username and password are both `test`.
 
-_NOTE:_ The above setup instructions assume you have added local npm bin folders to your path.
-If this is not the case you will need to install the Angular CLI globally.
+Event definitions use `events(source, definitions)` from
+[`@ngrx-sugar/store`](../store/README.md#creating-events), with camelCase keys and
+readable action labels. Reducer and effect test annotations use its `Event` type.
 
 ### Try it on StackBlitz
 

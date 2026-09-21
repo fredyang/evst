@@ -1,10 +1,8 @@
-import { createActionGroup, emptyProps } from '@ngrx/store';
+import { events } from '@ngrx-sugar/store';
+import { emptyProps } from '@ngrx/store';
 
-export const AuthActions = createActionGroup({
-  source: 'Auth',
-  events: {
-    Logout: emptyProps(),
-    'Logout Confirmation': emptyProps(),
-    'Logout Confirmation Dismiss': emptyProps(),
-  },
+export const AuthActions = events('Auth', {
+  logout: emptyProps(),
+  logoutConfirmation: emptyProps(),
+  logoutConfirmationDismiss: emptyProps(),
 });

@@ -1,9 +1,9 @@
+import type { Event } from '@ngrx-sugar/store';
 import { Book } from '@example-app/books/models';
 import {
   createSelector,
   createFeatureSelector,
   combineReducers,
-  Action,
 } from '@ngrx/store';
 import * as fromSearch from '@example-app/books/reducers/search.reducer';
 import * as fromBooks from '@example-app/books/reducers/books.reducer';
@@ -23,7 +23,7 @@ export interface State extends fromRoot.State {
 }
 
 /** Provide reducer in AoT-compilation happy way */
-export function reducers(state: BooksState | undefined, action: Action) {
+export function reducers(state: BooksState | undefined, action: Event) {
   return combineReducers({
     [fromSearch.searchFeatureKey]: fromSearch.reducer,
     [fromBooks.booksFeatureKey]: fromBooks.reducer,

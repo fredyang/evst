@@ -72,7 +72,6 @@ keys for diagnostics; individual functions are registered under the key `effect`
 
 `counter.provide()` takes no arguments and registers the state and its configured
 effects. All effects belonging to a state are declared in its `effects` option.
-The lower-level `provideFeature()` helper still accepts effects as arguments.
 
 When state and effect modules import each other, view access must be deferred
 until the functional effect runs. Module-level reads can access uninitialized
@@ -86,15 +85,15 @@ Typed event creators and reducer state inference for NgRx 22.
 
 ```ts
 import { emptyProps, props } from "@ngrx/store";
-import { createEventGroup } from "@ngrx-sugar/store";
+import { events } from "@ngrx-sugar/store";
 
-const events = createEventGroup("Books Page", {
+const booksPageEvents = events("Books Page", {
   entered: emptyProps(),
   bookSelected: props<{ id: string }>(),
 });
 
 // { type: '[Books Page] Book Selected', id: '42' }
-events.bookSelected({ id: "42" });
+booksPageEvents.bookSelected({ id: "42" });
 ```
 
 Keys remain camelCase while action labels split words and preserve acronyms. Keys must start with a lowercase ASCII letter and contain only ASCII letters and digits. Payload creator functions are also supported; their parameters require explicit types.

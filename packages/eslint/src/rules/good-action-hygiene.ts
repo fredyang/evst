@@ -57,7 +57,7 @@ export default createRule<Options, MessageIds>({
 
         checkActionType(node, actionType);
       },
-      "CallExpression[callee.name='createEventGroup']"(
+      "CallExpression[callee.name='events']"(
         node: TSESTree.CallExpression
       ) {
         const [source, events] = node.arguments;

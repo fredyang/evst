@@ -1,8 +1,6 @@
-import { createActionGroup, props } from '@ngrx/store';
+import { events } from '@ngrx-sugar/store';
+import { props } from '@ngrx/store';
 
-export const FindBookPageActions = createActionGroup({
-  source: 'Find Book Page',
-  events: {
-    'Search Books': props<{ query: string }>(),
-  },
+export const FindBookPageActions = events('Find Book Page', {
+  searchBooks: props<{ query: string }>(),
 });

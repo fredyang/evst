@@ -15,7 +15,8 @@ import {
 } from "@ngrx/store";
 import { map, tap } from "rxjs";
 import { expect, it } from "vitest";
-import { provideFeature, defineState, functionalEffect } from "../src/index.js";
+import { defineState, functionalEffect } from "../src/index.js";
+import { provideFeature } from "../src/provide-feature.js";
 
 const clicked = createAction("[Counter] Clicked");
 const counted = createAction("[Counter] Counted");

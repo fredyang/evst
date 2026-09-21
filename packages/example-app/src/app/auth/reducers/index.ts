@@ -1,7 +1,7 @@
+import type { Event } from '@ngrx-sugar/store';
 import {
   createSelector,
   createFeatureSelector,
-  Action,
   combineReducers,
 } from '@ngrx/store';
 import * as fromRoot from '@example-app/reducers';
@@ -19,7 +19,7 @@ export interface State extends fromRoot.State {
   [authFeatureKey]: AuthState;
 }
 
-export function reducers(state: AuthState | undefined, action: Action) {
+export function reducers(state: AuthState | undefined, action: Event) {
   return combineReducers({
     [fromAuth.statusFeatureKey]: fromAuth.reducer,
     [fromLoginPage.loginPageFeatureKey]: fromLoginPage.reducer,

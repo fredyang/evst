@@ -1,4 +1,4 @@
-import { Action } from '@ngrx/store';
+import type { Event } from '@ngrx-sugar/store';
 import { TestBed } from '@angular/core/testing';
 
 import { UserEffects } from '@example-app/core/effects';
@@ -30,7 +30,7 @@ describe('UserEffects', () => {
 
   describe('idle$', () => {
     it('should trigger idleTimeout action after 5 minutes', () => {
-      let action: Action | undefined;
+      let action: Event | undefined;
       effects.idle$.subscribe((res) => (action = res));
 
       // Initial action to trigger the effect
@@ -45,7 +45,7 @@ describe('UserEffects', () => {
     });
 
     it('should reset timeout on user activity', () => {
-      let action: Action | undefined;
+      let action: Event | undefined;
       effects.idle$.subscribe((res) => (action = res));
 
       // Initial action to trigger the effect

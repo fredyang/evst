@@ -1,26 +1,24 @@
-import { createActionGroup, props } from '@ngrx/store';
+import { events } from '@ngrx-sugar/store';
+import { props } from '@ngrx/store';
 
 import { Book } from '@example-app/books/models';
 
-export const CollectionApiActions = createActionGroup({
-  source: 'Collection/API',
-  events: {
-    /**
-     * Add Book to Collection Actions
-     */
-    'Add Book Success': props<{ book: Book }>(),
-    'Add Book Failure': props<{ book: Book }>(),
+export const CollectionApiActions = events('Collection/API', {
+  /**
+   * Add Book to Collection Actions
+   */
+  addBookSuccess: props<{ book: Book }>(),
+  addBookFailure: props<{ book: Book }>(),
 
-    /**
-     * Remove Book from Collection Actions
-     */
-    'Remove Book Success': props<{ book: Book }>(),
-    'Remove Book Failure': props<{ book: Book }>(),
+  /**
+   * Remove Book from Collection Actions
+   */
+  removeBookSuccess: props<{ book: Book }>(),
+  removeBookFailure: props<{ book: Book }>(),
 
-    /**
-     * Load Collection Actions
-     */
-    'Load Books Success': props<{ books: Book[] }>(),
-    'Load Books Failure': props<{ error: any }>(),
-  },
+  /**
+   * Load Collection Actions
+   */
+  loadBooksSuccess: props<{ books: Book[] }>(),
+  loadBooksFailure: props<{ error: any }>(),
 });

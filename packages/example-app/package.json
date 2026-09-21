@@ -12,6 +12,9 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui"
   },
+  "dependencies": {
+    "@ngrx-sugar/store": "0.1.0"
+  },
   "engines": {
     "node": ">=22"
   }

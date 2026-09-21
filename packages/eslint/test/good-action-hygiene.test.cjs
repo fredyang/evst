@@ -6,13 +6,13 @@ RuleTester.describe = describe;
 RuleTester.it = it;
 "use strict";
 const valid = () => [
-    `createEventGroup('Books/API', { bookLoaded: props(), 'booksLoaded': props(), HTTPRequestFailed: props(), version2Loaded: props() })`,
-    `createEventGroup('Books/API', { ...events, [eventName]: props() })`,
-    `createEventGroup(source, { loadBook: props() })`,
-    `createEventGroup('Books/API', events)`,
-    `createEventGroup()`,
-    `createEventGroup('Collection Page', { entered: emptyProps() })`,
-    `createEventGroup('Books/API', { searchSuccess: props(), 'searchFailure': props(), searchDone: props() })`,
+    `events('Books/API', { bookLoaded: props(), 'booksLoaded': props(), HTTPRequestFailed: props(), version2Loaded: props() })`,
+    `events('Books/API', { ...events, [eventName]: props() })`,
+    `events(source, { loadBook: props() })`,
+    `events('Books/API', events)`,
+    `events()`,
+    `events('Collection Page', { entered: emptyProps() })`,
+    `events('Books/API', { searchSuccess: props(), 'searchFailure': props(), searchDone: props() })`,
     `export const loadCustomer = createAction('[Customer Page] Customer Load Requested')`,
     `export const loadCustomerSuccess = createAction('[Customer API] Customer Loaded', props<{ customer: Customer }>())`,
     `export const loadCustomerFail = createAction('[Customer API] Customer Load Failed', (error: string) => ({ error, timestamp: +Date.now() }))`,
@@ -40,7 +40,7 @@ const valid = () => [
 ];
 const invalid = () => [
     {
-        code: `createEventGroup('Book Exists Guard', { loadBook: props(), 'searchBooks': props() })`,
+        code: `events('Book Exists Guard', { loadBook: props(), 'searchBooks': props() })`,
         errors: [
             {
                 messageId,
@@ -55,7 +55,7 @@ const invalid = () => [
         ],
     },
     {
-        code: `createEventGroup('', { entered: emptyProps() })`,
+        code: `events('', { entered: emptyProps() })`,
         errors: [{ messageId, data: { actionType: '[] Entered' } }],
     },
     ...[

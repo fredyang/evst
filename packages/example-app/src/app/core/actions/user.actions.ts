@@ -1,8 +1,6 @@
-import { createActionGroup, emptyProps } from '@ngrx/store';
+import { events } from '@ngrx-sugar/store';
+import { emptyProps } from '@ngrx/store';
 
-export const UserActions = createActionGroup({
-  source: 'User',
-  events: {
-    'Idle Timeout': emptyProps(),
-  },
+export const UserActions = events('User', {
+  idleTimeout: emptyProps(),
 });

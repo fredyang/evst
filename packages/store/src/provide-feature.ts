@@ -12,7 +12,9 @@ import { provideState, type Action, type ActionReducer } from "@ngrx/store";
 type EffectSource = Parameters<typeof provideEffects>[number];
 /** An effect class, named effect record, functional effect, or array of these. */
 export type EffectInput =
-  EffectSource | FunctionalEffect | readonly EffectInput[];
+  | EffectSource
+  | FunctionalEffect
+  | readonly EffectInput[];
 
 // Preserve source identity so repeated registration follows NgRx's deduplication.
 const functionalSources = new WeakMap<
@@ -39,8 +41,17 @@ function normalizeEffects(inputs: readonly EffectInput[]): EffectSource[] {
   });
 }
 
-/** Registers feature state and its effects in the current environment injector.
- * Requires provideStore() at the application root.
+/**
+ * Registers feature state and optional effects in an environment injector.
+ * Supports application and route providers. Requires `provideStore()` at the
+ * application root.
+ *
+ * @param feature - Feature name and reducer, such as a NgRx `createFeature()` result.
+ * @param effects - Effect classes, named functional-effect records, individual
+ * functional effects, or nested arrays of these, including readonly arrays.
+ * @returns Environment providers for the feature state and its effects.
+ *
+ * @internal
  */
 export function provideFeature<State, Event extends Action = Action>(
   feature: { name: string; reducer: ActionReducer<State, Event> },

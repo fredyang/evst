@@ -1,41 +1,43 @@
-import { createAction } from '@ngrx/store';
+import { createAction } from "@ngrx/store";
 import type {
   Action,
   ActionCreator,
   ActionCreatorProps,
   Creator,
   NotAllowedCheck,
-} from '@ngrx/store';
+} from "@ngrx/store";
+
+export type Event<Type extends string = string> = Action<Type>;
 
 type LowerLetter =
-  | 'a'
-  | 'b'
-  | 'c'
-  | 'd'
-  | 'e'
-  | 'f'
-  | 'g'
-  | 'h'
-  | 'i'
-  | 'j'
-  | 'k'
-  | 'l'
-  | 'm'
-  | 'n'
-  | 'o'
-  | 'p'
-  | 'q'
-  | 'r'
-  | 's'
-  | 't'
-  | 'u'
-  | 'v'
-  | 'w'
-  | 'x'
-  | 'y'
-  | 'z';
+  | "a"
+  | "b"
+  | "c"
+  | "d"
+  | "e"
+  | "f"
+  | "g"
+  | "h"
+  | "i"
+  | "j"
+  | "k"
+  | "l"
+  | "m"
+  | "n"
+  | "o"
+  | "p"
+  | "q"
+  | "r"
+  | "s"
+  | "t"
+  | "u"
+  | "v"
+  | "w"
+  | "x"
+  | "y"
+  | "z";
 type UpperLetter = Uppercase<LowerLetter>;
-type Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
+type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 
 type EventConfig = ActionCreatorProps<unknown> | Creator;
 
@@ -47,7 +49,7 @@ type StringLiteralCheck<
 type Alphanumeric<Text extends string> =
   Text extends `${LowerLetter | UpperLetter | Digit}${infer Rest}`
     ? Alphanumeric<Rest>
-    : Text extends ''
+    : Text extends ""
       ? true
       : false;
 
@@ -56,25 +58,25 @@ type EventKeyCheck<Key extends string> = string extends Key
   : Key extends `${LowerLetter}${infer Rest}`
     ? Alphanumeric<Rest> extends true
       ? unknown
-      : 'event key must contain only ASCII letters and digits'
-    : 'event key must start with a lowercase ASCII letter';
+      : "event key must contain only ASCII letters and digits"
+    : "event key must start with a lowercase ASCII letter";
 
 // Split before capitals after lowercase letters/digits, and before the final
 // capital of an acronym when a lowercase word follows: loadHTTPError -> Load HTTP Error.
 type Words<
   Text extends string,
-  Previous extends string = '',
+  Previous extends string = "",
 > = Text extends `${infer First}${infer Rest}`
   ? `${First extends UpperLetter
       ? Previous extends LowerLetter | Digit
-        ? ' '
+        ? " "
         : Previous extends UpperLetter
           ? Rest extends `${LowerLetter}${string}`
-            ? ' '
-            : ''
-          : ''
-      : ''}${First}${Words<Rest, First>}`
-  : '';
+            ? " "
+            : ""
+          : ""
+      : ""}${First}${Words<Rest, First>}`
+  : "";
 
 type EventLabel<Key extends string> = Capitalize<Words<Key>>;
 
@@ -90,22 +92,22 @@ type EventPropsCheck<Config extends EventConfig> =
 type EventCreator<Config extends EventConfig, Type extends string> =
   Config extends ActionCreatorProps<infer Payload>
     ? void extends Payload
-      ? ActionCreator<Type, () => Action<Type>>
+      ? ActionCreator<Type, () => Event<Type>>
       : ActionCreator<
           Type,
           (
-            props: Payload & NotAllowedCheck<Payload & object>
-          ) => Payload & Action<Type>
+            props: Payload & NotAllowedCheck<Payload & object>,
+          ) => Payload & Event<Type>
         >
     : Config extends Creator<infer Args, infer Result>
       ? ActionCreator<
           Type,
-          (...args: Args) => Result & NotAllowedCheck<Result> & Action<Type>
+          (...args: Args) => Result & NotAllowedCheck<Result> & Event<Type>
         >
       : never;
 
 type EventGroupConfig<Events extends Record<string, EventConfig>> = Events & {
-  [Key in keyof Events]: StringLiteralCheck<Key & string, 'event key'> &
+  [Key in keyof Events]: StringLiteralCheck<Key & string, "event key"> &
     EventKeyCheck<Key & string> &
     EventPropsCheck<Events[Key]>;
 };
@@ -126,14 +128,44 @@ type EventGroup<
  * Keys must start with a lowercase ASCII letter and contain only letters/digits.
  * Acronyms are preserved: loadHTTPError becomes "Load HTTP Error".
  * Supports props(), emptyProps(), and payload creator functions, like NgRx.
- * Explicitly type creator parameters, including parameters with default values.
+ * Creator parameters require explicit types, including parameters with default values.
+ *
+ * @param source - String literal identifying the event source.
+ * @param events - Event definitions keyed by camelCase string literals.
+ * @returns Event creators with the original keys and `[Source] Event Label` types.
+ * @throws If an event key does not start with a lowercase ASCII letter or
+ * contains characters other than ASCII letters and digits.
+ *
+ * @example
+ * ```ts
+ * import { emptyProps, props } from '@ngrx/store';
+ * import { events } from '@ngrx-sugar/store';
+ *
+ * const booksPageEvents = events('Books Page', {
+ *   entered: emptyProps(),
+ *   bookSelected: props<{ id: string }>(),
+ *   queryChanged: (query: string) => ({ query: query.trim() }),
+ * });
+ *
+ * booksPageEvents.entered();
+ * // { type: '[Books Page] Entered' }
+ *
+ * booksPageEvents.bookSelected({ id: '42' });
+ * // { type: '[Books Page] Book Selected', id: '42' }
+ *
+ * booksPageEvents.queryChanged(' Angular ');
+ * // { type: '[Books Page] Query Changed', query: 'Angular' }
+ *
+ * booksPageEvents.bookSelected.type;
+ * // '[Books Page] Book Selected'
+ * ```
  */
-export function createEventGroup<
+export function events<
   const Source extends string,
   Events extends Record<string, EventConfig>,
 >(
-  source: Source & StringLiteralCheck<Source, 'source'>,
-  events: EventGroupConfig<Events>
+  source: Source & StringLiteralCheck<Source, "source">,
+  events: EventGroupConfig<Events>,
 ): EventGroup<Source, Events> {
   const entries = Object.entries(events);
 
@@ -141,14 +173,14 @@ export function createEventGroup<
     entries.map(([eventKey, eventConfig]) => [
       eventKey,
       createEvent(source, eventKey, eventConfig),
-    ])
+    ]),
   ) as EventGroup<Source, Events>;
 }
 
 function createEvent(
   source: string,
   eventKey: string,
-  eventConfig: EventConfig
+  eventConfig: EventConfig,
 ) {
   validateEventKey(eventKey);
   const type = `[${source}] ${toEventLabel(eventKey)}`;
@@ -159,7 +191,7 @@ function createEvent(
 function validateEventKey(eventKey: string) {
   if (!/^[a-z][a-zA-Z0-9]*$/.test(eventKey)) {
     throw new Error(
-      `Invalid event key "${eventKey}": expected camelCase ASCII letters and digits.`
+      `Invalid event key "${eventKey}": expected camelCase ASCII letters and digits.`,
     );
   }
 }
@@ -168,7 +200,7 @@ function toEventLabel(eventKey: string): string {
   // Keep this conversion in sync with Words: loginSuccess -> Login Success,
   // loadHTTPError -> Load HTTP Error, version2Ready -> Version2 Ready.
   return eventKey
-    .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
-    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
     .replace(/^./, (letter) => letter.toUpperCase());
 }

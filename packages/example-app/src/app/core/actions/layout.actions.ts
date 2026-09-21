@@ -1,9 +1,7 @@
-import { createActionGroup, emptyProps } from '@ngrx/store';
+import { events } from '@ngrx-sugar/store';
+import { emptyProps } from '@ngrx/store';
 
-export const LayoutActions = createActionGroup({
-  source: 'Layout',
-  events: {
-    'Open Sidenav': emptyProps(),
-    'Close Sidenav': emptyProps(),
-  },
+export const LayoutActions = events('Layout', {
+  openSidenav: emptyProps(),
+  closeSidenav: emptyProps(),
 });
