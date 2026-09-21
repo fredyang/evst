@@ -7,6 +7,15 @@ import type {
   NotAllowedCheck,
 } from "@ngrx/store";
 
+/**
+ * An event with a string `type`, compatible with NgRx actions.
+ * The optional type parameter preserves a specific event type literal.
+ *
+ * @example
+ * ```ts
+ * type BookSelected = Event<'[Books Page] Book Selected'> & { id: string };
+ * ```
+ */
 export type Event<Type extends string = string> = Action<Type>;
 
 type LowerLetter =
@@ -39,6 +48,7 @@ type LowerLetter =
 type UpperLetter = Uppercase<LowerLetter>;
 type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 
+/** An NgRx props declaration or a function that creates an event payload. */
 type EventConfig = ActionCreatorProps<unknown> | Creator;
 
 type StringLiteralCheck<
@@ -89,6 +99,7 @@ type EventPropsCheck<Config extends EventConfig> =
       ? NotAllowedCheck<Result>
       : unknown;
 
+/** Infers a creator's arguments and payload while retaining its event type literal. */
 type EventCreator<Config extends EventConfig, Type extends string> =
   Config extends ActionCreatorProps<infer Payload>
     ? void extends Payload
@@ -106,12 +117,14 @@ type EventCreator<Config extends EventConfig, Type extends string> =
         >
       : never;
 
+/** Event definitions checked for literal camelCase keys and valid NgRx payloads. */
 type EventGroupConfig<Events extends Record<string, EventConfig>> = Events & {
   [Key in keyof Events]: StringLiteralCheck<Key & string, "event key"> &
     EventKeyCheck<Key & string> &
     EventPropsCheck<Events[Key]>;
 };
 
+/** Event creators keyed by the original definitions, with source-prefixed types. */
 type EventGroup<
   Source extends string,
   Events extends Record<string, EventConfig>,

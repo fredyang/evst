@@ -12,6 +12,7 @@ import {
   type SelectSignalOptions,
 } from "@ngrx/store";
 import { provideFeature, type EffectInput } from "./provide-feature.js";
+import type { Event } from "./events.js";
 
 /** Injection helpers attached to each exposed view. */
 type ViewMethods<Result> = {
@@ -21,6 +22,7 @@ type ViewMethods<Result> = {
   observable(): Observable<Result>;
 };
 
+/** Adds signal and observable access to each named memoized view. */
 type InjectableViews<Views extends Record<string, MemoizedSelector<object, any>>> = {
   [Key in keyof Views]: Views[Key] & ViewMethods<ReturnType<Views[Key]>>;
 };
@@ -143,7 +145,8 @@ export function defineState<
     typeof config.stateHandlers === "function"
       ? config.stateHandlers(on as StateOn<State>)
       : config.stateHandlers;
-  const reducer = createReducer(config.initialState, ...handlers);
+  const reducer: (state: State | undefined, event: Event) => State =
+    createReducer(config.initialState, ...handlers);
   const selectState = createFeatureSelector<State>(config.name);
   if (Object.hasOwn(config.initialState, "root")) {
     throw new Error(
