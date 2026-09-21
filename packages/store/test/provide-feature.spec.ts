@@ -15,7 +15,7 @@ import {
 } from "@ngrx/store";
 import { map, tap } from "rxjs";
 import { expect, it } from "vitest";
-import { defineState, functionalEffect } from "../src/index.js";
+import { defineState, sideEffect } from "../src/index.js";
 import { provideFeature } from "../src/provide-feature.js";
 
 const clicked = createAction("[Counter] Clicked");
@@ -83,13 +83,13 @@ it("combines configured arrays, named records, and classes through defineState",
     ],
     effects: [
       [{ count }, CounterEffects] as const,
-      functionalEffect((actions = inject(Actions)) =>
+      sideEffect((actions = inject(Actions)) =>
         actions.pipe(
           ofType(clicked),
           map(() => counted()),
         ),
       ),
-      functionalEffect(
+      sideEffect(
         (actions = inject(Actions)) =>
           actions.pipe(
             ofType(clicked),

@@ -23,7 +23,30 @@ const functionalSources = new WeakMap<
   Record<string, FunctionalEffect>
 >();
 
-function normalizeEffects(inputs: readonly EffectInput[]): EffectSource[] {
+/**
+ * Converts Sugar effect inputs into sources accepted by NgRx `provideEffects()`.
+ * Recursively flattens nested arrays and wraps individual functional effects in
+ * `{ effect }` records. NgRx effect metadata distinguishes functional effects
+ * from effect classes; classes and existing named records pass through unchanged.
+ *
+ * Each functional effect's wrapper is cached in a WeakMap. Reusing the same
+ * wrapper preserves source identity so NgRx can deduplicate registrations,
+ * including registration through both `effect.provide()` and `defineState()`.
+ * This helper only prepares sources; it does not execute or register effects.
+ *
+ * @param inputs - Effect classes, named records, functional effects, or nested arrays.
+ * @returns A flat array of effect classes and records for `provideEffects()`.
+ *
+ * @example
+ * ```ts
+ * normalizeEffects([BooksEffects, [loadBooks], { saveBooks }]);
+ * // [BooksEffects, { effect: loadBooks }, { saveBooks }]
+ * // Repeated calls with loadBooks reuse the same { effect: loadBooks } object.
+ * ```
+ *
+ * @internal
+ */
+export function normalizeEffects(inputs: readonly EffectInput[]): EffectSource[] {
   return inputs.flatMap((input): EffectSource[] => {
     if (Array.isArray(input)) return normalizeEffects(input);
     if (

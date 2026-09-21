@@ -111,7 +111,7 @@ export function defineState<
    * Effects belonging to this state, registered when provide() is called.
    * Accepts a functional effect, an effect class, a named effect object,
    * or an array mixing these forms. Nested and readonly arrays are supported.
-   * Functional effects must be created with functionalEffect() or NgRx's
+   * Functional effects must be created with sideEffect() or NgRx's
    * createEffect() with { functional: true }.
    *
    * @example A single effect class

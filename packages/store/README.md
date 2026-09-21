@@ -66,7 +66,7 @@ state annotations.
 `effects` accepts an effect class, a named functional-effect record, an individual
 functional effect, or arrays combining these forms, including readonly arrays.
 For example, `effects: [loadCollection, addBookToCollection]` registers both
-functional effects without a named object. Inline `functionalEffect(...)` calls
+functional effects without a named object. Inline `sideEffect(...)` calls
 are also accepted as array entries. Named records preserve descriptive effect
 keys for diagnostics; individual functions are registered under the key `effect`.
 
@@ -97,6 +97,32 @@ booksPageEvents.bookSelected({ id: "42" });
 ```
 
 Keys remain camelCase while action labels split words and preserve acronyms. Keys must start with a lowercase ASCII letter and contain only ASCII letters and digits. Payload creator functions are also supported; their parameters require explicit types.
+
+## Defining standalone effects
+
+`sideEffect()` creates a callable functional effect. Emitted events are dispatched
+by default; `{ dispatch: false }` supports effects that only perform side effects.
+The returned effect exposes `.provide()` for application or route providers,
+with `provideStore()` required at the application root.
+
+```ts
+import { timer, map } from "rxjs";
+import { provideStore } from "@ngrx/store";
+import { sideEffect } from "@ngrx-sugar/store";
+import { userEvents } from "./user.events";
+
+const idleEffect = sideEffect(() =>
+  timer(300_000).pipe(map(() => userEvents.idleTimeout()))
+);
+
+const appConfig = {
+  providers: [provideStore(), idleEffect.provide()],
+};
+```
+
+Effects also remain callable with explicit dependencies in tests. State-owned
+effects belong in `defineState({ ..., effects: [idleEffect] })` and are registered
+by that state's `.provide()` method.
 
 ## Inferring reducer state
 
