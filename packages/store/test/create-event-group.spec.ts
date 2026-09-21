@@ -1,6 +1,6 @@
 import { emptyProps, props } from '@ngrx/store';
 import { describe, it, expect, expectTypeOf } from 'vitest';
-import { createEventGroup, createEventSource } from '../src/index.js';
+import { createEventGroup } from '../src/index.js';
 
 describe('createEventGroup', () => {
   const actions = createEventGroup('Auth/API', {
@@ -40,29 +40,6 @@ describe('createEventGroup', () => {
       [{ user: string }]
     >();
     expectTypeOf(actions.loginRedirect).parameters.toEqualTypeOf<[]>();
-  });
-});
-
-describe('createEventSource', () => {
-  const auth = createEventSource('Auth');
-
-  it('creates grouped and standalone events with the same source', () => {
-    const events = auth.createEventGroup({
-      logout: emptyProps(),
-      login: props<{ user: string }>(),
-    });
-    const logout = auth.createEvent('logout');
-    const login = auth.createEvent('login', props<{ user: string }>());
-
-    expect(events.logout.type).toBe('[Auth] Logout');
-    expect(events.login.type).toBe('[Auth] Login');
-    expect(logout()).toEqual({ type: '[Auth] Logout' });
-    expect(login({ user: 'Ada' })).toEqual({
-      type: '[Auth] Login',
-      user: 'Ada',
-    });
-    expectTypeOf(logout).parameters.toEqualTypeOf<[]>();
-    expectTypeOf(login).parameters.toEqualTypeOf<[{ user: string }]>();
   });
 });
 

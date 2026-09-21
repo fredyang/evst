@@ -1,4 +1,4 @@
-export { createEventGroup, createEventSource } from "./create-event-group.js";
+export { createEventGroup } from "./create-event-group.js";
 export type { ReducerState } from "./reducer-state.js";
 export { injectPublish } from "./inject-publish.js";
 export type { Event } from "./event.js";

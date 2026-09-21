@@ -86,7 +86,7 @@ Typed event creators and reducer state inference for NgRx 22.
 
 ```ts
 import { emptyProps, props } from "@ngrx/store";
-import { createEventGroup, createEventSource } from "@ngrx-sugar/store";
+import { createEventGroup } from "@ngrx-sugar/store";
 
 const events = createEventGroup("Books Page", {
   entered: emptyProps(),
@@ -95,9 +95,6 @@ const events = createEventGroup("Books Page", {
 
 // { type: '[Books Page] Book Selected', id: '42' }
 events.bookSelected({ id: "42" });
-
-const api = createEventSource("Books API");
-const loaded = api.createEvent("loaded", props<{ ids: string[] }>());
 ```
 
 Keys remain camelCase while action labels split words and preserve acronyms. Keys must start with a lowercase ASCII letter and contain only ASCII letters and digits. Payload creator functions are also supported; their parameters require explicit types.
