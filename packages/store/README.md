@@ -11,6 +11,9 @@ completion leads to `.on()`, `.withViews()`, `.withEffects()`, and `.provide()`.
 Handlers, derived views, and registration fit together without remembering a
 collection of separate setup functions.
 
+This guide covers the common path rather than every option. The fluent API and
+editor completion expose the available choices as a definition takes shape.
+
 Consuming state is equally direct. Events expose `.publish()`; views expose
 `.signal()` and `.observable()`. Components need no injected Store, `dispatch()`
 calls, or selector wiring. NgRx's Store, reducers, memoized selectors, effects,
@@ -235,7 +238,7 @@ Event `.publish()` methods accept the same typed arguments as their creators.
 After application initialization, they work in lifecycle hooks, event handlers,
 and asynchronous callbacks without an injection context.
 
-## Providing state
+## Registering state
 
 The application supplies the root Store once. A state definition attaches its
 effects and registers the feature through the same fluent API:
@@ -248,11 +251,7 @@ import { provideStoreSugar } from "@ngrx-sugar/store";
 import { booksState } from "./books.state";
 
 export const appConfig: ApplicationConfig = {
-  providers: [
-    provideHttpClient(),
-    provideStoreSugar(),
-    booksState.provide(),
-  ],
+  providers: [provideHttpClient(), provideStoreSugar(), booksState.provide()],
 };
 ```
 
