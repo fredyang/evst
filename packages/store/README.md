@@ -178,11 +178,19 @@ callbacks; their subscriptions can run later.
 
 ## Publishing through event creators
 
-`provideStoreSugar()` enables direct publishing through event creators:
+`provideStoreSugar()` creates an empty NgRx root Store, enables Redux DevTools
+in Angular development mode, and enables direct publishing through event creators.
+Feature state is registered through `.provide()` or `provideState()`.
 
 ```ts
 // Application providers:
-providers: [provideStore(), provideStoreSugar()]
+providers: [
+  provideStoreSugar({
+    devtools: { name: 'Books' },
+    runtimeChecks: { strictActionSerializability: true },
+  }),
+  books.provide(),
+]
 
 // Lifecycle hooks, event handlers, or asynchronous callbacks:
 CollectionPageEvents.enter.publish();
@@ -192,6 +200,11 @@ SelectedBookPageEvents.addBook.publish({ book });
 Publishing accepts the same typed arguments as creating an event. Published
 values remain plain NgRx actions, and creators retain their action type and
 reducer/effect compatibility. Registration must finish before publishing.
+
+The root reducer map is empty, so no reducer is registered directly at the root.
+Registered feature keys still form the Store's runtime state. DevTools can be
+disabled with `devtools: false`; it is never registered outside Angular
+development mode.
 
 One active Store is supported per loaded Sugar module. A different active Store
 is rejected, and registration is released when its owning injector is destroyed.

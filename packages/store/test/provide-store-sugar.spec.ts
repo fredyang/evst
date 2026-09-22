@@ -1,9 +1,12 @@
 import {
   APP_INITIALIZER,
   createEnvironmentInjector,
+  ErrorHandler,
+  isDevMode,
   runInInjectionContext,
 } from "@angular/core";
 import { Store, emptyProps, props } from "@ngrx/store";
+import { INITIAL_OPTIONS } from "@ngrx/store-devtools";
 import { afterEach, expect, expectTypeOf, it, vi } from "vitest";
 import { events, injectPublish, provideStoreSugar } from "../src/index.js";
 
@@ -19,7 +22,7 @@ afterEach(() => {
 });
 function context(store = { dispatch: vi.fn() }) {
   const injector = createEnvironmentInjector(
-    [{ provide: Store, useValue: store }, provideStoreSugar()],
+    [provideStoreSugar({ devtools: false }), { provide: Store, useValue: store }],
     null!,
   );
   injectors.push(injector);
@@ -29,6 +32,46 @@ function context(store = { dispatch: vi.fn() }) {
     });
   return { injector, store, initialize };
 }
+
+it("uses a recognizable default DevTools name in development", () => {
+  if (!isDevMode()) return;
+
+  const defaults = createEnvironmentInjector(
+    [ErrorHandler, provideStoreSugar()],
+    null!,
+  );
+  const custom = createEnvironmentInjector(
+    [ErrorHandler, provideStoreSugar({ devtools: { name: "Books" } })],
+    null!,
+  );
+  const disabled = createEnvironmentInjector(
+    [ErrorHandler, provideStoreSugar({ devtools: false })],
+    null!,
+  );
+  injectors.push(defaults, custom, disabled);
+
+  expect(defaults.get(INITIAL_OPTIONS).name).toBe("NgRx Sugar Store");
+  expect(custom.get(INITIAL_OPTIONS).name).toBe("Books");
+  expect(disabled.get(INITIAL_OPTIONS, null)).toBeNull();
+});
+
+it("provides and captures an empty root Store", () => {
+  const injector = createEnvironmentInjector(
+    [provideStoreSugar({ devtools: false })],
+    null!,
+  );
+  injectors.push(injector);
+  const store = injector.get(Store);
+  const dispatch = vi.spyOn(store, "dispatch");
+  runInInjectionContext(injector, () => {
+    for (const init of injector.get(APP_INITIALIZER)) init();
+  });
+
+  page.entered.publish();
+
+  expect(dispatch).toHaveBeenCalledWith(page.entered());
+});
+
 it("requires initialization and keeps created events plain", () => {
   expect(page.entered()).toEqual({ type: "[Page] Entered" });
   expect(page.entered()).not.toHaveProperty("publish");

@@ -15,7 +15,7 @@ import {
 } from "@ngrx/store";
 import { map, tap } from "rxjs";
 import { expect, it } from "vitest";
-import { state as createState, sideEffect } from "../src/index.js";
+import { state, sideEffect } from "../src/index.js";
 import { provideFeature } from "../src/provide-feature.js";
 
 const clicked = createAction("[Counter] Clicked");
@@ -75,7 +75,7 @@ it.each([
 
 it("combines configured arrays, named records, and classes through state", () => {
   let observed = 0;
-  const state = createState("arrayCounter", { count: 0 })
+  const feature = state("arrayCounter", { count: 0 })
     .on(counted, (state) => ({ count: state.count + 1 }))
     .effects([
       [{ count }, CounterEffects] as const,
@@ -99,14 +99,14 @@ it("combines configured arrays, named records, and classes through state", () =>
       { provide: ɵINJECTOR_SCOPE, useValue: "root" },
       ErrorHandler,
       provideStore(),
-      state.provide(),
+      feature.provide(),
     ],
     null!,
   );
   try {
     const store = injector.get(Store);
     store.dispatch(clicked());
-    expect(store.selectSignal(state.views.count)()).toBe(3);
+    expect(store.selectSignal(feature.views.count)()).toBe(3);
     expect(observed).toBe(1);
   } finally {
     injector.destroy();
