@@ -8,17 +8,6 @@ import type {
   NotAllowedCheck,
 } from "@ngrx/store";
 
-/**
- * An event with a string `type`, compatible with NgRx actions.
- * The optional type parameter preserves a specific event type literal.
- *
- * @example
- * ```ts
- * type BookSelected = Event<'[Books Page] Book Selected'> & { id: string };
- * ```
- */
-export type Event<Type extends string = string> = Action<Type>;
-
 type LowerLetter =
   | "a"
   | "b"
@@ -104,17 +93,17 @@ type EventPropsCheck<Config extends EventConfig> =
 type EventCreator<Config extends EventConfig, Type extends string> =
   Config extends ActionCreatorProps<infer Payload>
     ? void extends Payload
-      ? ActionCreator<Type, () => Event<Type>>
+      ? ActionCreator<Type, () => Action<Type>>
       : ActionCreator<
           Type,
           (
             props: Payload & NotAllowedCheck<Payload & object>,
-          ) => Payload & Event<Type>
+          ) => Payload & Action<Type>
         >
     : Config extends Creator<infer Args, infer Result>
       ? ActionCreator<
           Type,
-          (...args: Args) => Result & NotAllowedCheck<Result> & Event<Type>
+          (...args: Args) => Result & NotAllowedCheck<Result> & Action<Type>
         >
       : never;
 
@@ -125,7 +114,7 @@ type EventGroupConfig<Events extends Record<string, EventConfig>> = Events & {
     EventPropsCheck<Events[Key]>;
 };
 
-type Publishable<Creator extends (...args: any[]) => Event> = Creator & {
+type Publishable<Creator extends (...args: any[]) => Action> = Creator & {
   /** Publishes an event through the Store registered by provideStoreSugar(). */
   publish(...args: Parameters<Creator>): void;
 };
@@ -142,7 +131,7 @@ type EventGroup<
 
 /**
  * Creates a group of events with a shared source, unchanged camelCase keys, and
- * readable action type labels.
+ * readable event type labels.
  * Keys must start with a lowercase ASCII letter and contain only letters/digits.
  * Acronyms are preserved: loadHTTPError becomes "Load HTTP Error".
  * Supports props(), emptyProps(), and payload creator functions, like NgRx.
@@ -205,7 +194,7 @@ function createEvent(
 
   const creator = createAction(type, eventConfig as any) as ActionCreator<
     string,
-    (...args: any[]) => Event
+    (...args: any[]) => Action
   >;
   return Object.assign(creator, {
     publish: (...args: any[]): void => publishEvent(creator(...args)),

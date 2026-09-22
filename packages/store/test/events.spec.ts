@@ -9,7 +9,7 @@ describe('events', () => {
     loginRedirect: emptyProps(),
   });
 
-  it('preserves keys and creates readable action types', () => {
+  it('preserves keys and creates readable event types', () => {
     expect(Object.keys(actions)).toEqual([
       'loginSuccess',
       'loginFailure',
@@ -137,7 +137,7 @@ describe('events compatibility', () => {
         loginÉchec: emptyProps(),
       });
       events('Test', {
-        // @ts-expect-error Creator results cannot override the action type.
+        // @ts-expect-error Creator results cannot override the event type.
         login: () => ({ type: 'override' }),
       });
       events('Test', {

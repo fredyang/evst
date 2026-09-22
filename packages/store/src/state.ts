@@ -12,7 +12,7 @@ import {
   type SelectSignalOptions,
 } from "@ngrx/store";
 import { provideFeature, type EffectInput } from "./provide-feature.js";
-import type { Event } from "./events.js";
+import type { Action } from "@ngrx/store";
 
 /** Injection helpers attached to each exposed view. */
 type ViewMethods<Result> = {
@@ -66,7 +66,7 @@ export interface StateDefinition<
   readonly views: StateViews<State> & InjectableViews<ExtraViews>;
   /** Pure state transitions for tests; no events are published or effects run. */
   readonly test: {
-    getNextState(state: State | undefined, event: Event): State;
+    getNextState(state: State | undefined, event: Action): State;
   };
   /** Registers this definition; requires provideStore() at the application root. */
   provide(): ReturnType<typeof provideFeature>;

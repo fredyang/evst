@@ -1,6 +1,5 @@
 import { inject } from "@angular/core";
-import { Store } from "@ngrx/store";
-import type { Event } from "./events.js";
+import { Store, type Action } from "@ngrx/store";
 
 /**
  * Captures the current Store and returns a function that dispatches events to it.
@@ -18,7 +17,7 @@ import type { Event } from "./events.js";
  * }
  * ```
  */
-export function injectPublish(): (event: Event) => void {
+export function injectPublish(): (event: Action) => void {
   const store = inject(Store);
   return (event) => store.dispatch(event);
 }

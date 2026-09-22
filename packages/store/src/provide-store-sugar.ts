@@ -1,6 +1,5 @@
 import { DestroyRef, inject, provideAppInitializer } from "@angular/core";
-import { Store } from "@ngrx/store";
-import type { Event } from "./events.js";
+import { Store, type Action } from "@ngrx/store";
 
 let registration: { store: Store; owners: number } | undefined;
 
@@ -29,7 +28,7 @@ export function provideStoreSugar() {
 }
 
 /** @internal Publishes through the explicitly registered application store. */
-export function publishEvent(event: Event): void {
+export function publishEvent(event: Action): void {
   if (!registration) {
     throw new Error(
       "Register provideStoreSugar() before publishing NgRx Sugar events.",

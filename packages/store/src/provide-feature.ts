@@ -7,8 +7,7 @@ import {
   getEffectsMetadata,
   type FunctionalEffect,
 } from "@ngrx/effects";
-import { provideState, type ActionReducer } from "@ngrx/store";
-import type { Event } from "./events.js";
+import { provideState, type Action, type ActionReducer } from "@ngrx/store";
 
 type EffectSource = Parameters<typeof provideEffects>[number];
 /** An effect class, named effect record, functional effect, or array of these. */
@@ -77,8 +76,8 @@ export function normalizeEffects(inputs: readonly EffectInput[]): EffectSource[]
  *
  * @internal
  */
-export function provideFeature<State, FeatureEvent extends Event = Event>(
-  feature: { name: string; reducer: ActionReducer<State, FeatureEvent> },
+export function provideFeature<State, FeatureAction extends Action = Action>(
+  feature: { name: string; reducer: ActionReducer<State, FeatureAction> },
   ...effects: EffectInput[]
 ): EnvironmentProviders {
   return makeEnvironmentProviders([

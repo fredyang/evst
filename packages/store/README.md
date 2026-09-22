@@ -189,9 +189,9 @@ CollectionPageEvents.enter.publish();
 SelectedBookPageEvents.addBook.publish({ book });
 ```
 
-Publishing accepts the same typed arguments as creating an event. Event objects
-remain plain data, and creators retain their NgRx action type and reducer/effect
-compatibility. Registration must finish before publishing.
+Publishing accepts the same typed arguments as creating an event. Published
+values remain plain NgRx actions, and creators retain their action type and
+reducer/effect compatibility. Registration must finish before publishing.
 
 One active Store is supported per loaded Sugar module. A different active Store
 is rejected, and registration is released when its owning injector is destroyed.
