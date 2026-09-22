@@ -23,6 +23,20 @@ The API encourages an event-driven mindset: components describe **what happened*
 and state handlers and effects decide how to respond. This discourages components
 from issuing commands that coordinate the rest of the application.
 
+```mermaid
+flowchart TB
+  component[Component] -->|reads| view[View]
+  component -->|publishes| event[Event]
+  event -->|handled by .on| state[State]
+  event -->|handled by .ofType| effect[SideEffect]
+  effect -->|publishes| event
+  state -->|exposes| view
+```
+
+The Store and reducer are intentionally absent from this model. It remains NgRx
+infrastructure underneath; application code works with events, state, views,
+and sideEffects instead.
+
 ## Defining events
 
 This guide builds a small books page. Entering the page starts loading books;
