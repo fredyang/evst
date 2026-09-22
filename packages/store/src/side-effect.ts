@@ -25,7 +25,7 @@ export type SideEffect<Source extends () => Observable<unknown> = () => Observab
  *   timer(300_000).pipe(map(() => userEvents.idleTimeout()))
  * );
  * // Application providers: [provideStore(), idleEffect.provide()]
- * // State-owned effects: defineState({ ..., effects: [idleEffect] })
+ * // State-owned effects: state('feature', initialState).effects([idleEffect])
  * ```
  */
 export function sideEffect<Source extends () => Observable<unknown>>(

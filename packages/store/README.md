@@ -2,25 +2,20 @@
 
 ## Defining state
 
-`defineState` combines state handlers, memoized views, and optional effects.
-The handler callback supplies a state-typed `on` function.
+`state(name, initialState)` combines typed handlers, memoized views, and optional
+effects through an immutable chaining API. No final `.build()` call is required.
 
 ```ts
 import { createAction, props } from "@ngrx/store";
-import { defineState } from "@ngrx-sugar/store";
+import { state } from "@ngrx-sugar/store";
 
 const changed = createAction("[Counter] Changed", props<{ amount: number }>());
 
-export const counter = defineState({
-  name: "counter",
-  initialState: { count: 0 },
-  stateHandlers: (on) => [
-    on(changed, (state, { amount }) => ({ count: state.count + amount })),
-  ],
-  extraViews: ({ count }, view) => ({
+export const counter = state("counter", { count: 0 })
+  .on(changed, (state, { amount }) => ({ count: state.count + amount }))
+  .extraViews(({ count }, view) => ({
     doubled: view(count, value => value * 2),
-  }),
-});
+  }));
 
 // Application or route providers, with provideStore() at the application root:
 // providers: [counter.provide()]
@@ -38,11 +33,11 @@ and memoization without requiring an import. Its inputs are views; its final
 callback receives their actual values. Returned views are used directly.
 
 ```ts
-extraViews: ({ books, search }, view) => ({
+definition.extraViews(({ books, search }, view) => ({
   searchResults: view(books, search, (books, search) =>
     search.ids.map(id => books.entities[id])
   ),
-})
+}))
 ```
 
 This calculation reuses its previous result when only `collection` changes.
@@ -59,19 +54,20 @@ const next = counter.test.getNextState(undefined, changed({ amount: 3 }));
 
 The `test` property is intended for tests by convention; it is not access-restricted.
 
-Typed NgRx `on(...)`
-arrays are also accepted as `stateHandlers`; the callback form avoids explicit
-state annotations.
+Each chained call returns a new definition. `.on()` appends a handler and accepts
+multiple event creators before the handler. `.extraViews()` can compose previously
+added views and rejects duplicate names. Its callback runs once per call.
+Existing definitions and view identities are preserved when a chain is extended.
 
-`effects` accepts an effect class, a named functional-effect record, an individual
+`.effects()` appends and accepts an effect class, a named functional-effect record, an individual
 functional effect, or arrays combining these forms, including readonly arrays.
-For example, `effects: [loadCollection, addBookToCollection]` registers both
+For example, `.effects([loadCollection, addBookToCollection])` registers both
 functional effects without a named object. Inline `sideEffect(...)` calls
 are also accepted as array entries. Named records preserve descriptive effect
 keys for diagnostics; individual functions are registered under the key `effect`.
 
 `counter.provide()` takes no arguments and registers the state and its configured
-effects. All effects belonging to a state are declared in its `effects` option.
+effects. All effects belonging to a state are declared in its `.effects()` calls.
 
 When state and effect modules import each other, view access must be deferred
 until the functional effect runs. Module-level reads can access uninitialized
@@ -121,7 +117,7 @@ const appConfig = {
 ```
 
 Effects also remain callable with explicit dependencies in tests. State-owned
-effects belong in `defineState({ ..., effects: [idleEffect] })` and are registered
+effects belong in `state('feature', initialState).effects([idleEffect])` and are registered
 by that state's `.provide()` method.
 
 ## Inferring reducer state
@@ -142,7 +138,7 @@ From the project root, `npm install` installs workspace dependencies and `npm te
 
 ## Reading views and publishing events
 
-Every view exposed by `defineState`, including `root`, generated field views,
+Every view exposed by `state()`, including `root`, generated field views,
 and returned `extraViews`, has `.signal(options?)` and `.observable()` methods:
 
 ```ts

@@ -31,7 +31,7 @@ const functionalSources = new WeakMap<
  *
  * Each functional effect's wrapper is cached in a WeakMap. Reusing the same
  * wrapper preserves source identity so NgRx can deduplicate registrations,
- * including registration through both `effect.provide()` and `defineState()`.
+ * including registration through both `effect.provide()` and `state()`.
  * This helper only prepares sources; it does not execute or register effects.
  *
  * @param inputs - Effect classes, named records, functional effects, or nested arrays.

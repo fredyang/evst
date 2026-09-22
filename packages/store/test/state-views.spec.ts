@@ -8,7 +8,7 @@ import { Actions, createEffect, ofType } from "@ngrx/effects";
 import { createAction, on, props, provideStore, Store } from "@ngrx/store";
 import { map } from "rxjs";
 import { expect, expectTypeOf, it } from "vitest";
-import { defineState } from "../src/index.js";
+import { state as createState } from "../src/index.js";
 
 const clicked = createAction("[Counter] Clicked");
 const changed = createAction("[Counter] Changed", props<{ amount: number }>());
@@ -22,18 +22,14 @@ const increment = createEffect(
   { functional: true },
 );
 
-it("accepts typed handler arrays and preserves view memoization", () => {
+it("accepts typed handlers and preserves view memoization", () => {
   let calls = 0;
-  const feature = defineState({
-    name: "typed",
-    initialState,
-    stateHandlers: [
-      on(changed, (state: typeof initialState, { amount }) => ({
-        ...state,
-        count: amount,
-      })),
-    ],
-    extraViews: ({ count, loading }, view) => ({
+  const feature = createState("typed", initialState)
+    .on(changed, (state: typeof initialState, { amount }) => ({
+      ...state,
+      count: amount,
+    }))
+    .extraViews(({ count, loading }, view) => ({
       doubled: view(count, (count) => {
         expectTypeOf(count).toEqualTypeOf<number>();
         calls++;
@@ -43,9 +39,8 @@ it("accepts typed handler arrays and preserves view memoization", () => {
         expectTypeOf(loading).toEqualTypeOf<boolean>();
         return loading ? "Loading…" : `${count} items`;
       }),
-    }),
-    effects: { increment },
-  });
+    }))
+    .effects({ increment });
   const state = { typed: initialState };
   expect(feature.views.root(state)).toBe(initialState);
   expect(feature.views.count(state)).toBe(0);
@@ -80,17 +75,14 @@ it("reuses derived arrays until a declared dependency changes", () => {
     search: { ids: ["one"] },
     collection: [] as string[],
   };
-  const feature = defineState({
-    name: "books",
-    initialState: initial,
-    stateHandlers: [],
-    extraViews: ({ books, search }, view) => ({
+  const feature = createState("books", initial).extraViews(
+    ({ books, search }, view) => ({
       results: view(books, search, (books, search) => {
         calls++;
         return search.ids.map((id) => books[id as keyof typeof books]);
       }),
     }),
-  });
+  );
   const view = feature.views.results;
   expectTypeOf(view).returns.toEqualTypeOf<{ id: string }[]>();
   const first = view({ books: initial });
@@ -114,11 +106,8 @@ it("reuses derived arrays until a declared dependency changes", () => {
 });
 
 it("composes views and preserves the projector type", () => {
-  const feature = defineState({
-    name: "counter",
-    initialState,
-    stateHandlers: [],
-    extraViews: ({ count, loading }, view) => {
+  const feature = createState("counter", initialState).extraViews(
+    ({ count, loading }, view) => {
       const doubled = view(count, (count) => count * 2);
       return {
         doubled,
@@ -127,7 +116,7 @@ it("composes views and preserves the projector type", () => {
         ),
       };
     },
-  });
+  );
   expectTypeOf(feature.views.doubled.projector).parameters.toEqualTypeOf<
     [number]
   >();
@@ -141,29 +130,31 @@ it("composes views and preserves the projector type", () => {
 });
 
 function definition() {
-  return defineState({
-    name: "counter",
-    initialState,
-    stateHandlers: (on) => [
-      on(changed, (state, { amount }) => {
-        expectTypeOf(state).toEqualTypeOf<typeof initialState>();
-        expectTypeOf(amount).toEqualTypeOf<number>();
-        return { ...state, count: state.count + amount };
-      }),
-    ],
-    effects: { increment },
-  });
+  return createState("counter", initialState)
+    .on(changed, (state, { amount }) => {
+      expectTypeOf(state).toEqualTypeOf<typeof initialState>();
+      expectTypeOf(amount).toEqualTypeOf<number>();
+      return { ...state, count: state.count + amount };
+    })
+    .effects({ increment });
 }
 
 it("infers state, payloads, views, and the test reducer", () => {
   const feature = definition();
   expectTypeOf<keyof typeof feature>().toEqualTypeOf<
-    "views" | "provide" | "test"
+    "views" | "provide" | "test" | "on" | "extraViews" | "effects"
   >();
   expectTypeOf(feature.test.getNextState).returns.toEqualTypeOf<
     typeof initialState
   >();
-  expect(Object.keys(feature).sort()).toEqual(["provide", "test", "views"]);
+  expect(Object.keys(feature).sort()).toEqual([
+    "effects",
+    "extraViews",
+    "on",
+    "provide",
+    "test",
+    "views",
+  ]);
   expectTypeOf(feature.views.count).returns.toEqualTypeOf<number>();
   expectTypeOf(feature.views.loading).returns.toEqualTypeOf<boolean>();
   expect(feature.test.getNextState(undefined, changed({ amount: 3 }))).toEqual({
@@ -177,18 +168,16 @@ it("infers state, payloads, views, and the test reducer", () => {
 });
 
 it("derives views from multiple state values with inferred types", () => {
-  const feature = defineState({
-    name: "books",
-    initialState: { query: "", books: [] as { title: string }[] },
-    stateHandlers: [],
-    extraViews: ({ query, books }, view) => ({
-      filteredBooks: view(query, books, (query, books) => {
-        expectTypeOf(query).toEqualTypeOf<string>();
-        expectTypeOf(books).toEqualTypeOf<{ title: string }[]>();
-        return books.filter((book) => book.title.includes(query));
-      }),
+  const feature = createState("books", {
+    query: "",
+    books: [] as { title: string }[],
+  }).extraViews(({ query, books }, view) => ({
+    filteredBooks: view(query, books, (query, books) => {
+      expectTypeOf(query).toEqualTypeOf<string>();
+      expectTypeOf(books).toEqualTypeOf<{ title: string }[]>();
+      return books.filter((book) => book.title.includes(query));
     }),
-  });
+  }));
   expectTypeOf(feature.views.filteredBooks).returns.toEqualTypeOf<
     { title: string }[]
   >();
@@ -203,21 +192,14 @@ it("derives views from multiple state values with inferred types", () => {
 });
 
 it("rejects collisions with generated views", () => {
+  expect(() => createState("reserved", { root: 1 })).toThrow(
+    'reserved view name "root"',
+  );
   expect(() =>
-    defineState({
-      name: "reserved",
-      initialState: { root: 1 },
-      stateHandlers: [],
-    }),
-  ).toThrow('reserved view name "root"');
-  expect(() =>
-    defineState({
-      name: "collision",
-      initialState,
-      stateHandlers: [],
-      extraViews: ({ count }) => ({ count }),
-    }),
-  ).toThrow("conflicts with a default view");
+    createState("collision", initialState).extraViews(({ count }) => ({
+      count,
+    })),
+  ).toThrow("conflicts with an existing view");
 });
 
 it("registers all effects from the state definition", () => {
@@ -230,17 +212,12 @@ it("registers all effects from the state definition", () => {
       ),
     { functional: true },
   );
-  const feature = defineState({
-    name: "counter",
-    initialState,
-    stateHandlers: (on) => [
-      on(changed, (state, { amount }) => ({
-        ...state,
-        count: state.count + amount,
-      })),
-    ],
-    effects: [{ increment }, { extra }],
-  });
+  const feature = createState("counter", initialState)
+    .on(changed, (state, { amount }) => ({
+      ...state,
+      count: state.count + amount,
+    }))
+    .effects([{ increment }, { extra }]);
   expectTypeOf(feature.provide).parameters.toEqualTypeOf<[]>();
   const injector = createEnvironmentInjector(
     [

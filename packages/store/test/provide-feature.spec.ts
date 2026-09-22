@@ -15,7 +15,7 @@ import {
 } from "@ngrx/store";
 import { map, tap } from "rxjs";
 import { expect, it } from "vitest";
-import { defineState, sideEffect } from "../src/index.js";
+import { state as createState, sideEffect } from "../src/index.js";
 import { provideFeature } from "../src/provide-feature.js";
 
 const clicked = createAction("[Counter] Clicked");
@@ -73,15 +73,11 @@ it.each([
   }
 });
 
-it("combines configured arrays, named records, and classes through defineState", () => {
+it("combines configured arrays, named records, and classes through state", () => {
   let observed = 0;
-  const state = defineState({
-    name: "arrayCounter",
-    initialState: { count: 0 },
-    stateHandlers: (on) => [
-      on(counted, (state) => ({ count: state.count + 1 })),
-    ],
-    effects: [
+  const state = createState("arrayCounter", { count: 0 })
+    .on(counted, (state) => ({ count: state.count + 1 }))
+    .effects([
       [{ count }, CounterEffects] as const,
       sideEffect((actions = inject(Actions)) =>
         actions.pipe(
@@ -97,8 +93,7 @@ it("combines configured arrays, named records, and classes through defineState",
           ),
         { dispatch: false },
       ),
-    ],
-  });
+    ]);
   const injector = createEnvironmentInjector(
     [
       { provide: ɵINJECTOR_SCOPE, useValue: "root" },
