@@ -5,6 +5,8 @@ import { Store, type Action } from "@ngrx/store";
  * Captures the current Store and returns a function that dispatches events to it.
  * Must be called in an Angular injection context, such as a field initializer.
  * The returned function can be called later, outside the injection context.
+ * Internal helper; not exported from the package entry point.
+ * @internal
  *
  * @returns A function that publishes an event to the captured Store.
  *

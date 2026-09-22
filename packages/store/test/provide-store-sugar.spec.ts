@@ -4,11 +4,13 @@ import {
   ErrorHandler,
   isDevMode,
   runInInjectionContext,
+  ɵINJECTOR_SCOPE,
 } from "@angular/core";
 import { Store, emptyProps, props } from "@ngrx/store";
 import { INITIAL_OPTIONS } from "@ngrx/store-devtools";
 import { afterEach, expect, expectTypeOf, it, vi } from "vitest";
-import { events, injectPublish, provideStoreSugar } from "../src/index.js";
+import { events, state, provideStoreSugar } from "../src/index.js";
+import { injectPublish } from "../src/inject-publish.js";
 
 const page = events("Page", {
   entered: emptyProps(),
@@ -22,7 +24,10 @@ afterEach(() => {
 });
 function context(store = { dispatch: vi.fn() }) {
   const injector = createEnvironmentInjector(
-    [provideStoreSugar({ devtools: false }), { provide: Store, useValue: store }],
+    [
+      provideStoreSugar({ devtools: false }),
+      { provide: Store, useValue: store },
+    ],
     null!,
   );
   injectors.push(injector);
@@ -34,21 +39,23 @@ function context(store = { dispatch: vi.fn() }) {
 }
 
 it("uses a recognizable default DevTools name in development", () => {
-  if (!isDevMode()) return;
+  expect(isDevMode()).toBe(true);
 
   const defaults = createEnvironmentInjector(
     [ErrorHandler, provideStoreSugar()],
     null!,
   );
+  injectors.push(defaults);
   const custom = createEnvironmentInjector(
     [ErrorHandler, provideStoreSugar({ devtools: { name: "Books" } })],
     null!,
   );
+  injectors.push(custom);
   const disabled = createEnvironmentInjector(
     [ErrorHandler, provideStoreSugar({ devtools: false })],
     null!,
   );
-  injectors.push(defaults, custom, disabled);
+  injectors.push(disabled);
 
   expect(defaults.get(INITIAL_OPTIONS).name).toBe("NgRx Sugar Store");
   expect(custom.get(INITIAL_OPTIONS).name).toBe("Books");
@@ -62,6 +69,7 @@ it("provides and captures an empty root Store", () => {
   );
   injectors.push(injector);
   const store = injector.get(Store);
+  expect(store.selectSignal((value) => value)()).toEqual({});
   const dispatch = vi.spyOn(store, "dispatch");
   runInInjectionContext(injector, () => {
     for (const init of injector.get(APP_INITIALIZER)) init();
@@ -70,6 +78,42 @@ it("provides and captures an empty root Store", () => {
   page.entered.publish();
 
   expect(dispatch).toHaveBeenCalledWith(page.entered());
+});
+
+it("publishes through a registered feature and forwards root configuration", () => {
+  const feature = state("selection", { id: "" }).on(
+    page.selected,
+    (_state, { id }) => ({ id }),
+  );
+  const observed = vi.fn();
+  const injector = createEnvironmentInjector(
+    [
+      { provide: ɵINJECTOR_SCOPE, useValue: "root" },
+      ErrorHandler,
+      provideStoreSugar({
+        devtools: false,
+        metaReducers: [
+          (reducer) => (value, event) => {
+            observed(event);
+            return reducer(value, event);
+          },
+        ],
+        runtimeChecks: { strictActionSerializability: true },
+      }),
+      feature.provide(),
+    ],
+    null!,
+  );
+  injectors.push(injector);
+  runInInjectionContext(injector, () => {
+    for (const init of injector.get(APP_INITIALIZER)) init();
+  });
+  const selected = runInInjectionContext(injector, () =>
+    feature.views.id.signal(),
+  );
+  page.selected.publish({ id: "42" });
+  expect(selected()).toBe("42");
+  expect(observed).toHaveBeenCalledWith(page.selected({ id: "42" }));
 });
 
 it("requires initialization and keeps created events plain", () => {

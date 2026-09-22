@@ -136,6 +136,10 @@ type EventGroup<
  * Acronyms are preserved: loadHTTPError becomes "Load HTTP Error".
  * Supports props(), emptyProps(), and payload creator functions, like NgRx.
  * Creator parameters require explicit types, including parameters with default values.
+ * Calling a creator returns a plain NgRx Action without publishing it.
+ * Its `.publish(...args)` method accepts the same arguments and dispatches the
+ * created event after provideStoreSugar() initializes. Publishing can run
+ * outside an injection context; event creation requires no store registration.
  *
  * @param source - String literal identifying the event source.
  * @param events - Event definitions keyed by camelCase string literals.
@@ -165,6 +169,9 @@ type EventGroup<
  *
  * booksPageEvents.bookSelected.type;
  * // '[Books Page] Book Selected'
+ *
+ * // In a handler, after provideStoreSugar() initializes:
+ * booksPageEvents.bookSelected.publish({ id: '42' });
  * ```
  */
 export function events<

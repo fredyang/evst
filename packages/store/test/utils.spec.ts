@@ -6,7 +6,8 @@ import {
 import { Store } from "@ngrx/store";
 import { of, type Observable } from "rxjs";
 import { afterEach, expect, expectTypeOf, it, vi } from "vitest";
-import { state as createState, injectPublish } from "../src/index.js";
+import { state as createState } from "../src/index.js";
+import { injectPublish } from "../src/inject-publish.js";
 
 const injectors: ReturnType<typeof createEnvironmentInjector>[] = [];
 afterEach(() => {

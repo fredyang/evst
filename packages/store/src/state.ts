@@ -68,13 +68,17 @@ export interface StateDefinition<
   readonly test: {
     getNextState(state: State | undefined, event: Action): State;
   };
-  /** Registers this definition; requires provideStore() at the application root. */
+  /** Registers this definition; requires a root Store, normally from provideStoreSugar(). */
   provide(): ReturnType<typeof provideFeature>;
   /** Adds a handler, preserving inference for each event's payload. */
   on<Creators extends readonly ActionCreator[]>(
     ...args: [...Creators, ReducerTypes<State, Creators>["reducer"]]
   ): StateDefinition<State, ExtraViews>;
-  /** Adds named views; existing names cannot be overwritten. */
+  /**
+   * Adds named memoized views from generated or previously added views.
+   * The callback runs once; its view builder is NgRx's createSelector.
+   * Existing names, including root, cannot be overwritten.
+   */
   extraViews<Added extends Record<string, MemoizedSelector<object, any>>>(
     build: (
       views: StateViews<State> & InjectableViews<ExtraViews>,
@@ -100,7 +104,7 @@ export interface StateDefinition<
  * methods require an Angular injection context.
  *
  * `.provide()` registers the feature and its effects in an application or route
- * injector. NgRx's `provideStore()` is required at the application root.
+ * injector. `provideStoreSugar()` normally supplies the required root Store.
  * Defining state alone does not register it or execute effects.
  *
  * @param name - Key under which the feature is registered in the root store.
@@ -137,8 +141,7 @@ export interface StateDefinition<
  *
  * @example Adding effects and registering state
  * ```ts
- * import { provideStore } from '@ngrx/store';
- * import { state } from '@ngrx-sugar/store';
+ * import { state, provideStoreSugar } from '@ngrx-sugar/store';
  * import { BooksEvents } from './books.events';
  * import { booksEffects } from './books.effects';
  * import { initialBooksState } from './books.initial-state';
@@ -148,7 +151,7 @@ export interface StateDefinition<
  *   .effects(booksEffects);
  *
  * const appConfig = {
- *   providers: [provideStore(), books.provide()],
+ *   providers: [provideStoreSugar(), books.provide()],
  * };
  * ```
  */

@@ -1,6 +1,7 @@
 import { combineReducers, createReducer, on, props } from '@ngrx/store';
 import { expectTypeOf, it } from 'vitest';
-import { events, type ReducerState } from '../src/index.js';
+import { events } from '../src/index.js';
+import type { ReducerState } from '../src/reducer-state.js';
 
 it('infers individual and combined reducer state', () => {
   const counterEvents = events('Counter', { changed: props<{ count: number }>() });
