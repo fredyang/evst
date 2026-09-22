@@ -35,7 +35,7 @@ function createContext() {
 
 it("reads generated and derived views with inferred signal types and equality options", () => {
   const { run, mock, selected } = createContext();
-  const feature = createState("counter", { count: 0 }).extraViews(
+  const feature = createState("counter", { count: 0 }).withViews(
     ({ count }, view) => ({ doubled: view(count, (count) => count * 2) }),
   );
   const view = feature.views.count;
@@ -55,7 +55,7 @@ it("reads generated and derived views with inferred signal types and equality op
 
 it("creates observable views during injection for later subscription", () => {
   const { run, mock } = createContext();
-  const feature = createState("counter", { count: 0 }).extraViews(
+  const feature = createState("counter", { count: 0 }).withViews(
     ({ count }, view) => ({ doubled: view(count, (count) => count * 2) }),
   );
   const view = feature.views.count;
@@ -87,7 +87,7 @@ it("requires an injection context when creating helpers", () => {
 });
 
 it("attaches typed injection methods to root, field, and derived views", () => {
-  const feature = createState("counter", { count: 0 }).extraViews(
+  const feature = createState("counter", { count: 0 }).withViews(
     ({ count }, view) => ({
       doubled: view(count, (value) => value * 2),
     }),

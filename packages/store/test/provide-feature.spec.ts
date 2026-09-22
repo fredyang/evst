@@ -77,7 +77,7 @@ it("combines configured arrays, named records, and classes through state", () =>
   let observed = 0;
   const feature = state("arrayCounter", { count: 0 })
     .on(counted, (state) => ({ count: state.count + 1 }))
-    .effects([
+    .withEffects([
       [{ count }, CounterEffects] as const,
       sideEffect((actions = inject(Actions)) =>
         actions.pipe(

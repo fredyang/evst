@@ -30,12 +30,12 @@ it("infers handlers and preserves independent branches", () => {
 it("composes successive extra views once and retains their types and caches", () => {
   const build = vi.fn();
   const base = state("counter", { count: 0 });
-  const first = base.extraViews(({ count }, view) => {
+  const first = base.withViews(({ count }, view) => {
     build();
     return { doubled: view(count, (n) => n * 2) };
   });
   const next = first
-    .extraViews(({ doubled }, view) => ({
+    .withViews(({ doubled }, view) => ({
       text: view(doubled, (n) => String(n)),
     }))
     .on(add, (s, { amount }) => ({ count: s.count + amount }));
@@ -53,10 +53,10 @@ it("composes successive extra views once and retains their types and caches", ()
   expectTypeOf(next.views.text.observable).returns.toEqualTypeOf<
     import("rxjs").Observable<string>
   >();
-  expect(() => first.extraViews(({ count }) => ({ count }))).toThrow(
+  expect(() => first.withViews(({ count }) => ({ count }))).toThrow(
     "conflicts",
   );
-  expect(() => first.extraViews(({ doubled }) => ({ doubled }))).toThrow(
+  expect(() => first.withViews(({ doubled }) => ({ doubled }))).toThrow(
     "conflicts",
   );
   expect(() => state("bad", { root: 0 })).toThrow("reserved");
@@ -75,7 +75,7 @@ it("registers chained handlers and appends effects", () => {
   const base = state("counter", { count: 0 }).on(add, (s, { amount }) => ({
     count: s.count + amount,
   }));
-  const definition = base.effects(effect(2)).effects(effect(3));
+  const definition = base.withEffects(effect(2)).withEffects(effect(3));
   const injector = createEnvironmentInjector(
     [
       { provide: ɵINJECTOR_SCOPE, useValue: "root" },

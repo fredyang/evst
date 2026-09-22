@@ -64,7 +64,7 @@ it.each(["standalone", "repeated", "state-owned"] as const)(
     });
     const state = createState("counter", { count: 0 })
       .on(counted, (state) => ({ count: state.count + 1 }))
-      .effects(mode === "state-owned" ? [effect] : []);
+      .withEffects(mode === "state-owned" ? [effect] : []);
     const providers = [effect.provide()];
     if (mode === "repeated") providers.push(effect.provide());
     expect(subscriptions).toBe(0);

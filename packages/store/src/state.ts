@@ -79,20 +79,20 @@ export interface StateDefinition<
    * The callback runs once; its view builder is NgRx's createSelector.
    * Existing names, including root, cannot be overwritten.
    */
-  extraViews<Added extends Record<string, MemoizedSelector<object, any>>>(
+  withViews<Added extends Record<string, MemoizedSelector<object, any>>>(
     build: (
       views: StateViews<State> & InjectableViews<ExtraViews>,
       view: typeof createSelector,
     ) => Added,
   ): StateDefinition<State, ExtraViews & Added>;
   /** Appends effect classes, functional effects, named records, or nested arrays. */
-  effects(effects: EffectInput): StateDefinition<State, ExtraViews>;
+  withEffects(effects: EffectInput): StateDefinition<State, ExtraViews>;
 }
 
 /**
  * Defines feature state with typed handlers, memoized views, and optional effects.
  *
- * `.on()`, `.extraViews()`, and `.effects()` return new definitions without
+ * `.on()`, `.withViews()`, and `.withEffects()` return new definitions without
  * changing earlier steps. Every step exposes `views`, `provide()`, and `test`;
  * no final `.build()` call is required. Registration uses the final definition.
  * Handlers must return state immutably.
@@ -126,7 +126,7 @@ export interface StateDefinition<
  *   .on(CounterEvents.added, (current, { amount }) => ({
  *     count: current.count + amount,
  *   }))
- *   .extraViews(({ count }, view) => ({
+ *   .withViews(({ count }, view) => ({
  *     doubled: view(count, count => count * 2),
  *   }));
  *
@@ -148,7 +148,7 @@ export interface StateDefinition<
  *
  * const books = state('books', initialBooksState)
  *   .on(BooksEvents.loaded, (current, { books }) => ({ ...current, books }))
- *   .effects(booksEffects);
+ *   .withEffects(booksEffects);
  *
  * const appConfig = {
  *   providers: [provideStoreSugar(), books.provide()],
@@ -202,7 +202,7 @@ function chainState<
         effects,
         views,
       ),
-    extraViews: (build) => {
+    withViews: (build) => {
       const added = build(views, createSelector);
       for (const key of Object.keys(added)) {
         if (Object.hasOwn(views, key)) {
@@ -222,7 +222,7 @@ function chainState<
       } as StateViews<State> & InjectableViews<ExtraViews & typeof added>;
       return chainState(name, initialState, handlers, effects, combined);
     },
-    effects: (added) =>
+    withEffects: (added) =>
       chainState(name, initialState, handlers, [...effects, added], views),
   };
 }

@@ -1,32 +1,30 @@
-# NgRx Sugar utilities
+# NgRx Sugar
 
-NgRx Sugar removes routine Store wiring so application code can focus on state
-and events. It keeps the public API deliberately small, encourages an
-event-driven model in which something happened rather than a command-driven
-model that dictates what to do, and follows the jQuery principle: write less,
-do more.
+**Less to learn. Less to remember. Less wiring to write.**
 
-NgRx Sugar keeps NgRx infrastructure out of everyday application code.
-Components publish events with `.publish()` and consume views with `.signal()`
-or `.observable()`, without injecting a Store or calling `dispatch()` and
-`select()`. Views wrap memoized selectors, and state definitions bring reducers
-and feature registration together behind a small API. Application code focuses
-on what happened and what to display, while NgRx manages state underneath.
+NgRx Sugar brings the spirit of “write less, do more” to NgRx Store. Four entry
+points cover the everyday workflow: `events`, `state`, `sideEffect`, and
+`provideStoreSugar`. You can forget all the ngrx store api.
 
-Four runtime APIs define the recommended application structure: `events`,
-`state`, `sideEffect`, and `provideStoreSugar`. The types `StateDefinition`,
-`SideEffect`, and `StoreSugarConfig` are also exported. NgRx types such as
-`Action` and `Actions` retain their original names and imports.
+Defining state is fluent and discoverable. Starting with `state(...)`, editor
+completion leads to `.on()`, `.withViews()`, `.withEffects()`, and `.provide()`.
+Handlers, derived views, and registration fit together without remembering a
+collection of separate setup functions.
 
-The package requires compatible Angular and NgRx 22 installations, including
-`@ngrx/store`, `@ngrx/effects`, and `@ngrx/store-devtools`. DevTools is a required
-peer dependency even when registration is disabled, because the module imports it.
+Consuming state is equally direct. Events expose `.publish()`; views expose
+`.signal()` and `.observable()`. Components need no injected Store, `dispatch()`
+calls, or selector wiring. NgRx's Store, reducers, memoized selectors, effects,
+and DevTools still power the application underneath.
+
+The API encourages an event-driven mindset: components describe **what happened**,
+and state handlers and effects decide how to respond. This discourages components
+from issuing commands that coordinate the rest of the application.
 
 ## Defining events
 
-A simplified books page publishes facts about user interactions. The API
-publishes facts about the results. The same page event can update state and
-trigger an effect without the component coordinating those reactions.
+This guide builds a small books page. Entering the page starts loading books;
+selecting a book displays its title. Page interactions and API outcomes have
+separate event sources.
 
 ```ts
 // books.events.ts
@@ -49,26 +47,31 @@ export const BooksApiEvents = events("Books API", {
 });
 ```
 
-`entered` describes what happened at the page. The component does not need to
-issue a `loadBooks` command or know which effects react to the event.
+`entered` reports a page interaction. The component does not need to know that
+one listener sets a loading flag and another fetches books. More listeners can
+react to that event without changing the component.
 
-Keys remain camelCase while action labels split words and preserve acronyms.
-Keys must start with a lowercase ASCII letter and contain only ASCII letters
-and digits. Payload creator functions are also supported; their parameters
-require explicit types. Calling a creator returns a plain NgRx action:
+Calling a creator constructs a plain NgRx action. Publishing it is a separate
+operation, shown in the component below.
 
 ```ts
 BooksPageEvents.bookSelected({ id: "42" });
 // { type: '[Books Page] Book Selected', id: '42' }
 ```
 
+Event keys use camelCase; generated labels separate words and preserve acronyms.
+Keys start with a lowercase ASCII letter and contain only ASCII letters and
+digits. Payload creator functions are supported as well as `props()`.
+
 ## Defining state and views
 
-`state(name, initialState)` combines typed handlers and memoized views through
-an immutable chaining API. No final `.build()` call is required.
+`state()` starts with a feature name and initial values. `.on()` describes how
+state responds to an event. `.withViews()` adds derived values using the views
+already available on the definition.
 
 ```ts
 // books.state.ts
+import { loadBooks } from "./books.effects";
 import { state } from "@ngrx-sugar/store";
 import { BooksApiEvents, BooksPageEvents, type Book } from "./books.events";
 
@@ -88,45 +91,53 @@ const initialState: BooksState = {
 
 export const booksState = state("books", initialState)
   .on(BooksPageEvents.entered, (state) => ({
-    ...state, loading: true, error: null,
+    ...state,
+    loading: true,
+    error: null,
   }))
   .on(BooksApiEvents.booksLoaded, (state, { books }) => ({
-    ...state, books, loading: false,
+    ...state,
+    books,
+    loading: false,
   }))
   .on(BooksApiEvents.booksLoadFailed, (state, { message }) => ({
-    ...state, loading: false, error: message,
+    ...state,
+    loading: false,
+    error: message,
   }))
   .on(BooksPageEvents.bookSelected, (state, { id }) => ({
-    ...state, selectedId: id,
+    ...state,
+    selectedId: id,
   }))
-  .extraViews(({ books, selectedId }, view) => ({
-    selectedBook: view(books, selectedId, (books, id) =>
-      books.find((book) => book.id === id) ?? null,
+  .withViews(({ books, selectedId }, view) => ({
+    selectedBook: view(
+      books,
+      selectedId,
+      (books, id) => books.find((book) => book.id === id) ?? null,
     ),
-  }));
+  }))
+  .withEffects([loadBooks]);
 ```
 
-The definition exposes `views`, `provide()`, and `test`. `views.root` selects
-all feature state. Each own enumerable property in `initialState` gets a view
-with the same name, such as `views.books` and `views.loading`. State fields
-should be initialized explicitly.
+Every initialized state field gets a view automatically: `views.books`,
+`views.loading`, and so on. `views.root` reads the whole feature state.
+`views.selectedBook` is the derived view added above.
 
-The `extraViews` callback receives the generated views and a `view` builder
-that aliases NgRx's `createSelector`. Its inputs are views; its final callback
-receives their values. `selectedBook` reuses its cached result when only
-`loading` or `error` changes. Input comparisons use NgRx's default `===`
-comparison, so updates must remain immutable.
+The supplied `view` builder uses NgRx's `createSelector`, with type inference
+and memoization. `selectedBook` recalculates when `books` or `selectedId`
+changes, and reuses its result when only `loading` or `error` changes. State
+updates must remain immutable.
 
-Each chained call returns a new definition. `.on()` appends a handler and
-accepts multiple event creators before the handler. `.extraViews()` runs its
-callback once, can compose previously added views, and rejects duplicate
-names. `root` is reserved. Existing definitions and view identities are
-preserved when a chain is extended.
+The chain needs no final `.build()` call. Each call returns a new definition,
+preserving existing definitions and view identities. `.on()` also accepts
+multiple event creators before a handler. Additional `.withViews()` calls
+can compose earlier views; duplicate names and the reserved name `root` are
+not allowed.
 
 ## Defining effects
 
-The page's `entered` event also triggers an HTTP request. The effect emits a
-success or failure event, and the state handlers above react to the result.
+The same `entered` event that sets `loading` also triggers a request. The effect
+returns an API outcome event, which the state handles independently.
 
 ```ts
 // books.effects.ts
@@ -145,9 +156,11 @@ export const loadBooks = sideEffect(
         http.get<Book[]>("/api/books").pipe(
           map((books) => BooksApiEvents.booksLoaded({ books })),
           catchError(() =>
-            of(BooksApiEvents.booksLoadFailed({
-              message: "Books could not be loaded.",
-            })),
+            of(
+              BooksApiEvents.booksLoadFailed({
+                message: "Books could not be loaded.",
+              }),
+            ),
           ),
         ),
       ),
@@ -155,18 +168,18 @@ export const loadBooks = sideEffect(
 );
 ```
 
-The example assumes `/api/books` returns a JSON array of books. `exhaustMap`
-ignores repeated page-entry events while a request is pending. Handling errors
-inside the request keeps the effect listening for future events.
+The example expects `/api/books` to return a JSON array of books. `exhaustMap`
+ignores repeated entries while a request is pending. Catching errors inside the
+request keeps the effect listening for future events.
 
-`sideEffect()` creates a callable functional effect. Emitted events are
-published automatically; calling `.publish()` inside this pipeline is
-unnecessary. `{ dispatch: false }` supports effects that do not emit events.
-Effects remain callable with explicit dependencies in tests.
+NgRx dispatches events emitted by `sideEffect()` automatically. Effects that
+only perform side effects can use `{ dispatch: false }`. This helper defines
+NgRx observable effects; Angular's signal-based `effect()` is a separate API.
 
 ## Consuming events and views
 
-Components read views and publish events describing interactions:
+The component reads views and announces interactions. It does not inject a Store
+or coordinate the request and its state changes.
 
 ```ts
 // books-page.component.ts
@@ -177,8 +190,12 @@ import { booksState } from "./books.state";
 @Component({
   selector: "app-books-page",
   template: `
-    @if (loading()) { <p>Loading books…</p> }
-    @if (error(); as message) { <p>{{ message }}</p> }
+    @if (loading()) {
+      <p>Loading books…</p>
+    }
+    @if (error(); as message) {
+      <p>{{ message }}</p>
+    }
     @for (book of books(); track book.id) {
       <button (click)="selectBook(book.id)">{{ book.title }}</button>
     }
@@ -203,23 +220,25 @@ export class BooksPageComponent implements OnInit {
 }
 ```
 
-Every view, including `root` and extra views, has `.signal(options?)` and
-`.observable()` methods. For RxJS composition, a component field can use
-`readonly books$ = booksState.views.books.observable()` instead.
+Every view supports `.signal(options?)` and `.observable()`. RxJS consumers
+can use a component field such as:
 
-Both methods require an injection context, such as a component field
-initializer, and resolve that injector's Store. Observable views must be
-created before entering asynchronous callbacks; subscriptions may run later.
-Views also remain callable memoized selectors with their projector and cache
-methods.
+```ts
+readonly books$ = booksState.views.books.observable();
+```
 
-`.publish()` accepts the same typed arguments as creating an event. It can run
-in lifecycle hooks, event handlers, and asynchronous callbacks after
-`provideStoreSugar()` initializes. No injected publishing service is needed.
+View methods require an injection context, such as a component field initializer.
+They resolve the local Store at that point; observable subscriptions may happen
+later. Views also remain usable as regular NgRx memoized selectors.
 
-## Providing the Store and state
+Event `.publish()` methods accept the same typed arguments as their creators.
+After application initialization, they work in lifecycle hooks, event handlers,
+and asynchronous callbacks without an injection context.
 
-The application registers the root Store, feature state, and effect together:
+## Providing state
+
+The application supplies the root Store once. A state definition attaches its
+effects and registers the feature through the same fluent API:
 
 ```ts
 // app.config.ts
@@ -227,55 +246,58 @@ import { type ApplicationConfig } from "@angular/core";
 import { provideHttpClient } from "@angular/common/http";
 import { provideStoreSugar } from "@ngrx-sugar/store";
 import { booksState } from "./books.state";
-import { loadBooks } from "./books.effects";
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(),
-    provideStoreSugar({ devtools: { name: "Books" } }),
-    booksState.effects([loadBooks]).provide(),
+    provideStoreSugar(),
+    booksState.provide(),
   ],
 };
 ```
 
-`.effects()` returns a new definition containing the registered effects while
-preserving the views used by the component. `.provide()` registers that
-feature and its effects. Feature providers can also belong to a route.
-Standalone effects can be registered with `loadBooks.provide()`; an effect
-should be registered only once.
+`provideStoreSugar()` registers the root Store, enables publishing, and adds
+Redux DevTools in Angular development mode. Separate `provideStore()` and
+`provideStoreDevtools()` calls are unnecessary. Its options also accept NgRx
+root Store configuration, such as `runtimeChecks` and `metaReducers`.
 
-`.effects()` accepts effect classes, named functional-effect records,
-individual functional effects, or arrays combining these forms, including
-readonly arrays. Named records preserve descriptive effect keys; individual
-functions use the key `effect`.
+`booksState.provide()` registers the feature and the effects attached with
+`.withEffects([loadBooks])` in its definition. Feature
+providers can live in route providers instead; `provideStoreSugar()` belongs
+at the application root.
 
-When state and effect modules import each other, view access must be deferred
-until the functional effect runs. Separating shared definitions into another
-module avoids that circular dependency.
+Standalone effects expose their own `.provide()`. An effect should be registered
+once, either through its state or independently. `.withEffects()` accepts individual
+functional effects, effect classes, named functional-effect records, and arrays
+combining these forms.
 
-`provideStoreSugar()` creates an empty NgRx root Store, enables Redux DevTools
-in Angular development mode, and enables event creator `.publish()` methods.
-It replaces separate `provideStore()` and `provideStoreDevtools()` calls and
-belongs in the application shell. Features use `.provide()` or `provideState()`.
+## Understanding registration and compatibility
 
-The root reducer map is empty, so no reducer is registered directly at the root.
-Registered feature keys still form the Store's runtime state. DevTools can be
-disabled with `devtools: false`; it is never registered outside Angular
-development mode. Omitted DevTools options use the connection name
-`NgRx Sugar Store`; custom objects and factories are forwarded without merging.
+NgRx Sugar reduces the public surface while retaining NgRx interoperability.
+Events are NgRx actions, views are memoized selectors, and NgRx types such as
+`Action` retain their original names. The package also exports `StateDefinition`,
+`SideEffect`, and `StoreSugarConfig` types.
 
-One active Store is supported per loaded Sugar module. A different active Store
-is rejected, and registration is released when its owning injector is destroyed.
-Repeated registrations of the same Store remain active until all owners are destroyed.
-Federated applications can share the root Store and Sugar singleton, with remote
-features registered through `provideState()`. Concurrent SSR applications and
-independent stores require NgRx providers and an injected `Store` instead of
-`provideStoreSugar()` and event creator `.publish()` methods.
-View `.signal()` and `.observable()` methods still resolve their local injection context.
+`provideStoreSugar()` starts with an empty root reducer map. Features registered
+through `.provide()` or NgRx's `provideState()` supply the state keys. DevTools
+uses the default name `NgRx Sugar Store`; `devtools: false` disables it. Custom
+options are forwarded without merging, and production mode skips registration.
 
-## Testing state
+Direct event publishing uses one active Store per loaded Sugar module. Module
+federation can share the root Store and Sugar singleton while remotes register
+features. Concurrent SSR applications or independent Stores require NgRx
+providers and an injected Store for publishing. View methods still resolve
+their local injection context. Destroying the owning injector releases the
+publishing registration; a different active Store is rejected.
 
-Pure state tests need no Angular injector or root Store:
+The example keeps events, state, and effects in separate modules without a
+circular import. If state and effect modules depend on each other, view access
+must be deferred until the effect runs; shared definitions in a separate module
+can avoid the cycle.
+
+## Testing
+
+State transitions can be tested without an Angular injector or a Store:
 
 ```ts
 import { expect, it } from "vitest";
@@ -294,17 +316,36 @@ it("selects a book after it is loaded", () => {
   );
 
   expect(selected.selectedId).toBe(book.id);
-  expect(booksState.views.selectedBook.projector(
-    selected.books, selected.selectedId,
-  )).toEqual(book);
+  expect(
+    booksState.views.selectedBook.projector(
+      selected.books,
+      selected.selectedId,
+    ),
+  ).toEqual(book);
 });
 ```
 
-Component tests that call `.publish()` can register `provideStoreSugar({ devtools:
-false })` before `provideMockStore(...)` in TestBed providers. The mock then replaces
-the injected Store. TestBed initialization runs the publishing initializer, and
-injector teardown clears registration between tests.
+`test` is intended for tests by convention. Effects remain callable with explicit
+dependencies, so tests can supply an event stream and an HTTP stub.
 
-## Developing
+Component tests that publish events can register
+`provideStoreSugar({ devtools: false })` before `provideMockStore(...)` in TestBed
+providers. TestBed initialization captures the mock Store, and injector teardown
+releases the registration.
 
-From the project root, `npm install` installs workspace dependencies and `npm test --workspace @ngrx-sugar/store` builds the package, checks test types, and runs the utility tests. `npm pack --workspace @ngrx-sugar/store` produces an installable archive.
+## Installing and developing
+
+The package requires compatible Angular and NgRx 22 dependencies, including
+`@ngrx/store`, `@ngrx/effects`, and `@ngrx/store-devtools`. DevTools remains a
+required peer dependency when disabled because the provider module imports it.
+
+From the repository root:
+
+```sh
+npm install
+npm test --workspace @ngrx-sugar/store
+npm pack --workspace @ngrx-sugar/store
+```
+
+The test command builds the package, checks test types, and runs the unit tests.
+The pack command produces an installable archive.

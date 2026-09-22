@@ -35,7 +35,7 @@ export type SideEffect<
  *   timer(300_000).pipe(map(() => userEvents.idleTimeout()))
  * );
  * // Application providers: [provideStoreSugar(), idleEffect.provide()]
- * // State-owned effects: state('feature', initialState).effects([idleEffect])
+ * // State-owned effects: state('feature', initialState).withEffects([idleEffect])
  * ```
  */
 export function sideEffect<Source extends () => Observable<unknown>>(
