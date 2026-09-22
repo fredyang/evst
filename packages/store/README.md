@@ -2,9 +2,9 @@
 
 **Less to learn. Less to remember. Less wiring to write.**
 
-NgRx Sugar brings the spirit of “write less, do more” to NgRx Store. Four entry
-points cover the everyday workflow: `events`, `state`, `sideEffect`, and
-`provideStoreSugar`. You can forget all the ngrx store api.
+NgRx Sugar brings the spirit of “write less, do more” to NgRx Store. Just four
+entry points to remember: `events`, `state`, `sideEffect`, and
+`provideStoreSugar`, with a fluent API guiding the rest.
 
 Defining state is fluent and discoverable. Starting with `state(...)`, editor
 completion leads to `.on()`, `.withViews()`, `.withEffects()`, and `.provide()`.
