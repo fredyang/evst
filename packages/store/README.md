@@ -27,8 +27,8 @@ from issuing commands that coordinate the rest of the application.
 flowchart TB
   component[Component] -->|reads| view[View]
   component -->|publishes| event[Event]
-  event -->|handled by .on| state[State]
-  event -->|handled by .ofType| effect[SideEffect]
+  event -->|handled by| state[State]
+  event -->|handled by| effect[SideEffect]
   effect -->|publishes| event
   state -->|exposes| view
 ```
