@@ -6,6 +6,13 @@ event-driven model in which something happened rather than a command-driven
 model that dictates what to do, and follows the jQuery principle: write less,
 do more.
 
+NgRx Sugar keeps NgRx infrastructure out of everyday application code.
+Components publish events with `.publish()` and consume views with `.signal()`
+or `.observable()`, without injecting a Store or calling `dispatch()` and
+`select()`. Views wrap memoized selectors, and state definitions bring reducers
+and feature registration together behind a small API. Application code focuses
+on what happened and what to display, while NgRx manages state underneath.
+
 Four runtime APIs define the recommended application structure: `events`,
 `state`, `sideEffect`, and `provideStoreSugar`. The types `StateDefinition`,
 `SideEffect`, and `StoreSugarConfig` are also exported. NgRx types such as
@@ -15,196 +22,241 @@ The package requires compatible Angular and NgRx 22 installations, including
 `@ngrx/store`, `@ngrx/effects`, and `@ngrx/store-devtools`. DevTools is a required
 peer dependency even when registration is disabled, because the module imports it.
 
-## Defining state
+## Defining events
 
-`state(name, initialState)` combines typed handlers, memoized views, and optional
-effects through an immutable chaining API. No final `.build()` call is required.
-
-```ts
-import { props } from "@ngrx/store";
-import { events, state } from "@ngrx-sugar/store";
-
-export const CounterEvents = events("Counter", {
-  changed: props<{ amount: number }>(),
-});
-
-export const counter = state("counter", { count: 0 })
-  .on(CounterEvents.changed, (state, { amount }) => ({
-    count: state.count + amount,
-  }))
-  .extraViews(({ count }, view) => ({
-    doubled: view(count, (value) => value * 2),
-  }));
-
-// Application or route providers, with provideStoreSugar() at the application root:
-// providers: [counter.provide()]
-// Component selection: counter.views.count.signal()
-```
-
-The returned state definition exposes `views`, `provide()`, and `test`.
-`views.root` selects the entire feature state, and each own
-enumerable property present in `initialState` gets a view with the same name,
-such as `views.count`. State fields should be initialized explicitly.
-
-The optional `extraViews` callback receives the generated views and a `view`
-builder. The builder aliases NgRx's `createSelector`, preserving type inference
-and memoization without requiring an import. Its inputs are views; its final
-callback receives their actual values. Returned views are used directly.
+A simplified books page publishes facts about user interactions. The API
+publishes facts about the results. The same page event can update state and
+trigger an effect without the component coordinating those reactions.
 
 ```ts
-const definition = state("books", initialState);
-definition.extraViews(({ books, search }, view) => ({
-  searchResults: view(books, search, (books, search) =>
-    search.ids.map((id) => books.entities[id]),
-  ),
-}));
-```
-
-This calculation reuses its previous result when only `collection` changes.
-It recalculates when either input view returns a different value, using NgRx's
-default `===` comparison. Updates must remain immutable. Views can also be
-composed by defining a local view and passing it into another builder call.
-`root` is reserved, and extra views cannot overwrite default views.
-
-`test.getNextState` provides typed access for isolated state transition tests:
-
-```ts
-const next = counter.test.getNextState(
-  undefined,
-  CounterEvents.changed({ amount: 3 }),
-);
-```
-
-The `test` property is intended for tests by convention; it is not access-restricted.
-
-Each chained call returns a new definition. `.on()` appends a handler and accepts
-multiple event creators before the handler. `.extraViews()` can compose previously
-added views and rejects duplicate names. Its callback runs once per call.
-Existing definitions and view identities are preserved when a chain is extended.
-
-`.effects()` appends and accepts an effect class, a named functional-effect record, an individual
-functional effect, or arrays combining these forms, including readonly arrays.
-For example, `.effects([loadCollection, addBookToCollection])` registers both
-functional effects without a named object. Inline `sideEffect(...)` calls
-are also accepted as array entries. Named records preserve descriptive effect
-keys for diagnostics; individual functions are registered under the key `effect`.
-
-`counter.provide()` takes no arguments and registers the state and its configured
-effects. All effects belonging to a state are declared in its `.effects()` calls.
-
-When state and effect modules import each other, view access must be deferred
-until the functional effect runs. Module-level reads can access uninitialized
-bindings. Circular imports remain sensitive to module evaluation order; deferring
-view access does not make every import order safe. Separating shared definitions
-into another module avoids that dependency when needed.
-
-## Creating events
-
-```ts
+// books.events.ts
 import { emptyProps, props } from "@ngrx/store";
 import { events } from "@ngrx-sugar/store";
 
-const booksPageEvents = events("Books Page", {
+export interface Book {
+  id: string;
+  title: string;
+}
+
+export const BooksPageEvents = events("Books Page", {
   entered: emptyProps(),
   bookSelected: props<{ id: string }>(),
 });
 
+export const BooksApiEvents = events("Books API", {
+  booksLoaded: props<{ books: Book[] }>(),
+  booksLoadFailed: props<{ message: string }>(),
+});
+```
+
+`entered` describes what happened at the page. The component does not need to
+issue a `loadBooks` command or know which effects react to the event.
+
+Keys remain camelCase while action labels split words and preserve acronyms.
+Keys must start with a lowercase ASCII letter and contain only ASCII letters
+and digits. Payload creator functions are also supported; their parameters
+require explicit types. Calling a creator returns a plain NgRx action:
+
+```ts
+BooksPageEvents.bookSelected({ id: "42" });
 // { type: '[Books Page] Book Selected', id: '42' }
-booksPageEvents.bookSelected({ id: "42" });
 ```
 
-Keys remain camelCase while action labels split words and preserve acronyms. Keys must start with a lowercase ASCII letter and contain only ASCII letters and digits. Payload creator functions are also supported; their parameters require explicit types.
+## Defining state and views
 
-## Defining standalone effects
-
-`sideEffect()` creates a callable functional effect. Emitted events are dispatched
-by default; `{ dispatch: false }` supports effects that only perform side effects.
-The returned effect exposes `.provide()` for application or route providers,
-with a root Store normally supplied by `provideStoreSugar()`.
+`state(name, initialState)` combines typed handlers and memoized views through
+an immutable chaining API. No final `.build()` call is required.
 
 ```ts
-import { timer, map } from "rxjs";
-import { sideEffect, provideStoreSugar } from "@ngrx-sugar/store";
-import { userEvents } from "./user.events";
+// books.state.ts
+import { state } from "@ngrx-sugar/store";
+import { BooksApiEvents, BooksPageEvents, type Book } from "./books.events";
 
-const idleEffect = sideEffect(() =>
-  timer(300_000).pipe(map(() => userEvents.idleTimeout())),
-);
+interface BooksState {
+  books: Book[];
+  selectedId: string | null;
+  loading: boolean;
+  error: string | null;
+}
 
-const appConfig = {
-  providers: [provideStoreSugar(), idleEffect.provide()],
+const initialState: BooksState = {
+  books: [],
+  selectedId: null,
+  loading: false,
+  error: null,
 };
+
+export const booksState = state("books", initialState)
+  .on(BooksPageEvents.entered, (state) => ({
+    ...state, loading: true, error: null,
+  }))
+  .on(BooksApiEvents.booksLoaded, (state, { books }) => ({
+    ...state, books, loading: false,
+  }))
+  .on(BooksApiEvents.booksLoadFailed, (state, { message }) => ({
+    ...state, loading: false, error: message,
+  }))
+  .on(BooksPageEvents.bookSelected, (state, { id }) => ({
+    ...state, selectedId: id,
+  }))
+  .extraViews(({ books, selectedId }, view) => ({
+    selectedBook: view(books, selectedId, (books, id) =>
+      books.find((book) => book.id === id) ?? null,
+    ),
+  }));
 ```
 
-Effects also remain callable with explicit dependencies in tests. State-owned
-effects belong in `state('feature', initialState).effects([idleEffect])` and are registered
-by that state's `.provide()` method.
+The definition exposes `views`, `provide()`, and `test`. `views.root` selects
+all feature state. Each own enumerable property in `initialState` gets a view
+with the same name, such as `views.books` and `views.loading`. State fields
+should be initialized explicitly.
 
-## Developing
+The `extraViews` callback receives the generated views and a `view` builder
+that aliases NgRx's `createSelector`. Its inputs are views; its final callback
+receives their values. `selectedBook` reuses its cached result when only
+`loading` or `error` changes. Input comparisons use NgRx's default `===`
+comparison, so updates must remain immutable.
 
-From the project root, `npm install` installs workspace dependencies and `npm test --workspace @ngrx-sugar/store` builds the package, checks test types, and runs the utility tests. `npm pack --workspace @ngrx-sugar/store` produces an installable archive.
+Each chained call returns a new definition. `.on()` appends a handler and
+accepts multiple event creators before the handler. `.extraViews()` runs its
+callback once, can compose previously added views, and rejects duplicate
+names. `root` is reserved. Existing definitions and view identities are
+preserved when a chain is extended.
 
-## Reading views and publishing events
+## Defining effects
 
-Every view exposed by `state()`, including `root`, generated field views,
-and returned `extraViews`, has `.signal(options?)` and `.observable()` methods:
+The page's `entered` event also triggers an HTTP request. The effect emits a
+success or failure event, and the state handlers above react to the result.
 
 ```ts
-readonly count = counter.views.count.signal();
-readonly count$ = counter.views.count.observable();
+// books.effects.ts
+import { inject } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Actions, ofType } from "@ngrx/effects";
+import { sideEffect } from "@ngrx-sugar/store";
+import { catchError, exhaustMap, map, of } from "rxjs";
+import { BooksApiEvents, BooksPageEvents, type Book } from "./books.events";
+
+export const loadBooks = sideEffect(
+  (events$ = inject(Actions), http = inject(HttpClient)) =>
+    events$.pipe(
+      ofType(BooksPageEvents.entered),
+      exhaustMap(() =>
+        http.get<Book[]>("/api/books").pipe(
+          map((books) => BooksApiEvents.booksLoaded({ books })),
+          catchError(() =>
+            of(BooksApiEvents.booksLoadFailed({
+              message: "Books could not be loaded.",
+            })),
+          ),
+        ),
+      ),
+    ),
+);
 ```
 
-Both methods require an injection context. They resolve the current store when
-called, so a shared view can be used with different injectors. Views remain
-callable memoized selectors with their original projector and cache methods.
+The example assumes `/api/books` returns a JSON array of books. `exhaustMap`
+ignores repeated page-entry events while a request is pending. Handling errors
+inside the request keeps the effect listening for future events.
 
-Event creator `.publish()` methods can run in lifecycle hooks, event handlers,
-and asynchronous callbacks after `provideStoreSugar()` initializes.
+`sideEffect()` creates a callable functional effect. Emitted events are
+published automatically; calling `.publish()` inside this pipeline is
+unnecessary. `{ dispatch: false }` supports effects that do not emit events.
+Effects remain callable with explicit dependencies in tests.
+
+## Consuming events and views
+
+Components read views and publish events describing interactions:
 
 ```ts
-import { Component } from "@angular/core";
-import { counter, CounterEvents } from "./counter.state";
+// books-page.component.ts
+import { Component, type OnInit } from "@angular/core";
+import { BooksPageEvents } from "./books.events";
+import { booksState } from "./books.state";
 
-@Component({ selector: "app-counter", template: "{{ count() }}" })
-export class CounterComponent {
-  readonly count = counter.views.count.signal();
-  readonly count$ = counter.views.count.observable();
+@Component({
+  selector: "app-books-page",
+  template: `
+    @if (loading()) { <p>Loading books…</p> }
+    @if (error(); as message) { <p>{{ message }}</p> }
+    @for (book of books(); track book.id) {
+      <button (click)="selectBook(book.id)">{{ book.title }}</button>
+    }
+    @if (selectedBook(); as book) {
+      <h2>Selected: {{ book.title }}</h2>
+    }
+  `,
+})
+export class BooksPageComponent implements OnInit {
+  readonly books = booksState.views.books.signal();
+  readonly loading = booksState.views.loading.signal();
+  readonly error = booksState.views.error.signal();
+  readonly selectedBook = booksState.views.selectedBook.signal();
 
-  increment() {
-    CounterEvents.changed.publish({ amount: 1 });
+  ngOnInit() {
+    BooksPageEvents.entered.publish();
+  }
+
+  selectBook(id: string) {
+    BooksPageEvents.bookSelected.publish({ id });
   }
 }
 ```
 
-Observable views must be created during injection, before entering asynchronous
-callbacks; their subscriptions can run later.
+Every view, including `root` and extra views, has `.signal(options?)` and
+`.observable()` methods. For RxJS composition, a component field can use
+`readonly books$ = booksState.views.books.observable()` instead.
 
-## Publishing through event creators
+Both methods require an injection context, such as a component field
+initializer, and resolve that injector's Store. Observable views must be
+created before entering asynchronous callbacks; subscriptions may run later.
+Views also remain callable memoized selectors with their projector and cache
+methods.
 
-`provideStoreSugar()` creates an empty NgRx root Store, enables Redux DevTools
-in Angular development mode, and enables direct publishing through event creators.
-Feature state is registered through `.provide()` or `provideState()`.
-This root provider replaces separate `provideStore()` and
-`provideStoreDevtools()` calls; it belongs in the application shell, not lazy routes.
+`.publish()` accepts the same typed arguments as creating an event. It can run
+in lifecycle hooks, event handlers, and asynchronous callbacks after
+`provideStoreSugar()` initializes. No injected publishing service is needed.
+
+## Providing the Store and state
+
+The application registers the root Store, feature state, and effect together:
 
 ```ts
-// Application providers:
-providers: [
-  provideStoreSugar({
-    devtools: { name: "Books" },
-    runtimeChecks: { strictActionSerializability: true },
-  }),
-  books.provide(),
-];
+// app.config.ts
+import { type ApplicationConfig } from "@angular/core";
+import { provideHttpClient } from "@angular/common/http";
+import { provideStoreSugar } from "@ngrx-sugar/store";
+import { booksState } from "./books.state";
+import { loadBooks } from "./books.effects";
 
-// Lifecycle hooks, event handlers, or asynchronous callbacks:
-CollectionPageEvents.enter.publish();
-SelectedBookPageEvents.addBook.publish({ book });
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideHttpClient(),
+    provideStoreSugar({ devtools: { name: "Books" } }),
+    booksState.effects([loadBooks]).provide(),
+  ],
+};
 ```
 
-Publishing accepts the same typed arguments as creating an event. Published
-values remain plain NgRx actions, and creators retain their action type and
-reducer/effect compatibility. Registration must finish before publishing.
+`.effects()` returns a new definition containing the registered effects while
+preserving the views used by the component. `.provide()` registers that
+feature and its effects. Feature providers can also belong to a route.
+Standalone effects can be registered with `loadBooks.provide()`; an effect
+should be registered only once.
+
+`.effects()` accepts effect classes, named functional-effect records,
+individual functional effects, or arrays combining these forms, including
+readonly arrays. Named records preserve descriptive effect keys; individual
+functions use the key `effect`.
+
+When state and effect modules import each other, view access must be deferred
+until the functional effect runs. Separating shared definitions into another
+module avoids that circular dependency.
+
+`provideStoreSugar()` creates an empty NgRx root Store, enables Redux DevTools
+in Angular development mode, and enables event creator `.publish()` methods.
+It replaces separate `provideStore()` and `provideStoreDevtools()` calls and
+belongs in the application shell. Features use `.provide()` or `provideState()`.
 
 The root reducer map is empty, so no reducer is registered directly at the root.
 Registered feature keys still form the Store's runtime state. DevTools can be
@@ -227,14 +279,24 @@ Pure state tests need no Angular injector or root Store:
 
 ```ts
 import { expect, it } from "vitest";
-import { counter, CounterEvents } from "./counter.state";
+import { booksState } from "./books.state";
+import { BooksApiEvents, BooksPageEvents } from "./books.events";
 
-it("adds the requested amount", () => {
-  const next = counter.test.getNextState(
+it("selects a book after it is loaded", () => {
+  const book = { id: "42", title: "The Hobbit" };
+  const loaded = booksState.test.getNextState(
     undefined,
-    CounterEvents.changed({ amount: 3 }),
+    BooksApiEvents.booksLoaded({ books: [book] }),
   );
-  expect(next).toEqual({ count: 3 });
+  const selected = booksState.test.getNextState(
+    loaded,
+    BooksPageEvents.bookSelected({ id: book.id }),
+  );
+
+  expect(selected.selectedId).toBe(book.id);
+  expect(booksState.views.selectedBook.projector(
+    selected.books, selected.selectedId,
+  )).toEqual(book);
 });
 ```
 
@@ -242,3 +304,7 @@ Component tests that call `.publish()` can register `provideStoreSugar({ devtool
 false })` before `provideMockStore(...)` in TestBed providers. The mock then replaces
 the injected Store. TestBed initialization runs the publishing initializer, and
 injector teardown clears registration between tests.
+
+## Developing
+
+From the project root, `npm install` installs workspace dependencies and `npm test --workspace @ngrx-sugar/store` builds the package, checks test types, and runs the utility tests. `npm pack --workspace @ngrx-sugar/store` produces an installable archive.
