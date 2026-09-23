@@ -2,10 +2,10 @@
 
 Utilities and an ESLint plugin for event-oriented NgRx applications.
 
-| Package | Purpose |
-| --- | --- |
-| [@ngrx-sugar/store](packages/store/README.md) | `events`, `state`, `task`, and `provideStoreSugar` |
-| [@ngrx-sugar/eslint](packages/eslint/README.md) | The `good-action-hygiene` ESLint rule |
+| Package                                         | Purpose                                            |
+| ----------------------------------------------- | -------------------------------------------------- |
+| [@ngrx-sugar/store](packages/store/README.md)   | `events`, `state`, `task`, and `provideStoreSugar` |
+| [@ngrx-sugar/eslint](packages/eslint/README.md) | The `good-action-hygiene` ESLint rule              |
 
 Each package has its own manifest, source, tests, and build output. The root is a private npm workspace.
 

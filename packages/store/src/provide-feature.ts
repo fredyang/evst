@@ -11,10 +11,7 @@ import { provideState, type Action, type ActionReducer } from "@ngrx/store";
 
 type EffectSource = Parameters<typeof provideEffects>[number];
 /** A task class, named task record, functional task, or array of these. */
-export type TaskInput =
-  | EffectSource
-  | FunctionalEffect
-  | readonly TaskInput[];
+export type TaskInput = EffectSource | FunctionalEffect | readonly TaskInput[];
 
 // Preserve source identity so repeated registration follows NgRx's deduplication.
 const functionalSources = new WeakMap<

@@ -1,5 +1,5 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  test: { include: ['test/**/*.spec.ts'], setupFiles: ['@angular/compiler'] },
+  test: { include: ["test/**/*.spec.ts"], setupFiles: ["@angular/compiler"] },
 });

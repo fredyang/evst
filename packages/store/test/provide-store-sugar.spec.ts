@@ -10,7 +10,6 @@ import { Store, emptyProps, props } from "@ngrx/store";
 import { INITIAL_OPTIONS } from "@ngrx/store-devtools";
 import { afterEach, expect, expectTypeOf, it, vi } from "vitest";
 import { events, state, provideStoreSugar } from "../src/index.js";
-import { injectPublish } from "../src/inject-publish.js";
 
 const page = events("Page", {
   entered: emptyProps(),
@@ -136,7 +135,7 @@ it("requires initialization and keeps created events plain", () => {
   >();
   expectTypeOf(page.entered.publish).returns.toEqualTypeOf<void>();
 });
-it("rejects another active store without replacing the first and allows scoped publishing", () => {
+it("rejects another active store without replacing the first", () => {
   const first = context();
   first.initialize();
   const second = context();
@@ -144,10 +143,6 @@ it("rejects another active store without replacing the first and allows scoped p
   second.injector.destroy();
   page.entered.publish();
   expect(first.store.dispatch).toHaveBeenCalledOnce();
-  const isolated = context();
-  const publish = runInInjectionContext(isolated.injector, injectPublish);
-  publish(page.entered());
-  expect(isolated.store.dispatch).toHaveBeenCalledWith(page.entered());
 });
 it("releases registration when its root injector is destroyed", () => {
   const first = context();

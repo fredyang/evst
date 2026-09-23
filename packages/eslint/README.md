@@ -19,15 +19,15 @@ The generated `ngrx-sugar-eslint-0.1.0.tgz` can be installed in a consuming proj
 Flat configuration (`eslint.config.mjs`):
 
 ```js
-import tseslint from 'typescript-eslint';
-import ngrxSugar from '@ngrx-sugar/eslint';
+import tseslint from "typescript-eslint";
+import ngrxSugar from "@ngrx-sugar/eslint";
 
 export default [
   {
-    files: ['**/*.ts'],
+    files: ["**/*.ts"],
     languageOptions: { parser: tseslint.parser },
-    plugins: { 'ngrx-sugar': ngrxSugar },
-    rules: { 'ngrx-sugar/good-action-hygiene': 'error' },
+    plugins: { "ngrx-sugar": ngrxSugar },
+    rules: { "ngrx-sugar/good-action-hygiene": "error" },
   },
 ];
 ```

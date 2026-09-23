@@ -7,6 +7,8 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm test --workspaces",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "pack:all": "npm pack --workspaces"
   },
   "devDependencies": {
@@ -31,6 +33,7 @@
     "@ngrx/store-devtools": "22.0.1",
     "@types/node": "^24.3.0",
     "jsdom": "^22.0.0",
+    "prettier": "^3.9.8",
     "rxjs": "7.8.0",
     "tslib": "^2.7.0",
     "typescript": "6.0.3",

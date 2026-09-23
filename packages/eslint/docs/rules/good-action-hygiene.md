@@ -6,12 +6,12 @@ Names must contain a nonempty `[Source]` followed by an event ending in a recogn
 
 ```ts
 // Accepted
-createAction('[Books Page] Entered');
-events('Books API', { booksLoaded: props(), searchFailure: props() });
+createAction("[Books Page] Entered");
+events("Books API", { booksLoaded: props(), searchFailure: props() });
 
 // Reported
-createAction('[Books Page] Load Books');
-events('Books Page', { loadBooks: props() });
+createAction("[Books Page] Load Books");
+events("Books Page", { loadBooks: props() });
 ```
 
 This is a naming heuristic, not a grammatical or architectural guarantee. Dynamic values, computed keys, spreads, aliased calls, and NgRx `createActionGroup` are not checked. No type information is required.

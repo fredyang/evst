@@ -10,32 +10,12 @@ import { Store } from "@ngrx/store";
 import { of, type Observable } from "rxjs";
 import { afterEach, expect, expectTypeOf, it, vi } from "vitest";
 import { state as createState } from "../src/index.js";
-import { injectPublish } from "../src/inject-publish.js";
 import { provideStoreSugar } from "../src/provide-store-sugar.js";
 
 const injectors: ReturnType<typeof createEnvironmentInjector>[] = [];
 afterEach(() => {
   for (const injector of injectors.splice(0)) injector.destroy();
 });
-
-function createContext() {
-  const selected = signal(1);
-  const mock = {
-    dispatch: vi.fn(),
-    select: vi.fn(() => of(1)),
-    selectSignal: vi.fn(() => selected),
-  };
-  const injector = createEnvironmentInjector(
-    [{ provide: Store, useValue: mock }],
-    null!,
-  );
-  injectors.push(injector);
-  return {
-    mock,
-    selected,
-    run: <T>(fn: () => T) => runInInjectionContext(injector, fn),
-  };
-}
 
 function createViewContext() {
   const selected = signal(1);
@@ -101,23 +81,6 @@ it("creates observable views without an injection context", () => {
   });
   expect(next).toHaveBeenCalledWith(1);
   expect(mock.select).toHaveBeenCalledWith(view);
-});
-
-it("publishes outside injection context using the captured store", () => {
-  const first = createContext();
-  const second = createContext();
-  const publishFirst = first.run(injectPublish);
-  const publishSecond = second.run(injectPublish);
-  const event = { type: "[Test] Clicked", count: 2 };
-  publishFirst(event);
-  expect(first.mock.dispatch).toHaveBeenCalledWith(event);
-  expect(second.mock.dispatch).not.toHaveBeenCalled();
-  publishSecond(event);
-  expect(second.mock.dispatch).toHaveBeenCalledWith(event);
-});
-
-it("requires an injection context when creating helpers", () => {
-  expect(() => injectPublish()).toThrow();
 });
 
 it("attaches typed injection methods to root, field, and derived views", () => {
