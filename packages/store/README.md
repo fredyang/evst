@@ -7,6 +7,17 @@ We will have less to learn, less to remember, less to wire up.
 Just four entry points to remember: `events`, `state`, `task`, and
 `provideStoreSugar`, with a fluent API guiding the rest.
 
+## Built on NgRx
+
+NgRx Sugar is a small, event-driven syntax for NgRx Store. It does not replace
+NgRx or create a separate state system.
+
+Sugar events are NgRx actions, Sugar state is an NgRx feature reducer, Sugar
+views are NgRx selectors, and Sugar tasks are functional NgRx effects. Sugar
+and standard NgRx APIs can coexist in the same application. Sugar fits the
+common feature flow; specialized APIs such as `@ngrx/entity`, router state,
+and meta-reducers remain available when they are the clearer fit.
+
 Defining state is fluent and discoverable. Starting with `state(...)`, editor
 completion leads to `.on()`, `.withViews()`, `.withTasks()`, and `.provide()`.
 Handlers, derived views, and registration fit together without remembering a
