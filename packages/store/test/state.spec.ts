@@ -75,7 +75,7 @@ it("registers chained handlers and appends effects", () => {
   const base = state("counter", { count: 0 }).on(add, (s, { amount }) => ({
     count: s.count + amount,
   }));
-  const definition = base.withEffects(effect(2)).withEffects(effect(3));
+  const definition = base.withTasks(effect(2)).withTasks(effect(3));
   const injector = createEnvironmentInjector(
     [
       { provide: ɵINJECTOR_SCOPE, useValue: "root" },

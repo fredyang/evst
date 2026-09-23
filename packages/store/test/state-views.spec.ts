@@ -40,7 +40,7 @@ it("accepts typed handlers and preserves view memoization", () => {
         return loading ? "Loading…" : `${count} items`;
       }),
     }))
-    .withEffects({ increment });
+    .withTasks({ increment });
   const state = { typed: initialState };
   expect(feature.views.root(state)).toBe(initialState);
   expect(feature.views.count(state)).toBe(0);
@@ -136,13 +136,13 @@ function definition() {
       expectTypeOf(amount).toEqualTypeOf<number>();
       return { ...state, count: state.count + amount };
     })
-    .withEffects({ increment });
+    .withTasks({ increment });
 }
 
 it("infers state, payloads, views, and the test reducer", () => {
   const feature = definition();
   expectTypeOf<keyof typeof feature>().toEqualTypeOf<
-    "views" | "provide" | "test" | "on" | "withViews" | "withEffects"
+    "views" | "provide" | "test" | "on" | "withViews" | "withTasks"
   >();
   expectTypeOf(feature.test.getNextState).returns.toEqualTypeOf<
     typeof initialState
@@ -152,7 +152,7 @@ it("infers state, payloads, views, and the test reducer", () => {
     "provide",
     "test",
     "views",
-    "withEffects",
+    "withTasks",
     "withViews",
   ]);
   expectTypeOf(feature.views.count).returns.toEqualTypeOf<number>();
@@ -217,7 +217,7 @@ it("registers all effects from the state definition", () => {
       ...state,
       count: state.count + amount,
     }))
-    .withEffects([{ increment }, { extra }]);
+    .withTasks([{ increment }, { extra }]);
   expectTypeOf(feature.provide).parameters.toEqualTypeOf<[]>();
   const injector = createEnvironmentInjector(
     [

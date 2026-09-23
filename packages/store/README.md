@@ -1,13 +1,14 @@
 # NgRx Sugar
 
-**Less to learn. Less to remember. Less wiring to write.**
+> **write less, do more**
 
-NgRx Sugar brings the spirit of “write less, do more” to NgRx Store. Just four
-entry points to remember: `events`, `state`, `sideEffect`, and
+This is the spirit of jQuery. Now NgRx Sugar bring it to NgRx Store.
+We will have less to learn, less to remember, less to wire up.
+Just four entry points to remember: `events`, `state`, `task`, and
 `provideStoreSugar`, with a fluent API guiding the rest.
 
 Defining state is fluent and discoverable. Starting with `state(...)`, editor
-completion leads to `.on()`, `.withViews()`, `.withEffects()`, and `.provide()`.
+completion leads to `.on()`, `.withViews()`, `.withTasks()`, and `.provide()`.
 Handlers, derived views, and registration fit together without remembering a
 collection of separate setup functions.
 
@@ -20,7 +21,7 @@ calls, or selector wiring. NgRx's Store, reducers, memoized selectors, effects,
 and DevTools still power the application underneath.
 
 The API encourages an event-driven mindset: components describe **what happened**,
-and state handlers and effects decide how to respond. This discourages components
+and state handlers and tasks decide how to respond. This discourages components
 from issuing commands that coordinate the rest of the application.
 
 ```mermaid
@@ -28,14 +29,14 @@ flowchart TB
   component[Component] -->|reads| view[View]
   component -->|publishes| event[Event]
   event -->|handled by| state[State]
-  event -->|handled by| effect[SideEffect]
-  effect -->|publishes| event
+  event -->|handled by| task[Task]
+  task -->|publishes| event
   state -->|exposes| view
 ```
 
 The Store and reducer are intentionally absent from this model. It remains NgRx
 infrastructure underneath; application code works with events, state, views,
-and sideEffects instead.
+and tasks instead.
 
 ## Defining events
 
@@ -88,7 +89,7 @@ already available on the definition.
 
 ```ts
 // books.state.ts
-import { loadBooks } from "./books.effects";
+import { loadBooks } from "./books.tasks";
 import { state } from "@ngrx-sugar/store";
 import { BooksApiEvents, BooksPageEvents, type Book } from "./books.events";
 
@@ -133,7 +134,7 @@ export const booksState = state("books", initialState)
       (books, id) => books.find((book) => book.id === id) ?? null,
     ),
   }))
-  .withEffects([loadBooks]);
+  .withTasks([loadBooks]);
 ```
 
 Every initialized state field gets a view automatically: `views.books`,
@@ -151,21 +152,21 @@ multiple event creators before a handler. Additional `.withViews()` calls
 can compose earlier views; duplicate names and the reserved name `root` are
 not allowed.
 
-## Defining effects
+## Defining tasks
 
-The same `entered` event that sets `loading` also triggers a request. The effect
+The same `entered` event that sets `loading` also triggers a request. The task
 returns an API outcome event, which the state handles independently.
 
 ```ts
-// books.effects.ts
+// books.tasks.ts
 import { inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Actions, ofType } from "@ngrx/effects";
-import { sideEffect } from "@ngrx-sugar/store";
+import { task } from "@ngrx-sugar/store";
 import { catchError, exhaustMap, map, of } from "rxjs";
 import { BooksApiEvents, BooksPageEvents, type Book } from "./books.events";
 
-export const loadBooks = sideEffect(
+export const loadBooks = task(
   (events$ = inject(Actions), http = inject(HttpClient)) =>
     events$.pipe(
       ofType(BooksPageEvents.entered),
@@ -187,11 +188,11 @@ export const loadBooks = sideEffect(
 
 The example expects `/api/books` to return a JSON array of books. `exhaustMap`
 ignores repeated entries while a request is pending. Catching errors inside the
-request keeps the effect listening for future events.
+request keeps the task listening for future events.
 
-NgRx dispatches events emitted by `sideEffect()` automatically. Effects that
-only perform side effects can use `{ dispatch: false }`. This helper defines
-NgRx observable effects; Angular's signal-based `effect()` is a separate API.
+NgRx dispatches events emitted by `task()` automatically. Tasks that only
+perform work can use `{ dispatch: false }`. `task()` creates an NgRx observable
+effect underneath; Angular's signal-based `effect()` is a separate API.
 
 ## Consuming events and views
 
@@ -255,7 +256,7 @@ and asynchronous callbacks without an injection context.
 ## Registering state
 
 The application supplies the root Store once. A state definition attaches its
-effects and registers the feature through the same fluent API:
+tasks and registers the feature through the same fluent API:
 
 ```ts
 // app.config.ts
@@ -274,14 +275,14 @@ Redux DevTools in Angular development mode. Separate `provideStore()` and
 `provideStoreDevtools()` calls are unnecessary. Its options also accept NgRx
 root Store configuration, such as `runtimeChecks` and `metaReducers`.
 
-`booksState.provide()` registers the feature and the effects attached with
-`.withEffects([loadBooks])` in its definition. Feature
+`booksState.provide()` registers the feature and the tasks attached with
+`.withTasks([loadBooks])` in its definition. Feature
 providers can live in route providers instead; `provideStoreSugar()` belongs
 at the application root.
 
-Standalone effects expose their own `.provide()`. An effect should be registered
-once, either through its state or independently. `.withEffects()` accepts individual
-functional effects, effect classes, named functional-effect records, and arrays
+Standalone tasks expose their own `.provide()`. A task should be registered
+once, either through its state or independently. `.withTasks()` accepts individual
+functional tasks, task classes, named functional-task records, and arrays
 combining these forms.
 
 ## Understanding registration and compatibility
@@ -289,7 +290,7 @@ combining these forms.
 NgRx Sugar reduces the public surface while retaining NgRx interoperability.
 Events are NgRx actions, views are memoized selectors, and NgRx types such as
 `Action` retain their original names. The package also exports `StateDefinition`,
-`SideEffect`, and `StoreSugarConfig` types.
+`Task`, and `StoreSugarConfig` types.
 
 `provideStoreSugar()` starts with an empty root reducer map. Features registered
 through `.provide()` or NgRx's `provideState()` supply the state keys. DevTools
@@ -303,9 +304,9 @@ providers and an injected Store for publishing. View methods still resolve
 their local injection context. Destroying the owning injector releases the
 publishing registration; a different active Store is rejected.
 
-The example keeps events, state, and effects in separate modules without a
-circular import. If state and effect modules depend on each other, view access
-must be deferred until the effect runs; shared definitions in a separate module
+The example keeps events, state, and tasks in separate modules without a
+circular import. If state and task modules depend on each other, view access
+must be deferred until the task runs; shared definitions in a separate module
 can avoid the cycle.
 
 ## Testing
@@ -338,7 +339,7 @@ it("selects a book after it is loaded", () => {
 });
 ```
 
-`test` is intended for tests by convention. Effects remain callable with explicit
+`test` is intended for tests by convention. Tasks remain callable with explicit
 dependencies, so tests can supply an event stream and an HTTP stub.
 
 Component tests that publish events can register

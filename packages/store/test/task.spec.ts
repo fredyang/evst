@@ -8,7 +8,7 @@ import { Actions, ofType } from "@ngrx/effects";
 import { createAction, provideStore, Store } from "@ngrx/store";
 import { of, map, tap } from "rxjs";
 import { expect, expectTypeOf, it } from "vitest";
-import { sideEffect, state as createState } from "../src/index.js";
+import { task, state as createState } from "../src/index.js";
 
 const clicked = createAction("[Test] Clicked");
 
@@ -18,7 +18,7 @@ it("defers execution and preserves optional source parameters", () => {
     calls++;
     return of(event);
   };
-  const effect = sideEffect(source);
+  const effect = task(source);
   expect(effect).toBe(source);
   expect(calls).toBe(0);
   expectTypeOf(effect).parameters.toEqualTypeOf<
@@ -34,7 +34,7 @@ it("defers execution and preserves optional source parameters", () => {
 });
 
 it("overrides functional while forwarding other options", () => {
-  const effect = sideEffect(() => of(42), {
+  const effect = task(() => of(42), {
     functional: false,
     dispatch: false,
     useEffectsErrorHandler: false,
@@ -55,7 +55,7 @@ it.each(["standalone", "repeated", "state-owned"] as const)(
   (mode) => {
     let subscriptions = 0;
     const counted = createAction("[Test] Counted");
-    const effect = sideEffect((actions = inject(Actions)) => {
+    const effect = task((actions = inject(Actions)) => {
       subscriptions++;
       return actions.pipe(
         ofType(clicked),
@@ -64,7 +64,7 @@ it.each(["standalone", "repeated", "state-owned"] as const)(
     });
     const state = createState("counter", { count: 0 })
       .on(counted, (state) => ({ count: state.count + 1 }))
-      .withEffects(mode === "state-owned" ? [effect] : []);
+      .withTasks(mode === "state-owned" ? [effect] : []);
     const providers = [effect.provide()];
     if (mode === "repeated") providers.push(effect.provide());
     expect(subscriptions).toBe(0);
@@ -91,7 +91,7 @@ it.each(["standalone", "repeated", "state-owned"] as const)(
 
 it("registers a non-dispatching effect in a child environment injector", () => {
   let observed = 0;
-  const effect = sideEffect(
+  const effect = task(
     (actions = inject(Actions)) =>
       actions.pipe(
         ofType(clicked),

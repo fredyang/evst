@@ -11,7 +11,7 @@ import {
   type ReducerTypes,
   type SelectSignalOptions,
 } from "@ngrx/store";
-import { provideFeature, type EffectInput } from "./provide-feature.js";
+import { provideFeature, type TaskInput } from "./provide-feature.js";
 import type { Action } from "@ngrx/store";
 
 /** Injection helpers attached to each exposed view. */
@@ -57,14 +57,14 @@ type StateOn<State> = <Creators extends readonly ActionCreator[]>(
   ...args: [...Creators, ReducerTypes<State, Creators>["reducer"]]
 ) => ReducerTypes<State, Creators>;
 
-/** An immutable state definition with composable handlers, views, and effects. */
+/** An immutable state definition with composable handlers, views, and tasks. */
 export interface StateDefinition<
   State extends object,
   ExtraViews extends Record<string, MemoizedSelector<object, any>> = {},
 > {
   /** Generated and derived views; root selects the complete feature state. */
   readonly views: StateViews<State> & InjectableViews<ExtraViews>;
-  /** Pure state transitions for tests; no events are published or effects run. */
+  /** Pure state transitions for tests; no events are published or tasks run. */
   readonly test: {
     getNextState(state: State | undefined, event: Action): State;
   };
@@ -85,14 +85,14 @@ export interface StateDefinition<
       view: typeof createSelector,
     ) => Added,
   ): StateDefinition<State, ExtraViews & Added>;
-  /** Appends effect classes, functional effects, named records, or nested arrays. */
-  withEffects(effects: EffectInput): StateDefinition<State, ExtraViews>;
+  /** Appends task classes, functional tasks, named records, or nested arrays. */
+  withTasks(tasks: TaskInput): StateDefinition<State, ExtraViews>;
 }
 
 /**
- * Defines feature state with typed handlers, memoized views, and optional effects.
+ * Defines feature state with typed handlers, memoized views, and optional tasks.
  *
- * `.on()`, `.withViews()`, and `.withEffects()` return new definitions without
+ * `.on()`, `.withViews()`, and `.withTasks()` return new definitions without
  * changing earlier steps. Every step exposes `views`, `provide()`, and `test`;
  * no final `.build()` call is required. Registration uses the final definition.
  * Handlers must return state immutably.
@@ -103,9 +103,9 @@ export interface StateDefinition<
  * Views remain callable NgRx selectors; their `.signal()` and `.observable()`
  * methods require an Angular injection context.
  *
- * `.provide()` registers the feature and its effects in an application or route
+ * `.provide()` registers the feature and its tasks in an application or route
  * injector. `provideStoreSugar()` normally supplies the required root Store.
- * Defining state alone does not register it or execute effects.
+ * Defining state alone does not register it or execute tasks.
  *
  * @param name - Key under which the feature is registered in the root store.
  * @param initialState - Initial feature values, also used to infer handler and
@@ -134,21 +134,21 @@ export interface StateDefinition<
  * // readonly count = counter.views.count.signal();
  * // readonly doubled$ = counter.views.doubled.observable();
  *
- * // Pure transition, without publishing or running effects:
+ * // Pure transition, without publishing or running tasks:
  * counter.test.getNextState(undefined, CounterEvents.added({ amount: 3 }));
  * // { count: 3 }
  * ```
  *
- * @example Adding effects and registering state
+ * @example Adding tasks and registering state
  * ```ts
  * import { state, provideStoreSugar } from '@ngrx-sugar/store';
  * import { BooksEvents } from './books.events';
- * import { booksEffects } from './books.effects';
+ * import { booksTasks } from './books.tasks';
  * import { initialBooksState } from './books.initial-state';
  *
  * const books = state('books', initialBooksState)
  *   .on(BooksEvents.loaded, (current, { books }) => ({ ...current, books }))
- *   .withEffects(booksEffects);
+ *   .withTasks(booksTasks);
  *
  * const appConfig = {
  *   providers: [provideStoreSugar(), books.provide()],
@@ -186,20 +186,20 @@ function chainState<
   name: string,
   initialState: State,
   handlers: readonly ReducerTypes<State, any>[],
-  effects: readonly EffectInput[],
+  tasks: readonly TaskInput[],
   views: StateViews<State> & InjectableViews<ExtraViews>,
 ): StateDefinition<State, ExtraViews> {
   const reducer = createReducer(initialState, ...handlers);
   return {
     views,
     test: { getNextState: reducer },
-    provide: () => provideFeature({ name, reducer }, ...effects),
+    provide: () => provideFeature({ name, reducer }, ...tasks),
     on: (...args) =>
       chainState(
         name,
         initialState,
         [...handlers, (on as StateOn<State>)(...args)],
-        effects,
+        tasks,
         views,
       ),
     withViews: (build) => {
@@ -220,9 +220,9 @@ function chainState<
           ]),
         ),
       } as StateViews<State> & InjectableViews<ExtraViews & typeof added>;
-      return chainState(name, initialState, handlers, effects, combined);
+      return chainState(name, initialState, handlers, tasks, combined);
     },
-    withEffects: (added) =>
-      chainState(name, initialState, handlers, [...effects, added], views),
+    withTasks: (added) =>
+      chainState(name, initialState, handlers, [...tasks, added], views),
   };
 }
