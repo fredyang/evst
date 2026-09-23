@@ -245,9 +245,9 @@ can use a component field such as:
 readonly books$ = booksState.views.books.observable();
 ```
 
-View methods require an injection context, such as a component field initializer.
-They resolve the local Store at that point; observable subscriptions may happen
-later. Views also remain usable as regular NgRx memoized selectors.
+View methods use the Store registered by `provideStoreSugar()`, so they work in
+component fields, methods, and asynchronous callbacks. Observable subscriptions
+may happen later. Views also remain usable as regular NgRx memoized selectors.
 
 Event `.publish()` methods accept the same typed arguments as their creators.
 After application initialization, they work in lifecycle hooks, event handlers,
@@ -300,9 +300,9 @@ options are forwarded without merging, and production mode skips registration.
 Direct event publishing uses one active Store per loaded Sugar module. Module
 federation can share the root Store and Sugar singleton while remotes register
 features. Concurrent SSR applications or independent Stores require NgRx
-providers and an injected Store for publishing. View methods still resolve
-their local injection context. Destroying the owning injector releases the
-publishing registration; a different active Store is rejected.
+providers and an injected Store for publishing and reading views. Destroying the
+owning injector releases the publishing registration; a different active Store
+is rejected.
 
 The example keeps events, state, and tasks in separate modules without a
 circular import. If state and task modules depend on each other, view access

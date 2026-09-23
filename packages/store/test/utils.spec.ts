@@ -1,13 +1,17 @@
 import {
+  APP_INITIALIZER,
   createEnvironmentInjector,
+  ErrorHandler,
   runInInjectionContext,
   signal,
+  ɵINJECTOR_SCOPE,
 } from "@angular/core";
 import { Store } from "@ngrx/store";
 import { of, type Observable } from "rxjs";
 import { afterEach, expect, expectTypeOf, it, vi } from "vitest";
 import { state as createState } from "../src/index.js";
 import { injectPublish } from "../src/inject-publish.js";
+import { provideStoreSugar } from "../src/provide-store-sugar.js";
 
 const injectors: ReturnType<typeof createEnvironmentInjector>[] = [];
 afterEach(() => {
@@ -33,14 +37,44 @@ function createContext() {
   };
 }
 
+function createViewContext() {
+  const selected = signal(1);
+  const mock = {
+    dispatch: vi.fn(),
+    select: vi.fn(() => of(1)),
+    selectSignal: vi.fn(() => selected),
+  };
+  const injector = createEnvironmentInjector(
+    [
+      { provide: ɵINJECTOR_SCOPE, useValue: "root" },
+      ErrorHandler,
+      provideStoreSugar({ devtools: false }),
+      { provide: Store, useValue: mock },
+    ],
+    null!,
+  );
+  injectors.push(injector);
+  runInInjectionContext(injector, () => {
+    for (const initialize of injector.get(APP_INITIALIZER)) initialize();
+  });
+  return { mock, selected };
+}
+
+it("requires Sugar Store registration before reading views", () => {
+  const feature = createState("counter", { count: 0 });
+
+  expect(() => feature.views.count.signal()).toThrow("provideStoreSugar");
+  expect(() => feature.views.count.observable()).toThrow("provideStoreSugar");
+});
+
 it("reads generated and derived views with inferred signal types and equality options", () => {
-  const { run, mock, selected } = createContext();
+  const { mock, selected } = createViewContext();
   const feature = createState("counter", { count: 0 }).withViews(
     ({ count }, view) => ({ doubled: view(count, (count) => count * 2) }),
   );
   const view = feature.views.count;
   const options = { equal: (a: number, b: number) => a === b };
-  const value = run(() => view.signal(options));
+  const value = view.signal(options);
   expectTypeOf(value()).toEqualTypeOf<number>();
   expect(value()).toBe(1);
   expect(mock.selectSignal).toHaveBeenCalledWith(view, options);
@@ -48,18 +82,18 @@ it("reads generated and derived views with inferred signal types and equality op
   expect(value()).toBe(2);
 
   const memoized = feature.views.doubled;
-  const derived = run(() => memoized.signal());
+  const derived = memoized.signal();
   expectTypeOf(derived()).toEqualTypeOf<number>();
   expect(mock.selectSignal).toHaveBeenCalledWith(memoized, undefined);
 });
 
-it("creates observable views during injection for later subscription", () => {
-  const { run, mock } = createContext();
+it("creates observable views without an injection context", () => {
+  const { mock } = createViewContext();
   const feature = createState("counter", { count: 0 }).withViews(
     ({ count }, view) => ({ doubled: view(count, (count) => count * 2) }),
   );
   const view = feature.views.count;
-  const value$ = run(() => view.observable());
+  const value$ = view.observable();
   const next = vi.fn();
   value$.subscribe((value) => {
     expectTypeOf(value).toEqualTypeOf<number>();
@@ -101,32 +135,29 @@ it("attaches typed injection methods to root, field, and derived views", () => {
   expectTypeOf<
     ReturnType<typeof feature.views.doubled.observable>
   >().toEqualTypeOf<import("rxjs").Observable<number>>();
-  const first = createContext();
-  const second = createContext();
+  const { mock, selected } = createViewContext();
   const options = { equal: (a: number, b: number) => a === b };
-  const value = first.run(() => feature.views.doubled.signal(options));
+  const value = feature.views.doubled.signal(options);
   expect(value()).toBe(1);
-  expect(first.mock.selectSignal).toHaveBeenCalledWith(
+  expect(mock.selectSignal).toHaveBeenCalledWith(
     feature.views.doubled,
     options,
   );
-  const other = second.run(() => feature.views.doubled.signal());
-  second.selected.set(3);
+  const other = feature.views.doubled.signal();
+  selected.set(3);
   expect(other()).toBe(3);
-  expect(value()).toBe(1);
+  expect(value()).toBe(3);
   for (const view of [
     feature.views.root,
     feature.views.count,
     feature.views.doubled,
   ]) {
-    first.run(() => view.signal());
-    expect(first.mock.selectSignal).toHaveBeenLastCalledWith(view, undefined);
+    view.signal();
+    expect(mock.selectSignal).toHaveBeenLastCalledWith(view, undefined);
     const next = vi.fn();
-    const values: Observable<unknown> = first.run(() => view.observable());
+    const values: Observable<unknown> = view.observable();
     values.subscribe(next);
     expect(next).toHaveBeenCalledWith(1);
-    expect(first.mock.select).toHaveBeenLastCalledWith(view);
-    expect(() => view.signal()).toThrow();
-    expect(() => view.observable()).toThrow();
+    expect(mock.select).toHaveBeenLastCalledWith(view);
   }
 });

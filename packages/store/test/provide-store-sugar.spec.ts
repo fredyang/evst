@@ -149,14 +149,10 @@ it("rejects another active store without replacing the first and allows scoped p
   publish(page.entered());
   expect(isolated.store.dispatch).toHaveBeenCalledWith(page.entered());
 });
-it("retains same-store registrations until all owners are destroyed", () => {
+it("releases registration when its root injector is destroyed", () => {
   const first = context();
   first.initialize();
-  const second = context(first.store);
-  second.initialize();
   first.injector.destroy();
-  page.entered.publish();
-  second.injector.destroy();
   expect(() => page.entered.publish()).toThrow("provideStoreSugar");
   const next = context();
   next.initialize();

@@ -1,4 +1,4 @@
-import { inject, type Signal } from "@angular/core";
+import type { Signal } from "@angular/core";
 import type { Observable } from "rxjs";
 import {
   Store,
@@ -13,12 +13,13 @@ import {
 } from "@ngrx/store";
 import { provideFeature, type TaskInput } from "./provide-feature.js";
 import type { Action } from "@ngrx/store";
+import { cachedStore } from "./provide-store-sugar.js";
 
 /** Injection helpers attached to each exposed view. */
 type ViewMethods<Result> = {
-  /** Reads this view as a signal in the current injection context. */
+  /** Reads this view as a signal from the registered Sugar Store. */
   signal(options?: SelectSignalOptions<Result>): Signal<Result>;
-  /** Reads this view as an observable in the current injection context. */
+  /** Reads this view as an observable from the registered Sugar Store. */
   observable(): Observable<Result>;
 };
 
@@ -34,8 +35,8 @@ function attachViewMethods<View extends MemoizedSelector<object, any>>(
 ) {
   return Object.assign(view, {
     signal: (options?: SelectSignalOptions<ReturnType<View>>) =>
-      inject(Store).selectSignal(view, options),
-    observable: () => inject(Store).select(view),
+      cachedStore().selectSignal(view, options),
+    observable: () => cachedStore().select(view),
   });
 }
 
@@ -100,8 +101,8 @@ export interface StateDefinition<
  * Each own enumerable initial-state field receives a view with the same name.
  * `views.root` selects the complete feature state. Extra views can compose
  * generated or previously added views, but cannot overwrite existing names.
- * Views remain callable NgRx selectors; their `.signal()` and `.observable()`
- * methods require an Angular injection context.
+ * Views remain callable NgRx selectors. Their `.signal()` and `.observable()`
+ * methods use the Store registered through `provideStoreSugar()`.
  *
  * `.provide()` registers the feature and its tasks in an application or route
  * injector. `provideStoreSugar()` normally supplies the required root Store.

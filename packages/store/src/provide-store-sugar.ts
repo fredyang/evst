@@ -17,7 +17,7 @@ import {
   type StoreDevtoolsOptions,
 } from "@ngrx/store-devtools";
 
-let registration: { store: Store; owners: number } | undefined;
+let _store: Store | undefined;
 
 /** Configuration for the root Sugar Store and development-time Redux DevTools. */
 export type StoreSugarConfig = RootStoreConfig<object> & {
@@ -38,8 +38,8 @@ export type StoreSugarConfig = RootStoreConfig<object> & {
  * Pass `devtools: false` to omit it in development, or options such as
  * `{ name: "Books" }` to configure the browser extension connection.
  *
- * Event creator `.publish()` methods dispatch through the Store registered by
- * this provider. One active Store is supported per loaded Sugar module. A
+ * Event creator `.publish()` methods and state view methods use the Store
+ * registered by this provider. One active Store is supported per loaded Sugar module. A
  * second, different Store is rejected; concurrent SSR applications and
  * independent Stores require NgRx's own providers and an injected Store instead
  * of this provider and the shared `.publish()` methods.
@@ -76,16 +76,15 @@ export function provideStoreSugar(
     provideAppInitializer(() => {
       const store = inject(Store);
       const destroyRef = inject(DestroyRef);
-      if (registration && registration.store !== store) {
+      if (_store && _store !== store) {
         throw new Error(
           "NgRx Sugar already has an active Store. Use NgRx providers and an injected Store for independent stores.",
         );
       }
-      const current = (registration ??= { store, owners: 0 });
-      current.owners++;
+      _store = store;
       destroyRef.onDestroy(() => {
-        if (--current.owners === 0 && registration === current) {
-          registration = undefined;
+        if (_store === store) {
+          _store = undefined;
         }
       });
     }),
@@ -94,10 +93,15 @@ export function provideStoreSugar(
 
 /** @internal Publishes through the explicitly registered application store. */
 export function publishEvent(event: Action): void {
-  if (!registration) {
+  cachedStore().dispatch(event);
+}
+
+/** @internal Returns the Store captured during Sugar application initialization. */
+export function cachedStore(): Store {
+  if (!_store) {
     throw new Error(
-      "Register provideStoreSugar() before publishing NgRx Sugar events.",
+      "Register provideStoreSugar() before using NgRx Sugar events or views.",
     );
   }
-  registration.store.dispatch(event);
+  return _store;
 }
