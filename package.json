@@ -9,7 +9,11 @@
     "test": "npm test --workspaces",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "prepare": "husky",
     "pack:all": "npm pack --workspaces"
+  },
+  "lint-staged": {
+    "*.{cjs,js,json,md,mjs,ts}": "prettier --write"
   },
   "devDependencies": {
     "@analogjs/vite-plugin-angular": "2.6.3",
@@ -32,7 +36,9 @@
     "@ngrx/store": "22.0.1",
     "@ngrx/store-devtools": "22.0.1",
     "@types/node": "^24.3.0",
+    "husky": "^9.1.7",
     "jsdom": "^22.0.0",
+    "lint-staged": "^17.5.1",
     "prettier": "^3.9.8",
     "rxjs": "7.8.0",
     "tslib": "^2.7.0",
