@@ -1,0 +1,61 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "examples/projects",
+  "projects": {
+    "ngrx-books": {
+      "projectType": "application",
+      "root": "examples/projects/ngrx-books",
+      "sourceRoot": "examples/projects/ngrx-books/src",
+      "prefix": "bc",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": "dist/examples/ngrx-books",
+            "index": "examples/projects/ngrx-books/src/index.html",
+            "browser": "examples/projects/ngrx-books/src/main.ts",
+            "polyfills": ["examples/projects/ngrx-books/src/polyfills.ts"],
+            "tsConfig": "examples/projects/ngrx-books/tsconfig.app.json",
+            "assets": [
+              "examples/projects/ngrx-books/src/favicon.ico",
+              "examples/projects/ngrx-books/src/assets"
+            ],
+            "styles": ["examples/projects/ngrx-books/src/styles.css"]
+          }
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": { "buildTarget": "ngrx-books:build" }
+        }
+      }
+    },
+    "sugar-books": {
+      "projectType": "application",
+      "root": "examples/projects/sugar-books",
+      "sourceRoot": "examples/projects/sugar-books/src",
+      "prefix": "bc",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": "dist/examples/sugar-books",
+            "index": "examples/projects/sugar-books/src/index.html",
+            "browser": "examples/projects/sugar-books/src/main.ts",
+            "polyfills": ["examples/projects/sugar-books/src/polyfills.ts"],
+            "tsConfig": "examples/projects/sugar-books/tsconfig.app.json",
+            "assets": [
+              "examples/projects/sugar-books/src/favicon.ico",
+              "examples/projects/sugar-books/src/assets"
+            ],
+            "styles": ["examples/projects/sugar-books/src/styles.css"]
+          }
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": { "buildTarget": "sugar-books:build" }
+        }
+      }
+    }
+  }
+}

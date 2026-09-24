@@ -10,7 +10,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
-    "pack:all": "npm pack --workspaces"
+    "pack:all": "npm pack --workspaces",
+    "serve:ngrx-books": "ng serve ngrx-books --port 4200",
+    "serve:sugar-books": "ng serve sugar-books --port 4201",
+    "serve:examples": "concurrently \"npm run serve:ngrx-books\" \"npm run serve:sugar-books\""
   },
   "lint-staged": {
     "*.{cjs,js,json,md,mjs,ts}": "prettier --write"
@@ -21,6 +24,7 @@
     "@angular/animations": "22.1.3",
     "@angular/build": "22.1.6",
     "@angular/cdk": "22.1.3",
+    "@angular/cli": "^22.1.6",
     "@angular/common": "22.1.3",
     "@angular/compiler": "22.1.3",
     "@angular/compiler-cli": "22.1.3",
@@ -36,6 +40,7 @@
     "@ngrx/store": "22.0.1",
     "@ngrx/store-devtools": "22.0.1",
     "@types/node": "^24.3.0",
+    "concurrently": "^10.0.5",
     "husky": "^9.1.7",
     "jsdom": "^22.0.0",
     "lint-staged": "^17.5.1",

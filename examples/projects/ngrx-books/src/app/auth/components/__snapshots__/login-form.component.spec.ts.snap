@@ -1,0 +1,228 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Login Page > should compile 1`] = `
+<bc-login-form
+  errormessage="[object Object]"
+  pending="[object Object]"
+  submitted="[object Object]"
+>
+  <mat-card
+    _ngcontent-a-c1882380116=""
+  >
+    <mat-card-title
+      _ngcontent-a-c1882380116=""
+    >
+      Login
+    </mat-card-title>
+    <mat-card-content
+      _ngcontent-a-c1882380116=""
+    >
+      <form
+        _ngcontent-a-c1882380116=""
+        class="ng-untouched ng-pristine ng-valid"
+        novalidate=""
+      >
+        <p
+          _ngcontent-a-c1882380116=""
+        >
+          <mat-form-field
+            _ngcontent-a-c1882380116=""
+          >
+            <input
+              _ngcontent-a-c1882380116=""
+              class="ng-untouched ng-pristine ng-valid"
+              formcontrolname="username"
+              matinput=""
+              placeholder="Username"
+              type="text"
+            />
+          </mat-form-field>
+        </p>
+        <p
+          _ngcontent-a-c1882380116=""
+        >
+          <mat-form-field
+            _ngcontent-a-c1882380116=""
+          >
+            <input
+              _ngcontent-a-c1882380116=""
+              class="ng-untouched ng-pristine ng-valid"
+              formcontrolname="password"
+              matinput=""
+              placeholder="Password"
+              type="password"
+            />
+          </mat-form-field>
+        </p>
+        <!--container-->
+        <div
+          _ngcontent-a-c1882380116=""
+          class="login-buttons"
+        >
+          <button
+            _ngcontent-a-c1882380116=""
+            mat-button=""
+            type="submit"
+          >
+            Login
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</bc-login-form>
+`;
+
+exports[`Login Page > should disable the form if pending 1`] = `
+<bc-login-form
+  errormessage="[object Object]"
+  pending="[object Object]"
+  submitted="[object Object]"
+>
+  <mat-card
+    _ngcontent-a-c1882380116=""
+  >
+    <mat-card-title
+      _ngcontent-a-c1882380116=""
+    >
+      Login
+    </mat-card-title>
+    <mat-card-content
+      _ngcontent-a-c1882380116=""
+    >
+      <form
+        _ngcontent-a-c1882380116=""
+        class="ng-untouched ng-pristine"
+        novalidate=""
+      >
+        <p
+          _ngcontent-a-c1882380116=""
+        >
+          <mat-form-field
+            _ngcontent-a-c1882380116=""
+          >
+            <input
+              _ngcontent-a-c1882380116=""
+              class="ng-untouched ng-pristine"
+              disabled=""
+              formcontrolname="username"
+              matinput=""
+              placeholder="Username"
+              type="text"
+            />
+          </mat-form-field>
+        </p>
+        <p
+          _ngcontent-a-c1882380116=""
+        >
+          <mat-form-field
+            _ngcontent-a-c1882380116=""
+          >
+            <input
+              _ngcontent-a-c1882380116=""
+              class="ng-untouched ng-pristine"
+              disabled=""
+              formcontrolname="password"
+              matinput=""
+              placeholder="Password"
+              type="password"
+            />
+          </mat-form-field>
+        </p>
+        <!--container-->
+        <div
+          _ngcontent-a-c1882380116=""
+          class="login-buttons"
+        >
+          <button
+            _ngcontent-a-c1882380116=""
+            mat-button=""
+            type="submit"
+          >
+            Login
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</bc-login-form>
+`;
+
+exports[`Login Page > should display an error message if provided 1`] = `
+<bc-login-form
+  errormessage="[object Object]"
+  pending="[object Object]"
+  submitted="[object Object]"
+>
+  <mat-card
+    _ngcontent-a-c1882380116=""
+  >
+    <mat-card-title
+      _ngcontent-a-c1882380116=""
+    >
+      Login
+    </mat-card-title>
+    <mat-card-content
+      _ngcontent-a-c1882380116=""
+    >
+      <form
+        _ngcontent-a-c1882380116=""
+        class="ng-untouched ng-pristine ng-valid"
+        novalidate=""
+      >
+        <p
+          _ngcontent-a-c1882380116=""
+        >
+          <mat-form-field
+            _ngcontent-a-c1882380116=""
+          >
+            <input
+              _ngcontent-a-c1882380116=""
+              class="ng-untouched ng-pristine ng-valid"
+              formcontrolname="username"
+              matinput=""
+              placeholder="Username"
+              type="text"
+            />
+          </mat-form-field>
+        </p>
+        <p
+          _ngcontent-a-c1882380116=""
+        >
+          <mat-form-field
+            _ngcontent-a-c1882380116=""
+          >
+            <input
+              _ngcontent-a-c1882380116=""
+              class="ng-untouched ng-pristine ng-valid"
+              formcontrolname="password"
+              matinput=""
+              placeholder="Password"
+              type="password"
+            />
+          </mat-form-field>
+        </p>
+        <p
+          _ngcontent-a-c1882380116=""
+          class="login-error"
+        >
+           Invalid credentials
+        </p>
+        <!--container-->
+        <div
+          _ngcontent-a-c1882380116=""
+          class="login-buttons"
+        >
+          <button
+            _ngcontent-a-c1882380116=""
+            mat-button=""
+            type="submit"
+          >
+            Login
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</bc-login-form>
+`;
