@@ -1,6 +1,6 @@
 export { events } from "./events.js";
 export { state, type StateDefinition } from "./state.js";
-export { task, type Task } from "./task.js";
+export { tasks, type Task, type Tasks } from "./tasks.js";
 export {
   provideStoreSugar,
   type StoreSugarConfig,

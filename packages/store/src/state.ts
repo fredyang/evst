@@ -11,7 +11,10 @@ import {
   type ReducerTypes,
   type SelectSignalOptions,
 } from "@ngrx/store";
-import { provideFeature, type TaskInput } from "./provide-feature.js";
+import {
+  provideFeature,
+  type TasksRegistrationInput,
+} from "./provide-feature.js";
 import type { Action } from "@ngrx/store";
 import { cachedStore } from "./provide-store-sugar.js";
 
@@ -87,7 +90,7 @@ export interface StateDefinition<
     ) => Added,
   ): StateDefinition<State, ExtraViews & Added>;
   /** Appends task classes, functional tasks, named records, or nested arrays. */
-  withTasks(tasks: TaskInput): StateDefinition<State, ExtraViews>;
+  withTasks(tasks: TasksRegistrationInput): StateDefinition<State, ExtraViews>;
 }
 
 /**
@@ -187,7 +190,7 @@ function chainState<
   name: string,
   initialState: State,
   handlers: readonly ReducerTypes<State, any>[],
-  tasks: readonly TaskInput[],
+  tasks: readonly TasksRegistrationInput[],
   views: StateViews<State> & InjectableViews<ExtraViews>,
 ): StateDefinition<State, ExtraViews> {
   const reducer = createReducer(initialState, ...handlers);

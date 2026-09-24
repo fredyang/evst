@@ -15,7 +15,7 @@ import {
 } from "@ngrx/store";
 import { map, tap } from "rxjs";
 import { expect, it } from "vitest";
-import { state, task } from "../src/index.js";
+import { state, tasks } from "../src/index.js";
 import { provideFeature } from "../src/provide-feature.js";
 
 const clicked = createAction("[Counter] Clicked");
@@ -79,13 +79,13 @@ it("combines configured arrays, named records, and classes through state", () =>
     .on(counted, (state) => ({ count: state.count + 1 }))
     .withTasks([
       [{ count }, CounterEffects] as const,
-      task((actions = inject(Actions)) =>
+      tasks.on((actions = inject(Actions)) =>
         actions.pipe(
           ofType(clicked),
           map(() => counted()),
         ),
       ),
-      task(
+      tasks.on(
         (actions = inject(Actions)) =>
           actions.pipe(
             ofType(clicked),

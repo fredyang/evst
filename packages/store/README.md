@@ -4,7 +4,7 @@
 
 This is the spirit of jQuery. Now NgRx Sugar bring it to NgRx Store.
 We will have less to learn, less to remember, less to wire up.
-Just four entry points to remember: `events`, `state`, `task`, and
+Just four entry points to remember: `events`, `state`, `tasks`, and
 `provideStoreSugar`, with a fluent API guiding the rest.
 
 ## Built on NgRx
@@ -145,7 +145,7 @@ export const booksState = state("books", initialState)
       (books, id) => books.find((book) => book.id === id) ?? null,
     ),
   }))
-  .withTasks([loadBooks]);
+  .withTasks(booksTasks);
 ```
 
 Every initialized state field gets a view automatically: `views.books`,
@@ -172,38 +172,55 @@ returns an API outcome event, which the state handles independently.
 // books.tasks.ts
 import { inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { Actions, ofType } from "@ngrx/effects";
-import { task } from "@ngrx-sugar/store";
+import { tasks } from "@ngrx-sugar/store";
 import { catchError, exhaustMap, map, of } from "rxjs";
 import { BooksApiEvents, BooksPageEvents, type Book } from "./books.events";
 
-export const loadBooks = task(
-  (events$ = inject(Actions), http = inject(HttpClient)) =>
-    events$.pipe(
-      ofType(BooksPageEvents.entered),
-      exhaustMap(() =>
-        http.get<Book[]>("/api/books").pipe(
-          map((books) => BooksApiEvents.booksLoaded({ books })),
-          catchError(() =>
-            of(
-              BooksApiEvents.booksLoadFailed({
-                message: "Books could not be loaded.",
-              }),
-            ),
+export const booksTasks = tasks().on(BooksPageEvents.entered, () => {
+  const http = inject(HttpClient);
+
+  return [
+    exhaustMap(() =>
+      http.get<Book[]>("/api/books").pipe(
+        map((books) => BooksApiEvents.booksLoaded({ books })),
+        catchError(() =>
+          of(
+            BooksApiEvents.booksLoadFailed({
+              message: "Books could not be loaded.",
+            }),
           ),
         ),
       ),
     ),
-);
+  ];
+});
 ```
 
 The example expects `/api/books` to return a JSON array of books. `exhaustMap`
 ignores repeated entries while a request is pending. Catching errors inside the
 request keeps the task listening for future events.
 
-NgRx dispatches events emitted by `task()` automatically. Tasks that only
-perform work can use `{ dispatch: false }`. `task()` creates an NgRx observable
-effect underneath; Angular's signal-based `effect()` is a separate API.
+NgRx dispatches events emitted by `tasks().on()` automatically. The operator
+factory can return several operators in their execution order. `exhaustMap`
+ignores repeated entries while a request is pending; `switchMap` keeps only the
+latest request; `concatMap` queues requests; and `mergeMap` runs independent
+requests in parallel.
+
+`tasks.on()` also creates standalone tasks from arbitrary Observable sources,
+such as sockets, timers, and browser APIs. Non-dispatching tasks use
+`{ dispatch: false }`:
+
+```ts
+const connectionTask = tasks.on(
+  () => inject(SocketService).connected$.pipe(tap(reportConnection)),
+  { dispatch: false },
+);
+
+const appTasks = tasks().on(connectionTask);
+```
+
+Both forms create NgRx observable effects underneath; Angular's signal-based
+`effect()` is a separate API.
 
 ## Consuming events and views
 
@@ -287,21 +304,22 @@ Redux DevTools in Angular development mode. Separate `provideStore()` and
 root Store configuration, such as `runtimeChecks` and `metaReducers`.
 
 `booksState.provide()` registers the feature and the tasks attached with
-`.withTasks([loadBooks])` in its definition. Feature
+`.withTasks(booksTasks)` in its definition. Feature
 providers can live in route providers instead; `provideStoreSugar()` belongs
 at the application root.
 
-Standalone tasks expose their own `.provide()`. A task should be registered
-once, either through its state or independently. `.withTasks()` accepts individual
-functional tasks, task classes, named functional-task records, and arrays
-combining these forms.
+A task collection can be registered independently with
+`booksTasks.provide()`. A collection should be registered once, either through
+its state or independently. `.withTasks()` also accepts individual functional
+tasks, task classes, named functional-task records, and arrays combining these
+forms.
 
 ## Understanding registration and compatibility
 
 NgRx Sugar reduces the public surface while retaining NgRx interoperability.
 Events are NgRx actions, views are memoized selectors, and NgRx types such as
 `Action` retain their original names. The package also exports `StateDefinition`,
-`Task`, and `StoreSugarConfig` types.
+`Task`, `Tasks`, and `StoreSugarConfig` types.
 
 `provideStoreSugar()` starts with an empty root reducer map. Features registered
 through `.provide()` or NgRx's `provideState()` supply the state keys. DevTools
@@ -350,8 +368,10 @@ it("selects a book after it is loaded", () => {
 });
 ```
 
-`test` is intended for tests by convention. Tasks remain callable with explicit
-dependencies, so tests can supply an event stream and an HTTP stub.
+`test` is intended for tests by convention. A task collection is tested by
+supplying a controlled event stream to `tasks.toList()` and asserting its
+emitted outcome events with mocked dependencies. Complex or reusable tasks can
+be extracted with `tasks.on(...)` for focused tests.
 
 Component tests that publish events can register
 `provideStoreSugar({ devtools: false })` before `provideMockStore(...)` in TestBed

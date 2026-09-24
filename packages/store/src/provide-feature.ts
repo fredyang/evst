@@ -10,8 +10,13 @@ import {
 import { provideState, type Action, type ActionReducer } from "@ngrx/store";
 
 type EffectSource = Parameters<typeof provideEffects>[number];
+/** A task collection that can expose its registered task inputs. */
+export interface TasksInput {
+  toList(): readonly TaskInput[];
+}
 /** A task class, named task record, functional task, or array of these. */
 export type TaskInput = EffectSource | FunctionalEffect | readonly TaskInput[];
+export type TasksRegistrationInput = TaskInput | TasksInput;
 
 // Preserve source identity so repeated registration follows NgRx's deduplication.
 const functionalSources = new WeakMap<
@@ -27,10 +32,11 @@ const functionalSources = new WeakMap<
  *
  * Each functional task's wrapper is cached in a WeakMap. Reusing the same
  * wrapper preserves source identity so NgRx can deduplicate registrations,
- * including registration through both `task.provide()` and `state()`.
+ * including registration through a task collection and `state()`.
  * This helper only prepares sources; it does not execute or register tasks.
  *
- * @param inputs - Task classes, named records, functional tasks, or nested arrays.
+ * @param inputs - Task classes, named records, functional tasks, task
+ * collections, or nested arrays.
  * @returns A flat array of effect classes and records for `provideEffects()`.
  *
  * @example
@@ -42,8 +48,11 @@ const functionalSources = new WeakMap<
  *
  * @internal
  */
-export function normalizeTasks(inputs: readonly TaskInput[]): EffectSource[] {
+export function normalizeTasks(
+  inputs: readonly TasksRegistrationInput[],
+): EffectSource[] {
   return inputs.flatMap((input): EffectSource[] => {
+    if (isTasksInput(input)) return normalizeTasks(input.toList());
     if (Array.isArray(input)) return normalizeTasks(input);
     if (
       typeof input === "function" &&
@@ -61,6 +70,15 @@ export function normalizeTasks(inputs: readonly TaskInput[]): EffectSource[] {
   });
 }
 
+function isTasksInput(input: TasksRegistrationInput): input is TasksInput {
+  return (
+    typeof input === "object" &&
+    input !== null &&
+    "toList" in input &&
+    typeof input.toList === "function"
+  );
+}
+
 /**
  * Registers feature state and optional tasks in an environment injector.
  * Supports application and route providers. Requires `provideStore()` at the
@@ -75,7 +93,7 @@ export function normalizeTasks(inputs: readonly TaskInput[]): EffectSource[] {
  */
 export function provideFeature<State, FeatureAction extends Action = Action>(
   feature: { name: string; reducer: ActionReducer<State, FeatureAction> },
-  ...tasks: TaskInput[]
+  ...tasks: TasksRegistrationInput[]
 ): EnvironmentProviders {
   return makeEnvironmentProviders([
     provideState(feature),
