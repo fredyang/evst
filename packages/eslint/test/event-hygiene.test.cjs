@@ -1,10 +1,7 @@
 const { describe, it } = require("node:test");
 const { RuleTester } = require("eslint");
 const { parser } = require("typescript-eslint");
-const {
-  default: rule,
-  messageId,
-} = require("../dist/rules/good-action-hygiene");
+const { default: rule, messageId } = require("../dist/rules/event-hygiene");
 RuleTester.describe = describe;
 RuleTester.it = it;
 ("use strict");
@@ -93,8 +90,7 @@ const invalid = () => [
     errors: [{ messageId, data: { actionType: "Load Customer" } }],
   },
 ];
-new RuleTester({ languageOptions: { parser } }).run(
-  "good-action-hygiene",
-  rule,
-  { valid: valid(), invalid: invalid() },
-);
+new RuleTester({ languageOptions: { parser } }).run("event-hygiene", rule, {
+  valid: valid(),
+  invalid: invalid(),
+});

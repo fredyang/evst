@@ -27,12 +27,15 @@ export default [
     files: ["**/*.ts"],
     languageOptions: { parser: tseslint.parser },
     plugins: { "ngrx-sugar": ngrxSugar },
-    rules: { "ngrx-sugar/good-action-hygiene": "error" },
+    rules: {
+      "ngrx-sugar/event-hygiene": "error",
+      "ngrx-sugar/event-publisher-ownership": "warn",
+    },
   },
 ];
 ```
 
-The consuming project needs ESLint 9 and `typescript-eslint`. Rule behavior and limitations are described in the [rule guide](docs/rules/good-action-hygiene.md).
+The consuming project needs ESLint 9 and `typescript-eslint`. Rule behavior and limitations are described in the [event hygiene guide](docs/rules/event-hygiene.md) and [event publisher ownership guide](docs/rules/event-publisher-ownership.md).
 
 ## Developing
 

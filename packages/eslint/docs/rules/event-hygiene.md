@@ -1,4 +1,4 @@
-# Enforcing event names
+# Enforcing event hygiene
 
 The rule checks string literals passed to `createAction` and static event keys in `events(source, events)`.
 

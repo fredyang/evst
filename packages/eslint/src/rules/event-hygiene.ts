@@ -4,7 +4,7 @@ import { ESLintUtils } from "@typescript-eslint/utils";
 const createRule = ESLintUtils.RuleCreator.withoutDocs;
 const actionCreator = `CallExpression[callee.name='createAction']`;
 
-export const messageId = "goodActionHygiene";
+export const messageId = "eventHygiene";
 
 type MessageIds = typeof messageId;
 type Options = readonly [];
@@ -13,7 +13,7 @@ export default createRule<Options, MessageIds>({
   meta: {
     type: "suggestion",
     docs: {
-      description: "Ensures the use of good action hygiene.",
+      description: "Ensures event names describe completed facts.",
     },
     schema: [],
     messages: {
