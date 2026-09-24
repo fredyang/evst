@@ -1,72 +1,15 @@
+import sugar from "@ngrx-sugar/eslint";
 import tseslint from "typescript-eslint";
-import baseConfig, {
-  angularTemplateConfig,
-  angularTsConfig,
-} from "../../eslint.config.mjs";
 
 export default tseslint.config(
+  { ignores: ["dist", "src/**/*.spec.ts"] },
   {
-    ignores: ["**/dist"],
-  },
-  baseConfig,
-  {
-    files: ["**/*.ts"],
-    extends: [angularTsConfig],
+    files: ["src/**/*.ts"],
+    languageOptions: { parser: tseslint.parser },
+    plugins: { "ngrx-sugar": sugar },
     rules: {
-      "@angular-eslint/directive-selector": [
-        "error",
-        {
-          type: "attribute",
-          prefix: "bc",
-          style: "camelCase",
-        },
-      ],
-      "@angular-eslint/component-selector": [
-        "error",
-        {
-          type: "element",
-          prefix: "bc",
-          style: "kebab-case",
-        },
-      ],
-      "@typescript-eslint/prefer-namespace-keyword": "error",
-      "@nx/enforce-module-boundaries": "off",
-      eqeqeq: ["off", "smart"],
-      "id-blacklist": [
-        "error",
-        "any",
-        "Number",
-        "number",
-        "String",
-        "string",
-        "Boolean",
-        "boolean",
-        "Undefined",
-        "undefined",
-      ],
-      "id-match": "error",
-      "no-eval": "off",
-      "no-redeclare": "error",
-      "no-underscore-dangle": "error",
-      "no-var": "error",
-      "no-case-declarations": "off",
-      "@angular-eslint/prefer-standalone": "off",
-      "@angular-eslint/prefer-inject": "off",
+      "ngrx-sugar/event-hygiene": "error",
+      "ngrx-sugar/event-publisher-ownership": "warn",
     },
-    languageOptions: {
-      parserOptions: {
-        project: ["projects/example-app/tsconfig.*.json"],
-      },
-    },
-  },
-  {
-    files: ["**/*.html"],
-    extends: [angularTemplateConfig],
-    rules: {
-      "@angular-eslint/template/prefer-control-flow": "off",
-    },
-  },
-  {
-    ignores: ["**/environment.prod.ts"],
   },
 );
