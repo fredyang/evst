@@ -6,7 +6,7 @@ import {
 } from "@angular/core";
 import { Actions, ofType } from "@ngrx/effects";
 import { createAction, provideStore, Store } from "@ngrx/store";
-import { of, map, tap, type Observable } from "rxjs";
+import { catchError, of, map, switchMap, tap, type Observable } from "rxjs";
 import { expect, expectTypeOf, it } from "vitest";
 import { tasks, state as createState } from "../src/index.js";
 
@@ -121,7 +121,7 @@ it("registers a non-dispatching effect in a child environment injector", () => {
 
 it("builds event-driven tasks without exposing Actions or ofType", () => {
   const completed = createAction("[Test] Completed");
-  const registry = tasks().on(clicked, () => [map(() => completed())]);
+  const registry = tasks().on(clicked, (pipe) => pipe(map(() => completed())));
   const effect = registry.toList()[0] as () => Observable<unknown>;
   const injector = createEnvironmentInjector(
     [
@@ -141,4 +141,22 @@ it("builds event-driven tasks without exposing Actions or ofType", () => {
   } finally {
     injector.destroy();
   }
+});
+
+it("types each event-driven operator from the preceding operator", () => {
+  const loaded = createAction("[Test] Loaded", (books: string[]) => ({
+    books,
+  }));
+  const failed = createAction("[Test] Failed", (error: unknown) => ({ error }));
+
+  tasks.on(clicked, (pipe) =>
+    pipe(
+      switchMap(() => of(["The Left Hand of Darkness"])),
+      map((books) => {
+        expectTypeOf(books).toEqualTypeOf<string[]>();
+        return loaded(books);
+      }),
+      catchError((error) => of(failed(error))),
+    ),
+  );
 });

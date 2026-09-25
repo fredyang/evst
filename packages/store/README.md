@@ -176,10 +176,10 @@ import { tasks } from "@ngrx-sugar/store";
 import { catchError, exhaustMap, map, of } from "rxjs";
 import { BooksApiEvents, BooksPageEvents, type Book } from "./books.events";
 
-export const booksTasks = tasks().on(BooksPageEvents.entered, () => {
+export const booksTasks = tasks().on(BooksPageEvents.entered, (pipe) => {
   const http = inject(HttpClient);
 
-  return [
+  return pipe(
     exhaustMap(() =>
       http.get<Book[]>("/api/books").pipe(
         map((books) => BooksApiEvents.booksLoaded({ books })),
@@ -192,7 +192,7 @@ export const booksTasks = tasks().on(BooksPageEvents.entered, () => {
         ),
       ),
     ),
-  ];
+  );
 });
 ```
 
@@ -200,9 +200,9 @@ The example expects `/api/books` to return a JSON array of books. `exhaustMap`
 ignores repeated entries while a request is pending. Catching errors inside the
 request keeps the task listening for future events.
 
-NgRx dispatches events emitted by `tasks().on()` automatically. The operator
-factory can return several operators in their execution order. `exhaustMap`
-ignores repeated entries while a request is pending; `switchMap` keeps only the
+NgRx dispatches events emitted by `tasks().on()` automatically. The `pipe`
+callback composes operators in their execution order. `exhaustMap` ignores
+repeated entries while a request is pending; `switchMap` keeps only the
 latest request; `concatMap` queues requests; and `mergeMap` runs independent
 requests in parallel.
 

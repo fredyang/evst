@@ -21,6 +21,10 @@ export type Task<
   Source extends () => Observable<unknown> = () => Observable<unknown>,
 > = FunctionalEffect<Source> & { provide(): EnvironmentProviders };
 
+type EventPipe<Creator extends ActionCreator> = Observable<
+  ReturnType<Creator>
+>["pipe"];
+
 export interface Tasks extends TasksInput {
   /** Adds a task created earlier with `tasks.on(...)`. */
   on(task: Task): this;
@@ -30,9 +34,9 @@ export interface Tasks extends TasksInput {
     options?: EffectConfig,
   ): this;
   /** Adds a task that starts when the supplied event is published. */
-  on<Creator extends ActionCreator, Result>(
+  on<Creator extends ActionCreator>(
     event: Creator,
-    operators: () => readonly OperatorFunction<ReturnType<Creator>, Result>[],
+    source: (pipe: EventPipe<Creator>) => Observable<unknown>,
     options?: EffectConfig,
   ): this;
   /** Returns a readonly snapshot without consuming this collection. */
@@ -48,14 +52,14 @@ class TasksCollection implements Tasks {
     source: Source,
     options?: EffectConfig,
   ): this;
-  on<Creator extends ActionCreator, Result>(
+  on<Creator extends ActionCreator>(
     event: Creator,
-    operators: () => readonly OperatorFunction<ReturnType<Creator>, Result>[],
+    source: (pipe: EventPipe<Creator>) => Observable<unknown>,
     options?: EffectConfig,
   ): this;
   on(
     first: Task | (() => Observable<unknown>) | ActionCreator,
-    second?: EffectConfig | (() => readonly OperatorFunction<any, any>[]),
+    second?: EffectConfig | ((pipe: EventPipe<any>) => Observable<unknown>),
     third?: EffectConfig,
   ): this {
     this.#registered.push(
@@ -79,17 +83,18 @@ class TasksCollection implements Tasks {
  * Creates a mutable task collection for one feature or application boundary.
  *
  * `.on(task)` includes a task created with the static `tasks.on(...)` form.
- * `.on(source)` adds an arbitrary Observable source. `.on(event, operators)`
- * adds an event-driven task without exposing `Actions` or `ofType()`.
+ * `.on(source)` adds an arbitrary Observable source. `.on(event, source)`
+ * adds an event-driven task without exposing `Actions` or `ofType()`. The
+ * source receives a typed event `pipe` for composing RxJS operators.
  * `.toList()` returns a snapshot; `.provide()` registers current tasks. Adding
  * tasks after bootstrap does not change already registered providers.
  *
  * @example
  * ```ts
  * const booksTasks = tasks()
- *   .on(BooksPageEvents.entered, () => {
+ *   .on(BooksPageEvents.entered, (pipe) => {
  *     const api = inject(BooksApi);
- *     return [exhaustMap(() => api.load())];
+ *     return pipe(exhaustMap(() => api.load()));
  *   });
  * ```
  */
@@ -111,32 +116,35 @@ export namespace tasks {
   ): Task<Source>;
   /**
    * Creates one task that begins when the supplied event is published.
-   * The operator factory runs in an injection context and can return ordinary
-   * RxJS operators such as `switchMap()` or `exhaustMap()`.
+   * The source runs in an injection context and receives a typed RxJS pipe.
    *
    * @param event - Event creator that starts the task.
-   * @param operators - Factory returning operators in execution order.
+   * @param source - Factory that composes operators with the event pipe.
    * @param options - NgRx effect options; Sugar always uses a functional effect.
    */
-  export function on<Creator extends ActionCreator, Result>(
+  export function on<Creator extends ActionCreator>(
     event: Creator,
-    operators: () => readonly OperatorFunction<ReturnType<Creator>, Result>[],
+    source: (pipe: EventPipe<Creator>) => Observable<unknown>,
     options?: EffectConfig,
   ): Task;
   export function on(
     first: (() => Observable<unknown>) | ActionCreator,
-    second?: EffectConfig | (() => readonly OperatorFunction<any, any>[]),
+    second?: EffectConfig | ((pipe: EventPipe<any>) => Observable<unknown>),
     third?: EffectConfig,
   ): Task {
     const source =
       typeof second === "function"
-        ? () =>
-            second().reduce(
-              (stream, operator) => operator(stream),
-              inject(Actions).pipe(
-                ofType(first as ActionCreator),
-              ) as Observable<any>,
-            )
+        ? () => {
+            const events = inject(Actions).pipe(
+              ofType(first as ActionCreator),
+            ) as Observable<any>;
+            const eventPipe = ((...operators: OperatorFunction<any, any>[]) =>
+              operators.reduce(
+                (stream, operator) => operator(stream),
+                events,
+              )) as EventPipe<any>;
+            return second(eventPipe);
+          }
         : (first as () => Observable<unknown>);
     const options = (typeof second === "function" ? third : second) ?? {};
     const create = createEffect as (
