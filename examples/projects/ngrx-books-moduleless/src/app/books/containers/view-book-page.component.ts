@@ -1,0 +1,37 @@
+import { Component, OnDestroy } from "@angular/core";
+import { ActivatedRoute } from "@angular/router";
+import { Store } from "@ngrx/store";
+import { Subscription } from "rxjs";
+import { map } from "rxjs/operators";
+
+import { ViewBookPageActions } from "@example-app/books/actions/view-book-page.actions";
+import { SelectedBookPageComponent } from "./selected-book-page.component";
+
+/**
+ * Note: Container components are also reusable. Whether or not
+ * a component is a presentation component or a container
+ * component is an implementation detail.
+ *
+ * The View Book Page's responsibility is to map router params
+ * to a 'Select' book action. Actually showing the selected
+ * book remains a responsibility of the
+ * SelectedBookPageComponent
+ */
+@Component({
+  selector: "bc-view-book-page",
+  template: ` <bc-selected-book-page></bc-selected-book-page> `,
+  imports: [SelectedBookPageComponent],
+})
+export class ViewBookPageComponent implements OnDestroy {
+  actionsSubscription: Subscription;
+
+  constructor(store: Store, route: ActivatedRoute) {
+    this.actionsSubscription = route.params
+      .pipe(map((params) => ViewBookPageActions.selectBook({ id: params.id })))
+      .subscribe((action) => store.dispatch(action));
+  }
+
+  ngOnDestroy() {
+    this.actionsSubscription.unsubscribe();
+  }
+}

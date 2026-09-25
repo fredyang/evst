@@ -56,6 +56,35 @@
           "options": { "buildTarget": "sugar-books:build" }
         }
       }
+    },
+    "ngrx-books-moduleless": {
+      "projectType": "application",
+      "root": "examples/projects/ngrx-books-moduleless",
+      "sourceRoot": "examples/projects/ngrx-books-moduleless/src",
+      "prefix": "bc",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": "dist/examples/ngrx-books-moduleless",
+            "index": "examples/projects/ngrx-books-moduleless/src/index.html",
+            "browser": "examples/projects/ngrx-books-moduleless/src/main.ts",
+            "polyfills": [
+              "examples/projects/ngrx-books-moduleless/src/polyfills.ts"
+            ],
+            "tsConfig": "examples/projects/ngrx-books-moduleless/tsconfig.app.json",
+            "assets": [
+              "examples/projects/ngrx-books-moduleless/src/favicon.ico",
+              "examples/projects/ngrx-books-moduleless/src/assets"
+            ],
+            "styles": ["examples/projects/ngrx-books-moduleless/src/styles.css"]
+          }
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": { "buildTarget": "ngrx-books-moduleless:build" }
+        }
+      }
     }
   }
 }

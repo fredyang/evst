@@ -1,0 +1,59 @@
+import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { ActivatedRoute } from "@angular/router";
+
+import { provideMockStore, MockStore } from "@ngrx/store/testing";
+import { BehaviorSubject } from "rxjs";
+
+import {
+  BookAuthorsComponent,
+  BookDetailComponent,
+} from "@example-app/books/components";
+import { SelectedBookPageComponent } from "@example-app/books/containers";
+import { ViewBookPageComponent } from "@example-app/books/containers";
+import { ViewBookPageActions } from "@example-app/books/actions/view-book-page.actions";
+import * as fromBooks from "@example-app/books/reducers";
+import { AddCommasPipe } from "@example-app/shared/pipes/add-commas.pipe";
+
+describe("View Book Page", () => {
+  let fixture: ComponentFixture<ViewBookPageComponent>;
+  let store: MockStore<fromBooks.State>;
+  let route: ActivatedRoute;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [ViewBookPageComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: { params: new BehaviorSubject({}) },
+        },
+        provideMockStore({
+          selectors: [
+            { selector: fromBooks.selectSelectedBook, value: null },
+            { selector: fromBooks.isSelectedBookInCollection, value: false },
+          ],
+        }),
+      ],
+    });
+
+    fixture = TestBed.createComponent(ViewBookPageComponent);
+    store = TestBed.inject<MockStore<fromBooks.State>>(MockStore);
+    route = TestBed.inject(ActivatedRoute);
+
+    vi.spyOn(store, "dispatch");
+  });
+
+  it("should compile", () => {
+    fixture.detectChanges();
+
+    expect(fixture).toMatchSnapshot();
+  });
+
+  it("should dispatch a book.Select action on init", () => {
+    const action = ViewBookPageActions.selectBook({ id: "2" });
+
+    (route.params as BehaviorSubject<any>).next({ id: "2" });
+
+    expect(store.dispatch).toHaveBeenLastCalledWith(action);
+  });
+});
