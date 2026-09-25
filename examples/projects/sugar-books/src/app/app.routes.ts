@@ -14,7 +14,7 @@ export const routes: Routes = [
   {
     path: "books",
     loadChildren: () =>
-      import("@example-app/books/books-routing.module").then((m) => m.routes),
+      import("@example-app/books/books-routing.config").then((m) => m.routes),
     canActivate: [authGuard],
     providers: [
       provideState(fromBooks.booksFeatureKey, fromBooks.reducers),
