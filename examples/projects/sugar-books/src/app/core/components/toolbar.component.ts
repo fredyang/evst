@@ -1,4 +1,7 @@
 import { Component, Output, EventEmitter } from "@angular/core";
+import { MatToolbar } from "@angular/material/toolbar";
+import { MatIconButton } from "@angular/material/button";
+import { MatIcon } from "@angular/material/icon";
 
 @Component({
   selector: "bc-toolbar",
@@ -10,7 +13,7 @@ import { Component, Output, EventEmitter } from "@angular/core";
       <ng-content></ng-content>
     </mat-toolbar>
   `,
-  standalone: false,
+  imports: [MatToolbar, MatIconButton, MatIcon],
 })
 export class ToolbarComponent {
   @Output() openMenu = new EventEmitter<void>();

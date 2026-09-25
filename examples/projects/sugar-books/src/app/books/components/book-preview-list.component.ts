@@ -1,6 +1,8 @@
 import { Component, Input } from "@angular/core";
 
 import { Book } from "@example-app/books/models";
+import { NgFor } from "@angular/common";
+import { BookPreviewComponent } from "./book-preview.component";
 
 @Component({
   selector: "bc-book-preview-list",
@@ -16,7 +18,7 @@ import { Book } from "@example-app/books/models";
       }
     `,
   ],
-  standalone: false,
+  imports: [NgFor, BookPreviewComponent],
 })
 export class BookPreviewListComponent {
   @Input() books!: Book[];

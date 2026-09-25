@@ -1,5 +1,4 @@
-import { NgModule } from "@angular/core";
-import { RouterModule, Routes } from "@angular/router";
+import { Routes } from "@angular/router";
 
 import {
   CollectionPageComponent,
@@ -26,9 +25,3 @@ export const routes: Routes = [
     data: { title: "Collection" },
   },
 ];
-
-@NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule],
-})
-export class BooksRoutingModule {}

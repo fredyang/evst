@@ -13,7 +13,6 @@ import { ViewBookPageComponent } from "@example-app/books/containers";
 import { ViewBookPageActions } from "@example-app/books/actions/view-book-page.actions";
 import * as fromBooks from "@example-app/books/reducers";
 import { AddCommasPipe } from "@example-app/shared/pipes/add-commas.pipe";
-import { MaterialModule } from "@example-app/material";
 
 describe("View Book Page", () => {
   let fixture: ComponentFixture<ViewBookPageComponent>;
@@ -22,7 +21,7 @@ describe("View Book Page", () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [MaterialModule],
+      imports: [ViewBookPageComponent],
       providers: [
         {
           provide: ActivatedRoute,
@@ -34,13 +33,6 @@ describe("View Book Page", () => {
             { selector: fromBooks.isSelectedBookInCollection, value: false },
           ],
         }),
-      ],
-      declarations: [
-        ViewBookPageComponent,
-        SelectedBookPageComponent,
-        BookDetailComponent,
-        BookAuthorsComponent,
-        AddCommasPipe,
       ],
     });
 

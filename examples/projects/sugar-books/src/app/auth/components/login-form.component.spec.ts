@@ -9,8 +9,7 @@ describe("Login Page", () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule],
-      declarations: [LoginFormComponent],
+      imports: [ReactiveFormsModule, LoginFormComponent],
       schemas: [NO_ERRORS_SCHEMA],
     });
 

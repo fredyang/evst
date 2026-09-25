@@ -1,14 +1,14 @@
-import { defineProject, mergeConfig } from 'vitest/config';
-import { baseConfig } from '../../vitest.config.mts';
+import { defineProject, mergeConfig } from "vitest/config";
+import { baseConfig } from "../../vitest.config.mts";
 
 export default defineProject((config) =>
   mergeConfig(baseConfig, {
     root: __dirname,
     test: {
-      name: 'sugar-books',
+      name: "sugar-books",
     },
     define: {
-      'import.meta.vitest': config.mode !== 'production',
+      "import.meta.vitest": config.mode !== "production",
     },
-  })
+  }),
 );

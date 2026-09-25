@@ -1,6 +1,8 @@
 import { Component, Input } from "@angular/core";
 
 import { Book } from "@example-app/books/models";
+import { MatListSubheaderCssMatStyler } from "@angular/material/list";
+import { AddCommasPipe } from "@example-app/shared/pipes/add-commas.pipe";
 
 @Component({
   selector: "bc-book-authors",
@@ -17,7 +19,7 @@ import { Book } from "@example-app/books/models";
       }
     `,
   ],
-  standalone: false,
+  imports: [MatListSubheaderCssMatStyler, AddCommasPipe],
 })
 export class BookAuthorsComponent {
   @Input() book!: Book;

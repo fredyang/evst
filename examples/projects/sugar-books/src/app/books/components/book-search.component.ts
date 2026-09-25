@@ -1,4 +1,13 @@
 import { Component, Output, Input, EventEmitter } from "@angular/core";
+import {
+  MatCard,
+  MatCardTitle,
+  MatCardContent,
+  MatCardFooter,
+} from "@angular/material/card";
+import { MatFormField, MatInput } from "@angular/material/input";
+import { MatProgressSpinner } from "@angular/material/progress-spinner";
+import { NgIf } from "@angular/common";
 
 @Component({
   selector: "bc-book-search",
@@ -60,7 +69,16 @@ import { Component, Output, Input, EventEmitter } from "@angular/core";
       }
     `,
   ],
-  standalone: false,
+  imports: [
+    MatCard,
+    MatCardTitle,
+    MatCardContent,
+    MatFormField,
+    MatInput,
+    MatProgressSpinner,
+    MatCardFooter,
+    NgIf,
+  ],
 })
 export class BookSearchComponent {
   @Input() query = "";

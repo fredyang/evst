@@ -12,7 +12,6 @@ import { SelectedBookPageComponent } from "@example-app/books/containers";
 import { Book, generateMockBook } from "@example-app/books/models";
 import * as fromBooks from "@example-app/books/reducers";
 import { AddCommasPipe } from "@example-app/shared/pipes/add-commas.pipe";
-import { MaterialModule } from "@example-app/material";
 
 describe("Selected Book Page", () => {
   let fixture: ComponentFixture<SelectedBookPageComponent>;
@@ -21,8 +20,8 @@ describe("Selected Book Page", () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule, MaterialModule],
-      declarations: [
+      imports: [
+        NoopAnimationsModule,
         SelectedBookPageComponent,
         BookDetailComponent,
         BookAuthorsComponent,

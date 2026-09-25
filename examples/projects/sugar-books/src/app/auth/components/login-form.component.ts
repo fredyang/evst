@@ -1,6 +1,10 @@
 import { Component, Input, Output, EventEmitter } from "@angular/core";
-import { FormGroup, FormControl } from "@angular/forms";
+import { FormGroup, FormControl, ReactiveFormsModule } from "@angular/forms";
 import { Credentials } from "@example-app/auth/models";
+import { MatCard, MatCardTitle, MatCardContent } from "@angular/material/card";
+import { MatFormField, MatInput } from "@angular/material/input";
+import { NgIf } from "@angular/common";
+import { MatButton } from "@angular/material/button";
 
 @Component({
   selector: "bc-login-form",
@@ -78,7 +82,16 @@ import { Credentials } from "@example-app/auth/models";
       }
     `,
   ],
-  standalone: false,
+  imports: [
+    MatCard,
+    MatCardTitle,
+    MatCardContent,
+    ReactiveFormsModule,
+    MatFormField,
+    MatInput,
+    NgIf,
+    MatButton,
+  ],
 })
 export class LoginFormComponent {
   @Input()

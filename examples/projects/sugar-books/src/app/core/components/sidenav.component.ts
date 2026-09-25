@@ -1,4 +1,6 @@
 import { Component, EventEmitter, Input, Output } from "@angular/core";
+import { MatSidenav } from "@angular/material/sidenav";
+import { MatNavList } from "@angular/material/list";
 
 @Component({
   selector: "bc-sidenav",
@@ -22,7 +24,7 @@ import { Component, EventEmitter, Input, Output } from "@angular/core";
       }
     `,
   ],
-  standalone: false,
+  imports: [MatSidenav, MatNavList],
 })
 export class SidenavComponent {
   @Input() open = false;

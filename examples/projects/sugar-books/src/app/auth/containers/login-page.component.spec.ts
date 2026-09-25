@@ -6,7 +6,6 @@ import { LoginFormComponent } from "@example-app/auth/components";
 import * as fromAuth from "@example-app/auth/reducers";
 import { LoginPageActions } from "@example-app/auth/actions/login-page.actions";
 import { provideMockStore, MockStore } from "@ngrx/store/testing";
-import { MaterialModule } from "@example-app/material";
 
 describe("Login Page", () => {
   let fixture: ComponentFixture<LoginPageComponent>;
@@ -15,8 +14,7 @@ describe("Login Page", () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule, MaterialModule, ReactiveFormsModule],
-      declarations: [LoginPageComponent, LoginFormComponent],
+      imports: [NoopAnimationsModule, ReactiveFormsModule, LoginPageComponent],
       providers: [
         provideMockStore({
           selectors: [

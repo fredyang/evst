@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from "@angular/core";
+import { Component } from "@angular/core";
 
 import { Store } from "@ngrx/store";
 import { Observable } from "rxjs";
@@ -7,10 +7,12 @@ import { take } from "rxjs/operators";
 import { FindBookPageActions } from "@example-app/books/actions/find-book-page.actions";
 import { Book } from "@example-app/books/models";
 import * as fromBooks from "@example-app/books/reducers";
+import { BookSearchComponent } from "../components/book-search.component";
+import { BookPreviewListComponent } from "../components/book-preview-list.component";
+import { AsyncPipe } from "@angular/common";
 
 @Component({
   selector: "bc-find-book-page",
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <bc-book-search
       [query]="(searchQuery$ | async)!"
@@ -21,7 +23,7 @@ import * as fromBooks from "@example-app/books/reducers";
     </bc-book-search>
     <bc-book-preview-list [books]="(books$ | async)!"> </bc-book-preview-list>
   `,
-  standalone: false,
+  imports: [BookSearchComponent, BookPreviewListComponent, AsyncPipe],
 })
 export class FindBookPageComponent {
   searchQuery$: Observable<string>;

@@ -1,6 +1,19 @@
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 
 import { Book } from "@example-app/books/models";
+import { NgIf } from "@angular/common";
+import {
+  MatCard,
+  MatCardTitleGroup,
+  MatCardTitle,
+  MatCardSubtitle,
+  MatCardSmImage,
+  MatCardContent,
+  MatCardFooter,
+  MatCardActions,
+} from "@angular/material/card";
+import { BookAuthorsComponent } from "./book-authors.component";
+import { MatButton } from "@angular/material/button";
 
 @Component({
   selector: "bc-book-detail",
@@ -67,7 +80,19 @@ import { Book } from "@example-app/books/models";
       }
     `,
   ],
-  standalone: false,
+  imports: [
+    NgIf,
+    MatCard,
+    MatCardTitleGroup,
+    MatCardTitle,
+    MatCardSubtitle,
+    MatCardSmImage,
+    MatCardContent,
+    MatCardFooter,
+    BookAuthorsComponent,
+    MatCardActions,
+    MatButton,
+  ],
 })
 export class BookDetailComponent {
   /**

@@ -3,32 +3,32 @@
 exports[`Login Page > should compile 1`] = `
 <bc-login-page>
   <bc-login-form
-    _nghost-a-c1882380116=""
+    _nghost-a-c684064197=""
   >
     <mat-card
-      _ngcontent-a-c1882380116=""
+      _ngcontent-a-c684064197=""
       class="mat-mdc-card mdc-card"
     >
       <mat-card-title
-        _ngcontent-a-c1882380116=""
+        _ngcontent-a-c684064197=""
         class="mat-mdc-card-title"
       >
         Login
       </mat-card-title>
       <mat-card-content
-        _ngcontent-a-c1882380116=""
+        _ngcontent-a-c684064197=""
         class="mat-mdc-card-content"
       >
         <form
-          _ngcontent-a-c1882380116=""
+          _ngcontent-a-c684064197=""
           class="ng-untouched ng-pristine ng-valid"
           novalidate=""
         >
           <p
-            _ngcontent-a-c1882380116=""
+            _ngcontent-a-c684064197=""
           >
             <mat-form-field
-              _ngcontent-a-c1882380116=""
+              _ngcontent-a-c684064197=""
               class="mat-mdc-form-field mat-mdc-form-field-type-mat-input mat-form-field-appearance-fill mat-primary ng-untouched ng-pristine ng-valid"
             >
               <!--container-->
@@ -54,10 +54,10 @@ exports[`Login Page > should compile 1`] = `
                 <!--container-->
                 <!--container-->
                 <input
-                  _ngcontent-a-c1882380116=""
+                  _ngcontent-a-c684064197=""
                   aria-invalid="false"
                   aria-required="false"
-                  class="mat-mdc-input-element mat-mdc-form-field-input-control mdc-text-field__input ng-untouched ng-pristine ng-valid cdk-text-field-autofill-monitored"
+                  class="mat-mdc-input-element ng-untouched ng-pristine ng-valid mat-mdc-form-field-input-control mdc-text-field__input cdk-text-field-autofill-monitored"
                   formcontrolname="username"
                   id="mat-input-a0"
                   matinput=""
@@ -92,10 +92,10 @@ exports[`Login Page > should compile 1`] = `
           </div>
           <p />
           <p
-            _ngcontent-a-c1882380116=""
+            _ngcontent-a-c684064197=""
           >
             <mat-form-field
-              _ngcontent-a-c1882380116=""
+              _ngcontent-a-c684064197=""
               class="mat-mdc-form-field mat-mdc-form-field-type-mat-input mat-form-field-appearance-fill mat-primary ng-untouched ng-pristine ng-valid"
             >
               <!--container-->
@@ -121,10 +121,10 @@ exports[`Login Page > should compile 1`] = `
                 <!--container-->
                 <!--container-->
                 <input
-                  _ngcontent-a-c1882380116=""
+                  _ngcontent-a-c684064197=""
                   aria-invalid="false"
                   aria-required="false"
-                  class="mat-mdc-input-element mat-mdc-form-field-input-control mdc-text-field__input ng-untouched ng-pristine ng-valid cdk-text-field-autofill-monitored"
+                  class="mat-mdc-input-element ng-untouched ng-pristine ng-valid mat-mdc-form-field-input-control mdc-text-field__input cdk-text-field-autofill-monitored"
                   formcontrolname="password"
                   id="mat-input-a1"
                   matinput=""
@@ -160,11 +160,11 @@ exports[`Login Page > should compile 1`] = `
           <p />
           <!--container-->
           <div
-            _ngcontent-a-c1882380116=""
+            _ngcontent-a-c684064197=""
             class="login-buttons"
           >
             <button
-              _ngcontent-a-c1882380116=""
+              _ngcontent-a-c684064197=""
               class="mdc-button mat-mdc-button-base mat-mdc-button mat-unthemed _mat-animation-noopable"
               mat-button=""
               mat-ripple-loader-class-name="mat-mdc-button-ripple"

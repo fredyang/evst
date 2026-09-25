@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 
 import { Store } from "@ngrx/store";
 import { Observable } from "rxjs";
@@ -6,10 +6,12 @@ import { Observable } from "rxjs";
 import { CollectionPageActions } from "@example-app/books/actions/collection-page.actions";
 import { Book } from "@example-app/books/models";
 import * as fromBooks from "@example-app/books/reducers";
+import { MatCard, MatCardTitle } from "@angular/material/card";
+import { BookPreviewListComponent } from "../components/book-preview-list.component";
+import { AsyncPipe } from "@angular/common";
 
 @Component({
   selector: "bc-collection-page",
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <mat-card>
       <mat-card-title>My Collection</mat-card-title>
@@ -32,7 +34,7 @@ import * as fromBooks from "@example-app/books/reducers";
       }
     `,
   ],
-  standalone: false,
+  imports: [MatCard, MatCardTitle, BookPreviewListComponent, AsyncPipe],
 })
 export class CollectionPageComponent implements OnInit {
   books$: Observable<Book[]>;

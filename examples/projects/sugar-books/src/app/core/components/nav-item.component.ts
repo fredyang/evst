@@ -1,4 +1,13 @@
 import { Component, Input, Output, EventEmitter } from "@angular/core";
+import {
+  MatListItem,
+  MatListItemIcon,
+  MatListItemTitle,
+  MatListItemLine,
+} from "@angular/material/list";
+import { RouterLink } from "@angular/router";
+import { MatIcon } from "@angular/material/icon";
+import { NgIf } from "@angular/common";
 
 @Component({
   selector: "bc-nav-item",
@@ -16,7 +25,15 @@ import { Component, Input, Output, EventEmitter } from "@angular/core";
       }
     `,
   ],
-  standalone: false,
+  imports: [
+    MatListItem,
+    RouterLink,
+    MatIcon,
+    MatListItemIcon,
+    MatListItemTitle,
+    NgIf,
+    MatListItemLine,
+  ],
 })
 export class NavItemComponent {
   @Input() icon = "";

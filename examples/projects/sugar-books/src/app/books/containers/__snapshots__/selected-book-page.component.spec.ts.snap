@@ -3,7 +3,7 @@
 exports[`Selected Book Page > should compile 1`] = `
 <bc-selected-book-page>
   <bc-book-detail
-    _nghost-a-c973509077=""
+    _nghost-a-c1421592298=""
   >
     <!--container-->
   </bc-book-detail>

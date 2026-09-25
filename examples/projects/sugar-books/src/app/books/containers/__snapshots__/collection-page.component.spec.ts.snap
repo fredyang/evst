@@ -3,19 +3,19 @@
 exports[`Collection Page > should compile 1`] = `
 <bc-collection-page>
   <mat-card
-    _ngcontent-a-c1432040493=""
+    _ngcontent-a-c2335439490=""
     class="mat-mdc-card mdc-card"
   >
     <mat-card-title
-      _ngcontent-a-c1432040493=""
+      _ngcontent-a-c2335439490=""
       class="mat-mdc-card-title"
     >
       My Collection
     </mat-card-title>
   </mat-card>
   <bc-book-preview-list
-    _ngcontent-a-c1432040493=""
-    _nghost-a-c3778324089=""
+    _ngcontent-a-c2335439490=""
+    _nghost-a-c2535807442=""
   >
     <!--container-->
   </bc-book-preview-list>

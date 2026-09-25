@@ -1,6 +1,19 @@
 import { Component, Input } from "@angular/core";
 
 import { Book } from "@example-app/books/models";
+import { RouterLink } from "@angular/router";
+import {
+  MatCard,
+  MatCardTitleGroup,
+  MatCardSmImage,
+  MatCardTitle,
+  MatCardSubtitle,
+  MatCardContent,
+  MatCardFooter,
+} from "@angular/material/card";
+import { NgIf } from "@angular/common";
+import { BookAuthorsComponent } from "./book-authors.component";
+import { EllipsisPipe } from "@example-app/shared/pipes/ellipsis.pipe";
 
 @Component({
   selector: "bc-book-preview",
@@ -76,7 +89,19 @@ import { Book } from "@example-app/books/models";
       }
     `,
   ],
-  standalone: false,
+  imports: [
+    RouterLink,
+    MatCard,
+    MatCardTitleGroup,
+    NgIf,
+    MatCardSmImage,
+    MatCardTitle,
+    MatCardSubtitle,
+    MatCardContent,
+    MatCardFooter,
+    BookAuthorsComponent,
+    EllipsisPipe,
+  ],
 })
 export class BookPreviewComponent {
   @Input() book!: Book;

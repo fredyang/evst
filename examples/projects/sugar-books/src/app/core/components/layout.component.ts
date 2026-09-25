@@ -1,4 +1,5 @@
 import { Component } from "@angular/core";
+import { MatSidenavContainer } from "@angular/material/sidenav";
 
 @Component({
   selector: "bc-layout",
@@ -14,6 +15,6 @@ import { Component } from "@angular/core";
       }
     `,
   ],
-  standalone: false,
+  imports: [MatSidenavContainer],
 })
 export class LayoutComponent {}

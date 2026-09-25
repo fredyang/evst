@@ -3,7 +3,7 @@
 exports[`Logout Confirmation Dialog > should compile 1`] = `
 <ng-component>
   <h2
-    _ngcontent-a-c626405556=""
+    _ngcontent-a-c3526466557=""
     class="mat-mdc-dialog-title mdc-dialog__title"
     id="mat-mdc-dialog-title-a0"
     mat-dialog-title=""
@@ -11,17 +11,17 @@ exports[`Logout Confirmation Dialog > should compile 1`] = `
     Logout
   </h2>
   <mat-dialog-content
-    _ngcontent-a-c626405556=""
+    _ngcontent-a-c3526466557=""
     class="mat-mdc-dialog-content mdc-dialog__content"
   >
     Are you sure you want to logout?
   </mat-dialog-content>
   <mat-dialog-actions
-    _ngcontent-a-c626405556=""
+    _ngcontent-a-c3526466557=""
     class="mat-mdc-dialog-actions mdc-dialog__actions"
   >
     <button
-      _ngcontent-a-c626405556=""
+      _ngcontent-a-c3526466557=""
       class="mdc-button mat-mdc-button-base mat-mdc-button mat-unthemed"
       mat-button=""
       mat-ripple-loader-class-name="mat-mdc-button-ripple"
@@ -45,7 +45,7 @@ exports[`Logout Confirmation Dialog > should compile 1`] = `
       />
     </button>
     <button
-      _ngcontent-a-c626405556=""
+      _ngcontent-a-c3526466557=""
       class="mdc-button mat-mdc-button-base mat-mdc-button mat-unthemed"
       mat-button=""
       mat-ripple-loader-class-name="mat-mdc-button-ripple"

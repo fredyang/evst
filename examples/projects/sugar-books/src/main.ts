@@ -1,6 +1,10 @@
 import "./polyfills";
 
-import { platformBrowser } from "@angular/platform-browser";
-import { AppModule } from "./app/app.module";
+import { bootstrapApplication } from "@angular/platform-browser";
+import { appConfig } from "@example-app/app.config";
 
-platformBrowser().bootstrapModule(AppModule);
+import { AppComponent } from "@example-app/core/containers";
+
+bootstrapApplication(AppComponent, appConfig).catch((err) =>
+  console.error(err),
+);
