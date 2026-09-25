@@ -201,10 +201,11 @@ ignores repeated entries while a request is pending. Catching errors inside the
 request keeps the task listening for future events.
 
 NgRx dispatches events emitted by `tasks().on()` automatically. The `pipe`
-callback composes operators in their execution order. `exhaustMap` ignores
-repeated entries while a request is pending; `switchMap` keeps only the
-latest request; `concatMap` queues requests; and `mergeMap` runs independent
-requests in parallel.
+callback composes operators in their execution order. Multiple event creators
+can precede the callback, and its pipe then emits their union. `exhaustMap`
+ignores repeated entries while a request is pending; `switchMap` keeps only
+the latest request; `concatMap` queues requests; and `mergeMap` runs
+independent requests in parallel.
 
 `tasks.on()` also creates standalone tasks from arbitrary Observable sources,
 such as sockets, timers, and browser APIs. Non-dispatching tasks use

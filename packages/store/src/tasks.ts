@@ -21,8 +21,8 @@ export type Task<
   Source extends () => Observable<unknown> = () => Observable<unknown>,
 > = FunctionalEffect<Source> & { provide(): EnvironmentProviders };
 
-type EventPipe<Creator extends ActionCreator> = Observable<
-  ReturnType<Creator>
+type EventPipe<Creators extends readonly ActionCreator[]> = Observable<
+  ReturnType<Creators[number]>
 >["pipe"];
 
 export interface Tasks extends TasksInput {
@@ -36,7 +36,14 @@ export interface Tasks extends TasksInput {
   /** Adds a task that starts when the supplied event is published. */
   on<Creator extends ActionCreator>(
     event: Creator,
-    source: (pipe: EventPipe<Creator>) => Observable<unknown>,
+    source: (pipe: EventPipe<[Creator]>) => Observable<unknown>,
+    options?: EffectConfig,
+  ): this;
+  /** Adds a task that starts when any supplied events are published. */
+  on<First extends ActionCreator, Second extends ActionCreator>(
+    first: First,
+    second: Second,
+    source: (pipe: EventPipe<[First, Second]>) => Observable<unknown>,
     options?: EffectConfig,
   ): this;
   /** Returns a readonly snapshot without consuming this collection. */
@@ -54,18 +61,21 @@ class TasksCollection implements Tasks {
   ): this;
   on<Creator extends ActionCreator>(
     event: Creator,
-    source: (pipe: EventPipe<Creator>) => Observable<unknown>,
+    source: (pipe: EventPipe<[Creator]>) => Observable<unknown>,
     options?: EffectConfig,
   ): this;
-  on(
-    first: Task | (() => Observable<unknown>) | ActionCreator,
-    second?: EffectConfig | ((pipe: EventPipe<any>) => Observable<unknown>),
-    third?: EffectConfig,
-  ): this {
+  on<First extends ActionCreator, Second extends ActionCreator>(
+    first: First,
+    second: Second,
+    source: (pipe: EventPipe<[First, Second]>) => Observable<unknown>,
+    options?: EffectConfig,
+  ): this;
+  on(...args: any[]): this {
+    const [first] = args;
     this.#registered.push(
-      second === undefined && isTask(first)
+      args.length === 1 && isTask(first)
         ? first
-        : tasks.on(first as any, second as any, third),
+        : (tasks.on as (...input: any[]) => Task)(...args),
     );
     return this;
   }
@@ -83,9 +93,10 @@ class TasksCollection implements Tasks {
  * Creates a mutable task collection for one feature or application boundary.
  *
  * `.on(task)` includes a task created with the static `tasks.on(...)` form.
- * `.on(source)` adds an arbitrary Observable source. `.on(event, source)`
- * adds an event-driven task without exposing `Actions` or `ofType()`. The
- * source receives a typed event `pipe` for composing RxJS operators.
+ * `.on(source)` adds an arbitrary Observable source. `.on(event, source)` or
+ * `.on(eventA, eventB, source)` adds an event-driven task without exposing
+ * `Actions` or `ofType()`. The source receives a typed event `pipe` for
+ * composing RxJS operators.
  * `.toList()` returns a snapshot; `.provide()` registers current tasks. Adding
  * tasks after bootstrap does not change already registered providers.
  *
@@ -124,29 +135,42 @@ export namespace tasks {
    */
   export function on<Creator extends ActionCreator>(
     event: Creator,
-    source: (pipe: EventPipe<Creator>) => Observable<unknown>,
+    source: (pipe: EventPipe<[Creator]>) => Observable<unknown>,
     options?: EffectConfig,
   ): Task;
-  export function on(
-    first: (() => Observable<unknown>) | ActionCreator,
-    second?: EffectConfig | ((pipe: EventPipe<any>) => Observable<unknown>),
-    third?: EffectConfig,
-  ): Task {
-    const source =
-      typeof second === "function"
-        ? () => {
-            const events = inject(Actions).pipe(
-              ofType(first as ActionCreator),
-            ) as Observable<any>;
-            const eventPipe = ((...operators: OperatorFunction<any, any>[]) =>
-              operators.reduce(
-                (stream, operator) => operator(stream),
-                events,
-              )) as EventPipe<any>;
-            return second(eventPipe);
-          }
-        : (first as () => Observable<unknown>);
-    const options = (typeof second === "function" ? third : second) ?? {};
+  export function on<First extends ActionCreator, Second extends ActionCreator>(
+    first: First,
+    second: Second,
+    source: (pipe: EventPipe<[First, Second]>) => Observable<unknown>,
+    options?: EffectConfig,
+  ): Task;
+  export function on(...args: any[]): Task {
+    const [first] = args;
+    const eventDriven = isActionCreator(first);
+    const options = eventDriven
+      ? ((typeof args.at(-1) === "function" ? {} : args.at(-1)) ?? {})
+      : (args[1] ?? {});
+    const source = eventDriven
+      ? () => {
+          const sourceIndex =
+            typeof args.at(-1) === "function"
+              ? args.length - 1
+              : args.length - 2;
+          const eventCreators = args.slice(0, sourceIndex) as ActionCreator[];
+          const compose = args[sourceIndex] as (
+            pipe: EventPipe<any>,
+          ) => Observable<unknown>;
+          const events = inject(Actions).pipe(
+            ofType(...eventCreators),
+          ) as Observable<any>;
+          const eventPipe = ((...operators: OperatorFunction<any, any>[]) =>
+            operators.reduce(
+              (stream, operator) => operator(stream),
+              events,
+            )) as EventPipe<any>;
+          return compose(eventPipe);
+        }
+      : (first as () => Observable<unknown>);
     const create = createEffect as (
       source: () => Observable<unknown>,
       config: EffectConfig & { functional: true },
@@ -162,5 +186,12 @@ function isTask(value: unknown): value is Task {
   return (
     typeof value === "function" &&
     !!getEffectsMetadata({ effect: value }).effect
+  );
+}
+
+function isActionCreator(value: unknown): value is ActionCreator {
+  return (
+    typeof value === "function" &&
+    typeof (value as ActionCreator).type === "string"
   );
 }

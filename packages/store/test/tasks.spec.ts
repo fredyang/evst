@@ -11,6 +11,10 @@ import { expect, expectTypeOf, it } from "vitest";
 import { tasks, state as createState } from "../src/index.js";
 
 const clicked = createAction("[Test] Clicked");
+const doubleClicked = createAction(
+  "[Test] Double Clicked",
+  (count: number) => ({ count }),
+);
 
 it("defers execution and preserves optional source parameters", () => {
   let calls = 0;
@@ -138,6 +142,43 @@ it("builds event-driven tasks without exposing Actions or ofType", () => {
     });
     injector.get(Store).dispatch(clicked());
     expect(emitted).toEqual([completed()]);
+  } finally {
+    injector.destroy();
+  }
+});
+
+it("builds event-driven tasks from multiple event creators", () => {
+  const completed = createAction("[Test] Completed", (count: number) => ({
+    count,
+  }));
+  const registry = tasks().on(clicked, doubleClicked, (pipe) =>
+    pipe(
+      map((event) => {
+        expectTypeOf(event).toEqualTypeOf<
+          ReturnType<typeof clicked> | ReturnType<typeof doubleClicked>
+        >();
+        return completed("count" in event ? event.count : 1);
+      }),
+    ),
+  );
+  const effect = registry.toList()[0] as () => Observable<unknown>;
+  const injector = createEnvironmentInjector(
+    [
+      { provide: ɵINJECTOR_SCOPE, useValue: "root" },
+      ErrorHandler,
+      provideStore(),
+    ],
+    null!,
+  );
+  try {
+    const emitted: unknown[] = [];
+    injector.runInContext(() => {
+      effect().subscribe((event) => emitted.push(event));
+    });
+    const store = injector.get(Store);
+    store.dispatch(clicked());
+    store.dispatch(doubleClicked(2));
+    expect(emitted).toEqual([completed(1), completed(2)]);
   } finally {
     injector.destroy();
   }
