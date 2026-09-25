@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "module": "preserve",
@@ -9,5 +9,6 @@
     "isolatedModules": true
   },
   "files": ["test-setup.ts"],
-  "include": ["**/*.spec.ts", "**/*.test.ts", "**/*.d.ts"]
+  "include": ["**/*.spec.ts", "**/*.test.ts", "**/*.d.ts"],
+  "exclude": []
 }

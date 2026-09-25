@@ -44,7 +44,11 @@ describe("Service: GoogleBooks", () => {
 
     expect(service.searchBooks(queryTitle)).toBeObservable(expected);
     expect(http.get).toHaveBeenCalledWith(
-      `https://www.googleapis.com/books/v1/volumes?orderBy=newest&q=${queryTitle}`,
+      expect.stringMatching(
+        new RegExp(
+          `^https://www\\.googleapis\\.com/books/v1/volumes\\?orderBy=newest&q=${queryTitle}&key=.+$`,
+        ),
+      ),
     );
   });
 
@@ -55,7 +59,11 @@ describe("Service: GoogleBooks", () => {
 
     expect(service.retrieveBook(data.id)).toBeObservable(expected);
     expect(http.get).toHaveBeenCalledWith(
-      `https://www.googleapis.com/books/v1/volumes/${data.id}`,
+      expect.stringMatching(
+        new RegExp(
+          `^https://www\\.googleapis\\.com/books/v1/volumes/${data.id}\\?key=.+$`,
+        ),
+      ),
     );
   });
 });
