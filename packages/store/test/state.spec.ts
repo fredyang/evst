@@ -8,7 +8,7 @@ import { Actions, createEffect, ofType } from "@ngrx/effects";
 import { createAction, props, provideStore, Store } from "@ngrx/store";
 import { map } from "rxjs";
 import { expect, expectTypeOf, it, vi } from "vitest";
-import { state } from "../src/index.js";
+import { state, view } from "../src/index.js";
 
 const add = createAction("[Counter] Add", props<{ amount: number }>());
 const other = createAction("[Counter] Other", props<{ amount: number }>());
@@ -30,12 +30,12 @@ it("infers handlers and preserves independent branches", () => {
 it("composes successive extra views once and retains their types and caches", () => {
   const build = vi.fn();
   const base = state("counter", { count: 0 });
-  const first = base.withViews(({ count }, view) => {
+  const first = base.withViews(({ count }) => {
     build();
     return { doubled: view(count, (n) => n * 2) };
   });
   const next = first
-    .withViews(({ doubled }, view) => ({
+    .withViews(({ doubled }) => ({
       text: view(doubled, (n) => String(n)),
     }))
     .on(add, (s, { amount }) => ({ count: s.count + amount }));

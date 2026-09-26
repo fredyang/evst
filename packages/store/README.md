@@ -4,7 +4,7 @@
 
 This is the spirit of jQuery. Now NgRx Sugar bring it to NgRx Store.
 We will have less to learn, less to remember, less to wire up.
-Just four entry points to remember: `events`, `state`, `tasks`, and
+Just five entry points to remember: `events`, `state`, `view`, `tasks`, and
 `provideStoreSugar`, with a fluent API guiding the rest.
 
 ## Built on NgRx
@@ -101,7 +101,7 @@ already available on the definition.
 ```ts
 // books.state.ts
 import { loadBooks } from "./books.tasks";
-import { state } from "@ngrx-sugar/store";
+import { state, view } from "@ngrx-sugar/store";
 import { BooksApiEvents, BooksPageEvents, type Book } from "./books.events";
 
 interface BooksState {
@@ -138,7 +138,7 @@ export const booksState = state("books", initialState)
     ...state,
     selectedId: id,
   }))
-  .withViews(({ books, selectedId }, view) => ({
+  .withViews(({ books, selectedId }) => ({
     selectedBook: view(
       books,
       selectedId,
@@ -152,8 +152,8 @@ Every initialized state field gets a view automatically: `views.books`,
 `views.loading`, and so on. `views.root` reads the whole feature state.
 `views.selectedBook` is the derived view added above.
 
-The supplied `view` builder uses NgRx's `createSelector`, with type inference
-and memoization. `selectedBook` recalculates when `books` or `selectedId`
+`view()` uses NgRx's `createSelector`, with type inference and memoization.
+`selectedBook` recalculates when `books` or `selectedId`
 changes, and reuses its result when only `loading` or `error` changes. State
 updates must remain immutable.
 
@@ -162,6 +162,29 @@ preserving existing definitions and view identities. `.on()` also accepts
 multiple event creators before a handler. Additional `.withViews()` calls
 can compose earlier views; duplicate names and the reserved name `root` are
 not allowed.
+
+Standalone views compose views from more than one feature without assigning the
+result to either feature:
+
+```ts
+import { view } from "@ngrx-sugar/store";
+import { ordersState } from "./orders.state";
+import { usersState } from "./users.state";
+
+export const selectedUserWithOrders = view(
+  usersState.views.users,
+  usersState.views.selectedId,
+  ordersState.views.orders,
+  (users, selectedId, orders) => {
+    const user = users.find((user) => user.id === selectedId);
+    return user
+      ? { ...user, orders: orders.filter((order) => order.userId === user.id) }
+      : null;
+  },
+);
+```
+
+Standalone views expose `.signal()` and `.observable()` just like feature views.
 
 ## Defining tasks
 

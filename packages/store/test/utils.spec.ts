@@ -9,7 +9,7 @@ import {
 import { Store } from "@ngrx/store";
 import { of, type Observable } from "rxjs";
 import { afterEach, expect, expectTypeOf, it, vi } from "vitest";
-import { state as createState } from "../src/index.js";
+import { state as createState, view } from "../src/index.js";
 import { provideStoreSugar } from "../src/provide-store-sugar.js";
 
 const injectors: ReturnType<typeof createEnvironmentInjector>[] = [];
@@ -50,14 +50,14 @@ it("requires Sugar Store registration before reading views", () => {
 it("reads generated and derived views with inferred signal types and equality options", () => {
   const { mock, selected } = createViewContext();
   const feature = createState("counter", { count: 0 }).withViews(
-    ({ count }, view) => ({ doubled: view(count, (count) => count * 2) }),
+    ({ count }) => ({ doubled: view(count, (count) => count * 2) }),
   );
-  const view = feature.views.count;
+  const countView = feature.views.count;
   const options = { equal: (a: number, b: number) => a === b };
-  const value = view.signal(options);
+  const value = countView.signal(options);
   expectTypeOf(value()).toEqualTypeOf<number>();
   expect(value()).toBe(1);
-  expect(mock.selectSignal).toHaveBeenCalledWith(view, options);
+  expect(mock.selectSignal).toHaveBeenCalledWith(countView, options);
   selected.set(2);
   expect(value()).toBe(2);
 
@@ -65,27 +65,32 @@ it("reads generated and derived views with inferred signal types and equality op
   const derived = memoized.signal();
   expectTypeOf(derived()).toEqualTypeOf<number>();
   expect(mock.selectSignal).toHaveBeenCalledWith(memoized, undefined);
+
+  const standalone = view(feature.views.count, (count) => count * 3);
+  const standaloneSignal = standalone.signal();
+  expectTypeOf(standaloneSignal()).toEqualTypeOf<number>();
+  expect(mock.selectSignal).toHaveBeenCalledWith(standalone, undefined);
 });
 
 it("creates observable views without an injection context", () => {
   const { mock } = createViewContext();
   const feature = createState("counter", { count: 0 }).withViews(
-    ({ count }, view) => ({ doubled: view(count, (count) => count * 2) }),
+    ({ count }) => ({ doubled: view(count, (count) => count * 2) }),
   );
-  const view = feature.views.count;
-  const value$ = view.observable();
+  const countView = feature.views.count;
+  const value$ = countView.observable();
   const next = vi.fn();
   value$.subscribe((value) => {
     expectTypeOf(value).toEqualTypeOf<number>();
     next(value);
   });
   expect(next).toHaveBeenCalledWith(1);
-  expect(mock.select).toHaveBeenCalledWith(view);
+  expect(mock.select).toHaveBeenCalledWith(countView);
 });
 
 it("attaches typed injection methods to root, field, and derived views", () => {
   const feature = createState("counter", { count: 0 }).withViews(
-    ({ count }, view) => ({
+    ({ count }) => ({
       doubled: view(count, (value) => value * 2),
     }),
   );

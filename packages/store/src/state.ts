@@ -1,30 +1,17 @@
-import type { Signal } from "@angular/core";
-import type { Observable } from "rxjs";
 import {
-  Store,
   createFeatureSelector,
   createReducer,
-  createSelector,
   on,
   type ActionCreator,
   type MemoizedSelector,
   type ReducerTypes,
-  type SelectSignalOptions,
 } from "@ngrx/store";
 import {
   provideFeature,
   type TasksRegistrationInput,
 } from "./provide-feature.js";
 import type { Action } from "@ngrx/store";
-import { cachedStore } from "./provide-store-sugar.js";
-
-/** Injection helpers attached to each exposed view. */
-type ViewMethods<Result> = {
-  /** Reads this view as a signal from the registered Sugar Store. */
-  signal(options?: SelectSignalOptions<Result>): Signal<Result>;
-  /** Reads this view as an observable from the registered Sugar Store. */
-  observable(): Observable<Result>;
-};
+import { attachViewMethods, type ViewMethods, view } from "./view.js";
 
 /** Adds signal and observable access to each named memoized view. */
 type InjectableViews<
@@ -32,16 +19,6 @@ type InjectableViews<
 > = {
   [Key in keyof Views]: Views[Key] & ViewMethods<ReturnType<Views[Key]>>;
 };
-
-function attachViewMethods<View extends MemoizedSelector<object, any>>(
-  view: View,
-) {
-  return Object.assign(view, {
-    signal: (options?: SelectSignalOptions<ReturnType<View>>) =>
-      cachedStore().selectSignal(view, options),
-    observable: () => cachedStore().select(view),
-  });
-}
 
 /** Memoized views for each state field, plus the complete state. */
 type StateViews<State> = {
@@ -80,14 +57,11 @@ export interface StateDefinition<
   ): StateDefinition<State, ExtraViews>;
   /**
    * Adds named memoized views from generated or previously added views.
-   * The callback runs once; its view builder is NgRx's createSelector.
+   * The callback runs once. Use the exported `view()` builder for derived views.
    * Existing names, including root, cannot be overwritten.
    */
   withViews<Added extends Record<string, MemoizedSelector<object, any>>>(
-    build: (
-      views: StateViews<State> & InjectableViews<ExtraViews>,
-      view: typeof createSelector,
-    ) => Added,
+    build: (views: StateViews<State> & InjectableViews<ExtraViews>) => Added,
   ): StateDefinition<State, ExtraViews & Added>;
   /** Appends task classes, functional tasks, named records, or nested arrays. */
   withTasks(tasks: TasksRegistrationInput): StateDefinition<State, ExtraViews>;
@@ -120,7 +94,7 @@ export interface StateDefinition<
  * @example Defining handlers and derived views
  * ```ts
  * import { props } from '@ngrx/store';
- * import { events, state } from '@ngrx-sugar/store';
+ * import { events, state, view } from '@ngrx-sugar/store';
  *
  * const CounterEvents = events('Counter', {
  *   added: props<{ amount: number }>(),
@@ -130,7 +104,7 @@ export interface StateDefinition<
  *   .on(CounterEvents.added, (current, { amount }) => ({
  *     count: current.count + amount,
  *   }))
- *   .withViews(({ count }, view) => ({
+ *   .withViews(({ count }) => ({
  *     doubled: view(count, count => count * 2),
  *   }));
  *
@@ -173,9 +147,7 @@ export function state<State extends object>(
     ...Object.fromEntries(
       Object.keys(initialState).map((key) => [
         key,
-        attachViewMethods(
-          createSelector(root, (state) => state[key as keyof State]),
-        ),
+        attachViewMethods(view(root, (state) => state[key as keyof State])),
       ]),
     ),
     root: attachViewMethods(root),
@@ -207,7 +179,7 @@ function chainState<
         views,
       ),
     withViews: (build) => {
-      const added = build(views, createSelector);
+      const added = build(views);
       for (const key of Object.keys(added)) {
         if (Object.hasOwn(views, key)) {
           throw new Error(

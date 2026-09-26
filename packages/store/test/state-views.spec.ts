@@ -8,7 +8,7 @@ import { Actions, createEffect, ofType } from "@ngrx/effects";
 import { createAction, on, props, provideStore, Store } from "@ngrx/store";
 import { map } from "rxjs";
 import { expect, expectTypeOf, it } from "vitest";
-import { state as createState } from "../src/index.js";
+import { state as createState, view } from "../src/index.js";
 
 const clicked = createAction("[Counter] Clicked");
 const changed = createAction("[Counter] Changed", props<{ amount: number }>());
@@ -29,7 +29,7 @@ it("accepts typed handlers and preserves view memoization", () => {
       ...state,
       count: amount,
     }))
-    .withViews(({ count, loading }, view) => ({
+    .withViews(({ count, loading }) => ({
       doubled: view(count, (count) => {
         expectTypeOf(count).toEqualTypeOf<number>();
         calls++;
@@ -67,6 +67,48 @@ it("accepts typed handlers and preserves view memoization", () => {
   ).toBe(7);
 });
 
+it("creates standalone views that compose feature views", () => {
+  const users = createState("users", {
+    users: [{ id: "user-1", name: "Ada" }],
+    selectedId: "user-1" as string | null,
+  });
+  const orders = createState("orders", {
+    orders: [{ id: "order-1", userId: "user-1", amount: 12 }],
+  });
+  const selectedUserWithOrders = view(
+    users.views.users,
+    users.views.selectedId,
+    orders.views.orders,
+    (users, selectedId, orders) => {
+      const user = users.find((user) => user.id === selectedId);
+      return user
+        ? {
+            ...user,
+            orders: orders.filter((order) => order.userId === user.id),
+          }
+        : null;
+    },
+  );
+
+  expect(
+    selectedUserWithOrders({
+      users: users.test.getNextState(undefined, { type: "init" }),
+      orders: orders.test.getNextState(undefined, { type: "init" }),
+    }),
+  ).toEqual({
+    id: "user-1",
+    name: "Ada",
+    orders: [{ id: "order-1", userId: "user-1", amount: 12 }],
+  });
+  expectTypeOf(selectedUserWithOrders.signal).returns.toEqualTypeOf<
+    import("@angular/core").Signal<{
+      id: string;
+      name: string;
+      orders: { id: string; userId: string; amount: number }[];
+    } | null>
+  >();
+});
+
 it("reuses derived arrays until a declared dependency changes", () => {
   let calls = 0;
   const book = { id: "one" };
@@ -76,38 +118,40 @@ it("reuses derived arrays until a declared dependency changes", () => {
     collection: [] as string[],
   };
   const feature = createState("books", initial).withViews(
-    ({ books, search }, view) => ({
+    ({ books, search }) => ({
       results: view(books, search, (books, search) => {
         calls++;
         return search.ids.map((id) => books[id as keyof typeof books]);
       }),
     }),
   );
-  const view = feature.views.results;
-  expectTypeOf(view).returns.toEqualTypeOf<{ id: string }[]>();
-  const first = view({ books: initial });
+  const resultsView = feature.views.results;
+  expectTypeOf(resultsView).returns.toEqualTypeOf<{ id: string }[]>();
+  const first = resultsView({ books: initial });
   expect(first).toEqual([book]);
-  expect(view({ books: { ...initial, collection: ["one"] } })).toBe(first);
+  expect(resultsView({ books: { ...initial, collection: ["one"] } })).toBe(
+    first,
+  );
   expect(calls).toBe(1);
   const searching = { ...initial, search: { ids: [] } };
-  expect(view({ books: searching })).toEqual([]);
+  expect(resultsView({ books: searching })).toEqual([]);
   expect(calls).toBe(2);
   const updated = { ...initial, books: { one: { id: "updated" } } };
-  expect(view({ books: updated })).toEqual([{ id: "updated" }]);
+  expect(resultsView({ books: updated })).toEqual([{ id: "updated" }]);
   expect(calls).toBe(3);
-  view.release();
-  view({ books: updated });
+  resultsView.release();
+  resultsView({ books: updated });
   expect(calls).toBe(4);
   const override = [{ id: "mock" }];
-  view.setResult(override);
-  expect(view({ books: initial })).toBe(override);
-  view.clearResult();
-  expect(view({ books: initial })).toEqual([book]);
+  resultsView.setResult(override);
+  expect(resultsView({ books: initial })).toBe(override);
+  resultsView.clearResult();
+  expect(resultsView({ books: initial })).toEqual([book]);
 });
 
 it("composes views and preserves the projector type", () => {
   const feature = createState("counter", initialState).withViews(
-    ({ count, loading }, view) => {
+    ({ count, loading }) => {
       const doubled = view(count, (count) => count * 2);
       return {
         doubled,
@@ -171,7 +215,7 @@ it("derives views from multiple state values with inferred types", () => {
   const feature = createState("books", {
     query: "",
     books: [] as { title: string }[],
-  }).withViews(({ query, books }, view) => ({
+  }).withViews(({ query, books }) => ({
     filteredBooks: view(query, books, (query, books) => {
       expectTypeOf(query).toEqualTypeOf<string>();
       expectTypeOf(books).toEqualTypeOf<{ title: string }[]>();
