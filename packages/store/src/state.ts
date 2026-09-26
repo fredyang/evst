@@ -45,25 +45,33 @@ export interface StateDefinition<
 > {
   /** Generated and derived views; root selects the complete feature state. */
   readonly views: StateViews<State> & InjectableViews<ExtraViews>;
-  /** Pure state transitions for tests; no events are published or tasks run. */
+  /** Pure reducer access for unit tests; events are neither published nor handled by tasks. */
   readonly test: {
+    /** Returns the next feature state for an action without registering the feature. */
     getNextState(state: State | undefined, event: Action): State;
   };
-  /** Registers this definition; requires a root Store, normally from provideStoreSugar(). */
+  /**
+   * Registers this feature reducer and its tasks in an application or route injector.
+   * A root Store is required, normally from `provideStoreSugar()`.
+   */
   provide(): ReturnType<typeof provideFeature>;
-  /** Adds a handler, preserving inference for each event's payload. */
+  /** Adds immutable event handlers while preserving each event payload type. */
   on<Creators extends readonly ActionCreator[]>(
     ...args: [...Creators, ReducerTypes<State, Creators>["reducer"]]
   ): StateDefinition<State, ExtraViews>;
   /**
-   * Adds named memoized views from generated or previously added views.
-   * The callback runs once. Use the exported `view()` builder for derived views.
-   * Existing names, including root, cannot be overwritten.
+   * Optionally adds named, derived views alongside the default field and `root`
+   * views. The callback runs once; use the exported `view()` builder for each
+   * derived view. Existing names, including `root`, cannot be overwritten.
    */
   withViews<Added extends Record<string, MemoizedSelector<object, any>>>(
     build: (views: StateViews<State> & InjectableViews<ExtraViews>) => Added,
   ): StateDefinition<State, ExtraViews & Added>;
-  /** Appends task classes, functional tasks, named records, or nested arrays. */
+  /**
+   * Optionally appends tasks so this definition's `provide()` method registers
+   * both the feature state and its tasks. Task collections, functional effects,
+   * named records, and nested arrays are supported.
+   */
   withTasks(tasks: TasksRegistrationInput): StateDefinition<State, ExtraViews>;
 }
 

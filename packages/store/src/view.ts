@@ -36,23 +36,31 @@ export function attachViewMethods<
   });
 }
 
-/** Creates a memoized NgRx selector with Sugar signal and observable readers. */
+/**
+ * Creates memoized NgRx selectors with Sugar signal and observable readers.
+ *
+ * `view()` supports one or more input selectors followed by a projector.
+ */
 export interface ViewBuilder {
+  /** Creates a view from one input selector. */
   <State extends object, S1, Result>(
     s1: Selector<State, S1>,
     projector: (s1: S1) => Result,
   ): View<State, Result, typeof projector>;
+  /** Creates a view from two input selectors. */
   <State extends object, S1, S2, Result>(
     s1: Selector<State, S1>,
     s2: Selector<State, S2>,
     projector: (s1: S1, s2: S2) => Result,
   ): View<State, Result, typeof projector>;
+  /** Creates a view from three input selectors. */
   <State extends object, S1, S2, S3, Result>(
     s1: Selector<State, S1>,
     s2: Selector<State, S2>,
     s3: Selector<State, S3>,
     projector: (s1: S1, s2: S2, s3: S3) => Result,
   ): View<State, Result, typeof projector>;
+  /** Creates a view from four or more input selectors. */
   <State extends object, Slices extends unknown[], Result>(
     ...args: [...slices: Selector<State, unknown>[], projector: unknown] &
       [

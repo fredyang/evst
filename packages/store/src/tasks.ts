@@ -61,9 +61,16 @@ export interface TaskBuilder {
   ): TaskDefinition;
 }
 
+/** A named collection of Sugar tasks that can be registered together. */
 export interface Tasks<Effects extends Record<string, TaskDefinition> = {}> {
-  /** Generated NgRx functional effects, keyed by the collection definition. */
+  /**
+   * Generated NgRx functional effects, keyed by task name.
+   *
+   * Effects are normally registered through `withTasks()` or `provide()` rather
+   * than consumed directly. This property is primarily useful in unit tests.
+   */
   readonly effects: Readonly<Effects>;
+  /** Registers every task in this collection with the current Angular injector. */
   provide(): EnvironmentProviders;
 }
 
