@@ -13,6 +13,18 @@ const doubleClicked = createAction(
   "[Test] Double Clicked",
   (count: number) => ({ count }),
 );
+const tripleClicked = createAction(
+  "[Test] Triple Clicked",
+  (label: string) => ({ label }),
+);
+const quadrupleClicked = createAction(
+  "[Test] Quadruple Clicked",
+  (active: boolean) => ({ active }),
+);
+const quintupleClicked = createAction(
+  "[Test] Quintuple Clicked",
+  (timestamp: number) => ({ timestamp }),
+);
 
 it("exposes named generated effects", () => {
   const registry = tasks((on) => ({
@@ -67,6 +79,31 @@ it("runs event tasks and dispatches their results", () => {
   } finally {
     injector.destroy();
   }
+});
+
+it("infers the event union for tasks with five event sources", () => {
+  tasks((on) => ({
+    complete: on(
+      clicked,
+      doubleClicked,
+      tripleClicked,
+      quadrupleClicked,
+      quintupleClicked,
+      (pipe) =>
+        pipe(
+          map((event) => {
+            expectTypeOf(event).toEqualTypeOf<
+              | ReturnType<typeof clicked>
+              | ReturnType<typeof doubleClicked>
+              | ReturnType<typeof tripleClicked>
+              | ReturnType<typeof quadrupleClicked>
+              | ReturnType<typeof quintupleClicked>
+            >();
+            return event;
+          }),
+        ),
+    ),
+  }));
 });
 
 it("rejects values not created by the supplied builder", () => {

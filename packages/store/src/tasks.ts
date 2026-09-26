@@ -24,7 +24,8 @@ type TaskDefinition<Source extends EffectSource = () => Observable<unknown>> =
  * Creates a task definition for a `tasks` collection.
  *
  * The builder is supplied as `on` to the callback passed to `tasks`. A task
- * can be defined from an observable source, or scoped to one or two events.
+ * can be defined from an observable source, or scoped to one through five
+ * events.
  * Event-scoped tasks receive a `pipe` function whose source emits only the
  * selected event types.
  *
@@ -41,7 +42,13 @@ type TaskDefinition<Source extends EffectSource = () => Observable<unknown>> =
  * ```
  */
 export interface TaskBuilder {
-  /** Creates a task from an observable source that is subscribed when its effects are provided. */
+  /**
+   * Creates a task from an observable source that is subscribed when its effects are provided.
+   *
+   * @param source - Function that returns the task source observable.
+   * @param options - NgRx effect configuration.
+   * @returns A task definition for a `tasks()` collection.
+   */
   <Source extends () => Observable<unknown>>(
     source: Source,
     options?: EffectConfig,
@@ -59,6 +66,52 @@ export interface TaskBuilder {
     source: (pipe: EventPipe<[First, Second]>) => Observable<unknown>,
     options?: EffectConfig,
   ): TaskDefinition;
+  /** Creates a task that runs for any of three event types. */
+  <
+    First extends ActionCreator,
+    Second extends ActionCreator,
+    Third extends ActionCreator,
+  >(
+    first: First,
+    second: Second,
+    third: Third,
+    source: (pipe: EventPipe<[First, Second, Third]>) => Observable<unknown>,
+    options?: EffectConfig,
+  ): TaskDefinition;
+  /** Creates a task that runs for any of four event types. */
+  <
+    First extends ActionCreator,
+    Second extends ActionCreator,
+    Third extends ActionCreator,
+    Fourth extends ActionCreator,
+  >(
+    first: First,
+    second: Second,
+    third: Third,
+    fourth: Fourth,
+    source: (
+      pipe: EventPipe<[First, Second, Third, Fourth]>,
+    ) => Observable<unknown>,
+    options?: EffectConfig,
+  ): TaskDefinition;
+  /** Creates a task that runs for any of five event types. */
+  <
+    First extends ActionCreator,
+    Second extends ActionCreator,
+    Third extends ActionCreator,
+    Fourth extends ActionCreator,
+    Fifth extends ActionCreator,
+  >(
+    first: First,
+    second: Second,
+    third: Third,
+    fourth: Fourth,
+    fifth: Fifth,
+    source: (
+      pipe: EventPipe<[First, Second, Third, Fourth, Fifth]>,
+    ) => Observable<unknown>,
+    options?: EffectConfig,
+  ): TaskDefinition;
 }
 
 /** A named collection of Sugar tasks that can be registered together. */
@@ -70,7 +123,11 @@ export interface Tasks<Effects extends Record<string, TaskDefinition> = {}> {
    * than consumed directly. This property is primarily useful in unit tests.
    */
   readonly effects: Readonly<Effects>;
-  /** Registers every task in this collection with the current Angular injector. */
+  /**
+   * Registers every task in this collection with the current Angular injector.
+   *
+   * @returns Environment providers for every task in the collection.
+   */
   provide(): EnvironmentProviders;
 }
 
@@ -86,6 +143,10 @@ class TasksCollection<
 /**
  * Defines a named task collection. Each returned property is registered as a
  * task and exposed under `.effects` with the same name.
+ *
+ * @param build - Creates named tasks with the supplied `on` builder.
+ * @returns A task collection for `withTasks()` or `provide()` registration.
+ * @throws If a returned task was not created with the supplied `on` builder.
  *
  * @example
  * ```ts

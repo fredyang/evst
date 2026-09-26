@@ -47,15 +47,28 @@ export interface StateDefinition<
   readonly views: StateViews<State> & InjectableViews<ExtraViews>;
   /** Pure reducer access for unit tests; events are neither published nor handled by tasks. */
   readonly test: {
-    /** Returns the next feature state for an action without registering the feature. */
+    /**
+     * Returns the next feature state for an action without registering the feature.
+     *
+     * @param state - Current feature state, or `undefined` to use the initial state.
+     * @param event - Event handled by this feature reducer.
+     * @returns The resulting feature state.
+     */
     getNextState(state: State | undefined, event: Action): State;
   };
   /**
    * Registers this feature reducer and its tasks in an application or route injector.
    * A root Store is required, normally from `provideStoreSugar()`.
+   *
+   * @returns Environment providers for the feature reducer and its tasks.
    */
   provide(): ReturnType<typeof provideFeature>;
-  /** Adds immutable event handlers while preserving each event payload type. */
+  /**
+   * Adds immutable event handlers while preserving each event payload type.
+   *
+   * @param args - Event creators followed by a reducer handler.
+   * @returns A new definition containing the added handler.
+   */
   on<Creators extends readonly ActionCreator[]>(
     ...args: [...Creators, ReducerTypes<State, Creators>["reducer"]]
   ): StateDefinition<State, ExtraViews>;
@@ -63,6 +76,9 @@ export interface StateDefinition<
    * Optionally adds named, derived views alongside the default field and `root`
    * views. The callback runs once; use the exported `view()` builder for each
    * derived view. Existing names, including `root`, cannot be overwritten.
+   *
+   * @param build - Creates named derived views from the current views.
+   * @returns A new definition containing the added views.
    */
   withViews<Added extends Record<string, MemoizedSelector<object, any>>>(
     build: (views: StateViews<State> & InjectableViews<ExtraViews>) => Added,
@@ -71,6 +87,9 @@ export interface StateDefinition<
    * Optionally appends tasks so this definition's `provide()` method registers
    * both the feature state and its tasks. Task collections, functional effects,
    * named records, and nested arrays are supported.
+   *
+   * @param tasks - Tasks to register with this feature.
+   * @returns A new definition containing the added tasks.
    */
   withTasks(tasks: TasksRegistrationInput): StateDefinition<State, ExtraViews>;
 }

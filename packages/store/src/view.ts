@@ -10,9 +10,18 @@ import { cachedStore } from "./provide-store-sugar.js";
 
 /** Injection helpers attached to a memoized view. */
 export type ViewMethods<Result> = {
-  /** Reads this view as a signal from the registered Sugar Store. */
+  /**
+   * Reads this view as a signal from the registered Sugar Store.
+   *
+   * @param options - Signal selection options, including an optional equality function.
+   * @returns A signal containing the current view result.
+   */
   signal(options?: SelectSignalOptions<Result>): Signal<Result>;
-  /** Reads this view as an observable from the registered Sugar Store. */
+  /**
+   * Reads this view as an observable from the registered Sugar Store.
+   *
+   * @returns An observable of view results.
+   */
   observable(): Observable<Result>;
 };
 
@@ -42,25 +51,51 @@ export function attachViewMethods<
  * `view()` supports one or more input selectors followed by a projector.
  */
 export interface ViewBuilder {
-  /** Creates a view from one input selector. */
+  /**
+   * Creates a view from one input selector.
+   *
+   * @param s1 - Input selector.
+   * @param projector - Maps the input result to the view result.
+   * @returns A memoized view with signal and observable readers.
+   */
   <State extends object, S1, Result>(
     s1: Selector<State, S1>,
     projector: (s1: S1) => Result,
   ): View<State, Result, typeof projector>;
-  /** Creates a view from two input selectors. */
+  /**
+   * Creates a view from two input selectors.
+   *
+   * @param s1 - First input selector.
+   * @param s2 - Second input selector.
+   * @param projector - Maps input results to the view result.
+   * @returns A memoized view with signal and observable readers.
+   */
   <State extends object, S1, S2, Result>(
     s1: Selector<State, S1>,
     s2: Selector<State, S2>,
     projector: (s1: S1, s2: S2) => Result,
   ): View<State, Result, typeof projector>;
-  /** Creates a view from three input selectors. */
+  /**
+   * Creates a view from three input selectors.
+   *
+   * @param s1 - First input selector.
+   * @param s2 - Second input selector.
+   * @param s3 - Third input selector.
+   * @param projector - Maps input results to the view result.
+   * @returns A memoized view with signal and observable readers.
+   */
   <State extends object, S1, S2, S3, Result>(
     s1: Selector<State, S1>,
     s2: Selector<State, S2>,
     s3: Selector<State, S3>,
     projector: (s1: S1, s2: S2, s3: S3) => Result,
   ): View<State, Result, typeof projector>;
-  /** Creates a view from four or more input selectors. */
+  /**
+   * Creates a view from four or more input selectors.
+   *
+   * @param args - Input selectors followed by a projector.
+   * @returns A memoized view with signal and observable readers.
+   */
   <State extends object, Slices extends unknown[], Result>(
     ...args: [...slices: Selector<State, unknown>[], projector: unknown] &
       [
@@ -75,6 +110,8 @@ export interface ViewBuilder {
  *
  * The result is also a standard NgRx memoized selector, so it can compose
  * feature views or be used with NgRx Store APIs.
+ *
+ * @returns A memoized view with signal and observable readers.
  *
  * @example Combining views from two features
  * ```ts
