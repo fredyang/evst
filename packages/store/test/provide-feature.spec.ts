@@ -94,7 +94,7 @@ it("combines configured arrays, named records, and classes through state", () =>
             ),
           { dispatch: false },
         ),
-      })).effects,
+      })),
     );
   const injector = createEnvironmentInjector(
     [

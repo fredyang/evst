@@ -10,9 +10,10 @@ import {
 import { provideState, type Action, type ActionReducer } from "@ngrx/store";
 
 type EffectSource = Parameters<typeof provideEffects>[number];
-/** A task collection that can expose its registered task inputs. */
+/** A Sugar task collection that exposes its named functional effects. */
 export interface TasksInput {
-  toList(): readonly TaskInput[];
+  readonly effects: Readonly<Record<string, FunctionalEffect>>;
+  provide(): EnvironmentProviders;
 }
 /** A task class, named task record, functional task, or array of these. */
 export type TaskInput = EffectSource | FunctionalEffect | readonly TaskInput[];
@@ -52,7 +53,8 @@ export function normalizeTasks(
   inputs: readonly TasksRegistrationInput[],
 ): EffectSource[] {
   return inputs.flatMap((input): EffectSource[] => {
-    if (isTasksInput(input)) return normalizeTasks(input.toList());
+    if (isTasksInput(input))
+      return normalizeTasks(Object.values(input.effects));
     if (Array.isArray(input)) return normalizeTasks(input);
     if (
       typeof input === "function" &&
@@ -74,8 +76,11 @@ function isTasksInput(input: TasksRegistrationInput): input is TasksInput {
   return (
     typeof input === "object" &&
     input !== null &&
-    "toList" in input &&
-    typeof input.toList === "function"
+    "effects" in input &&
+    typeof input.effects === "object" &&
+    input.effects !== null &&
+    "provide" in input &&
+    typeof input.provide === "function"
   );
 }
 

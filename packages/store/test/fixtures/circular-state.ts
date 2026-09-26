@@ -5,4 +5,4 @@ import { circularTasks } from "./circular-tasks.js";
 const counted = createAction("[Circular] Counted", props<{ count: number }>());
 export const circularState = createState("circular", { count: 0 })
   .on(counted, (_state, { count }) => ({ count }))
-  .withTasks(circularTasks.effects);
+  .withTasks(circularTasks);
