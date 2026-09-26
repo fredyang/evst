@@ -20,16 +20,39 @@ type EventPipe<Creators extends readonly ActionCreator[]> = Observable<
 type TaskDefinition<Source extends EffectSource = () => Observable<unknown>> =
   Task & Source;
 
+/**
+ * Creates a task definition for a `tasks` collection.
+ *
+ * The builder is supplied as `on` to the callback passed to `tasks`. A task
+ * can be defined from an observable source, or scoped to one or two events.
+ * Event-scoped tasks receive a `pipe` function whose source emits only the
+ * selected event types.
+ *
+ * @example
+ * ```ts
+ * const booksTasks = tasks((on) => ({
+ *   load: on(BooksPageEvents.entered, (pipe) =>
+ *     pipe(
+ *       exhaustMap(() => booksApi.getAll()),
+ *       map((books) => BooksApiEvents.loaded({ books })),
+ *     ),
+ *   ),
+ * }));
+ * ```
+ */
 export interface TaskBuilder {
+  /** Creates a task from an observable source that is subscribed when its effects are provided. */
   <Source extends () => Observable<unknown>>(
     source: Source,
     options?: EffectConfig,
   ): TaskDefinition<Source>;
+  /** Creates a task that runs for a single event type. */
   <Creator extends ActionCreator>(
     event: Creator,
     source: (pipe: EventPipe<[Creator]>) => Observable<unknown>,
     options?: EffectConfig,
   ): TaskDefinition;
+  /** Creates a task that runs for either of two event types. */
   <First extends ActionCreator, Second extends ActionCreator>(
     first: First,
     second: Second,
