@@ -77,23 +77,25 @@ it("combines configured arrays, named records, and classes through state", () =>
   let observed = 0;
   const feature = state("arrayCounter", { count: 0 })
     .on(counted, (state) => ({ count: state.count + 1 }))
-    .withTasks([
-      [{ count }, CounterEffects] as const,
-      tasks.on((actions = inject(Actions)) =>
-        actions.pipe(
-          ofType(clicked),
-          map(() => counted()),
-        ),
-      ),
-      tasks.on(
-        (actions = inject(Actions)) =>
+    .withTasks([{ count }, CounterEffects] as const)
+    .withTasks(
+      tasks((on) => ({
+        count: on((actions = inject(Actions)) =>
           actions.pipe(
             ofType(clicked),
-            tap(() => observed++),
+            map(() => counted()),
           ),
-        { dispatch: false },
-      ),
-    ]);
+        ),
+        observe: on(
+          (actions = inject(Actions)) =>
+            actions.pipe(
+              ofType(clicked),
+              tap(() => observed++),
+            ),
+          { dispatch: false },
+        ),
+      })).effects,
+    );
   const injector = createEnvironmentInjector(
     [
       { provide: ɵINJECTOR_SCOPE, useValue: "root" },

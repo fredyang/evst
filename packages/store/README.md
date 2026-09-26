@@ -176,48 +176,49 @@ import { tasks } from "@ngrx-sugar/store";
 import { catchError, exhaustMap, map, of } from "rxjs";
 import { BooksApiEvents, BooksPageEvents, type Book } from "./books.events";
 
-export const booksTasks = tasks().on(BooksPageEvents.entered, (pipe) => {
-  const http = inject(HttpClient);
+export const booksTasks = tasks((on) => ({
+  load: on(BooksPageEvents.entered, (pipe) => {
+    const http = inject(HttpClient);
 
-  return pipe(
-    exhaustMap(() =>
-      http.get<Book[]>("/api/books").pipe(
-        map((books) => BooksApiEvents.booksLoaded({ books })),
-        catchError(() =>
-          of(
-            BooksApiEvents.booksLoadFailed({
-              message: "Books could not be loaded.",
-            }),
+    return pipe(
+      exhaustMap(() =>
+        http.get<Book[]>("/api/books").pipe(
+          map((books) => BooksApiEvents.booksLoaded({ books })),
+          catchError(() =>
+            of(
+              BooksApiEvents.booksLoadFailed({
+                message: "Books could not be loaded.",
+              }),
+            ),
           ),
         ),
       ),
-    ),
-  );
-});
+    );
+  }),
+}));
 ```
 
 The example expects `/api/books` to return a JSON array of books. `exhaustMap`
 ignores repeated entries while a request is pending. Catching errors inside the
 request keeps the task listening for future events.
 
-NgRx dispatches events emitted by `tasks().on()` automatically. The `pipe`
+NgRx dispatches events emitted by `tasks()` automatically. The `pipe`
 callback composes operators in their execution order. Multiple event creators
 can precede the callback, and its pipe then emits their union. `exhaustMap`
 ignores repeated entries while a request is pending; `switchMap` keeps only
 the latest request; `concatMap` queues requests; and `mergeMap` runs
 independent requests in parallel.
 
-`tasks.on()` also creates standalone tasks from arbitrary Observable sources,
-such as sockets, timers, and browser APIs. Non-dispatching tasks use
-`{ dispatch: false }`:
+`on()` also creates tasks from arbitrary Observable sources, such as sockets,
+timers, and browser APIs. Non-dispatching tasks use `{ dispatch: false }`:
 
 ```ts
-const connectionTask = tasks.on(
-  () => inject(SocketService).connected$.pipe(tap(reportConnection)),
-  { dispatch: false },
-);
-
-const appTasks = tasks().on(connectionTask);
+const appTasks = tasks((on) => ({
+  connection: on(
+    () => inject(SocketService).connected$.pipe(tap(reportConnection)),
+    { dispatch: false },
+  ),
+}));
 ```
 
 Both forms create NgRx observable effects underneath; Angular's signal-based
@@ -372,7 +373,7 @@ it("selects a book after it is loaded", () => {
 `test` is intended for tests by convention. A task collection is tested by
 supplying a controlled event stream to `tasks.toList()` and asserting its
 emitted outcome events with mocked dependencies. Complex or reusable tasks can
-be extracted with `tasks.on(...)` for focused tests.
+be read from `tasks.testing` for focused tests.
 
 Component tests that publish events can register
 `provideStoreSugar({ devtools: false })` before `provideMockStore(...)` in TestBed

@@ -152,7 +152,7 @@ export interface StateDefinition<
  *
  * const books = state('books', initialBooksState)
  *   .on(BooksEvents.loaded, (current, { books }) => ({ ...current, books }))
- *   .withTasks(booksTasks);
+ *   .withTasks(booksTasks.effects);
  *
  * const appConfig = {
  *   providers: [provideStoreSugar(), books.provide()],
