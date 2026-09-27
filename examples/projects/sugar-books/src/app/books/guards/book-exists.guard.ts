@@ -1,12 +1,11 @@
 import { inject } from "@angular/core";
 import { Router, ActivatedRouteSnapshot } from "@angular/router";
-import { Store } from "@ngrx/store";
 import { Observable, of } from "rxjs";
 import { catchError, filter, map, switchMap, take, tap } from "rxjs/operators";
 
 import { GoogleBooksService } from "@example-app/core/services";
-import { BookActions } from "@example-app/books/actions/book.actions";
-import * as fromBooks from "@example-app/books/reducers";
+import { fromBookExistsGuard } from "@example-app/books/store/books.events";
+import { booksViews } from "@example-app/books/store/books.state";
 
 /**
  * Guards are hooks into the route resolution process, providing an opportunity
@@ -17,7 +16,6 @@ import * as fromBooks from "@example-app/books/reducers";
 export const bookExistsGuard = (
   route: ActivatedRouteSnapshot,
 ): Observable<boolean> => {
-  const store = inject(Store);
   const googleBooks = inject(GoogleBooksService);
   const router = inject(Router);
 
@@ -27,7 +25,7 @@ export const bookExistsGuard = (
    * has finished.
    */
   function waitForCollectionToLoad(): Observable<boolean> {
-    return store.select(fromBooks.selectCollectionLoaded).pipe(
+    return booksViews.collectionLoaded.observable().pipe(
       filter((loaded) => loaded),
       take(1),
     );
@@ -38,7 +36,7 @@ export const bookExistsGuard = (
    * in the Store
    */
   function hasBookInStore(id: string): Observable<boolean> {
-    return store.select(fromBooks.selectBookEntities).pipe(
+    return booksViews.bookEntities.observable().pipe(
       map((entities) => !!entities[id]),
       take(1),
     );
@@ -50,8 +48,7 @@ export const bookExistsGuard = (
    */
   function hasBookInApi(id: string): Observable<boolean> {
     return googleBooks.retrieveBook(id).pipe(
-      map((bookEntity) => BookActions.loadBook({ book: bookEntity })),
-      tap((action) => store.dispatch(action)),
+      tap((book) => fromBookExistsGuard.loadBook.publish({ book })),
       map((book) => !!book),
       catchError(() => {
         router.navigate(["/404"]);

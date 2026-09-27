@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from "@angular/core";
 
-import { Book } from "@example-app/books/models";
+import type { Book } from "@example-app/books/models";
 import { NgIf } from "@angular/common";
 import {
   MatCard,

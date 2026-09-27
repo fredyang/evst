@@ -2,7 +2,10 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./src",
-    "paths": { "@example-app/*": ["app/*"] },
+    "paths": {
+      "@example-app/*": ["app/*"],
+      "@ngrx-sugar/store": ["../../../../packages/store/src/index.ts"]
+    },
     "types": ["vitest/globals", "node"]
   },
   "files": [],

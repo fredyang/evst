@@ -1,6 +1,6 @@
 import { Component, Input } from "@angular/core";
 
-import { Book } from "@example-app/books/models";
+import type { Book } from "@example-app/books/models";
 import { RouterLink } from "@angular/router";
 import {
   MatCard,

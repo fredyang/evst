@@ -4,16 +4,16 @@ import {
   provideZonelessChangeDetection,
 } from "@angular/core";
 import { provideAnimations } from "@angular/platform-browser/animations";
-import { provideRouter, withHashLocation } from "@angular/router";
-import { provideEffects } from "@ngrx/effects";
-import { provideRouterStore } from "@ngrx/router-store";
-import { provideStore, provideState } from "@ngrx/store";
-import { provideStoreDevtools } from "@ngrx/store-devtools";
+import {
+  provideRouter,
+  TitleStrategy,
+  withHashLocation,
+} from "@angular/router";
+import { provideStoreSugar } from "@ngrx-sugar/store";
 import { routes } from "./app.routes";
-import { AuthEffects } from "./auth/effects";
-import { UserEffects, RouterEffects } from "./core/effects";
-import { rootReducers, metaReducers } from "./reducers";
-import * as fromAuth from "@example-app/auth/reducers";
+import { authState } from "./auth/store/auth.state";
+import { AppTitleStrategy } from "./core/app-title.strategy";
+import { coreState } from "./core/store/core.state";
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,18 +21,17 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideHttpClient(),
     provideRouter(routes, withHashLocation()),
-    provideStore(rootReducers, {
-      metaReducers,
+    provideStoreSugar({
       runtimeChecks: {
         strictStateSerializability: true,
         strictActionSerializability: true,
         strictActionWithinNgZone: false,
         strictActionTypeUniqueness: true,
       },
+      devtools: { name: "NgRx Book Store App" },
     }),
-    provideRouterStore(),
-    provideStoreDevtools({ name: "NgRx Book Store App" }),
-    provideEffects(UserEffects, RouterEffects, AuthEffects),
-    provideState(fromAuth.authFeatureKey, fromAuth.reducers),
+    { provide: TitleStrategy, useClass: AppTitleStrategy },
+    authState.provide(),
+    coreState.provide(),
   ],
 };

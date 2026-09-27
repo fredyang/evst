@@ -1,17 +1,13 @@
-import { inject } from "@angular/core";
-import { Store } from "@ngrx/store";
 import { Observable } from "rxjs";
 import { map, take } from "rxjs/operators";
-import { AuthApiActions } from "@example-app/auth/actions/auth-api.actions";
-import * as fromAuth from "@example-app/auth/reducers";
+import { fromAuthGuard } from "@example-app/auth/store/auth.events";
+import { authViews } from "@example-app/auth/store/auth.state";
 
 export const authGuard = (): Observable<boolean> => {
-  const store = inject(Store);
-
-  return store.select(fromAuth.selectLoggedIn).pipe(
+  return authViews.loggedIn.observable().pipe(
     map((authed) => {
       if (!authed) {
-        store.dispatch(AuthApiActions.loginRedirect());
+        fromAuthGuard.loginRequired.publish();
         return false;
       }
 

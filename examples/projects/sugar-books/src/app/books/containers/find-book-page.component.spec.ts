@@ -1,11 +1,10 @@
+import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { ReactiveFormsModule } from "@angular/forms";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import { MockStore, provideMockStore } from "@ngrx/store/testing";
-
-import { FindBookPageActions } from "@example-app/books/actions/find-book-page.actions";
+import { fromFindBookPage } from "@example-app/books/store/books.events";
 import {
   BookAuthorsComponent,
   BookPreviewComponent,
@@ -13,16 +12,25 @@ import {
   BookSearchComponent,
 } from "@example-app/books/components";
 import { FindBookPageComponent } from "@example-app/books/containers";
-import * as fromBooks from "@example-app/books/reducers";
+import { booksViews } from "@example-app/books/store/books.state";
 import { AddCommasPipe } from "@example-app/shared/pipes/add-commas.pipe";
 import { EllipsisPipe } from "@example-app/shared/pipes/ellipsis.pipe";
 
 describe("Find Book Page", () => {
   let fixture: ComponentFixture<FindBookPageComponent>;
-  let store: MockStore<fromBooks.State>;
   let instance: FindBookPageComponent;
 
+  afterEach(() => vi.restoreAllMocks());
+
   beforeEach(() => {
+    vi.spyOn(booksViews.searchQuery, "signal").mockReturnValue(signal(""));
+    vi.spyOn(booksViews.searchResults, "signal").mockReturnValue(signal([]));
+    vi.spyOn(booksViews.searchLoading, "signal").mockReturnValue(signal(false));
+    vi.spyOn(booksViews.searchError, "signal").mockReturnValue(signal(""));
+    vi.spyOn(fromFindBookPage.searchQueryChanged, "publish").mockImplementation(
+      () => {},
+    );
+
     TestBed.configureTestingModule({
       imports: [
         NoopAnimationsModule,
@@ -36,23 +44,10 @@ describe("Find Book Page", () => {
         AddCommasPipe,
         EllipsisPipe,
       ],
-      providers: [
-        provideMockStore({
-          selectors: [
-            { selector: fromBooks.selectSearchQuery, value: "" },
-            { selector: fromBooks.selectSearchResults, value: [] },
-            { selector: fromBooks.selectSearchLoading, value: false },
-            { selector: fromBooks.selectSearchError, value: "" },
-          ],
-        }),
-      ],
     });
 
     fixture = TestBed.createComponent(FindBookPageComponent);
     instance = fixture.componentInstance;
-    store = TestBed.inject<MockStore<fromBooks.State>>(MockStore);
-
-    vi.spyOn(store, "dispatch");
   });
 
   it("should compile", () => {
@@ -61,12 +56,14 @@ describe("Find Book Page", () => {
     expect(fixture).toMatchSnapshot();
   });
 
-  it("should dispatch a book.Search action on search", () => {
+  it("should publish searchQueryChanged on search", () => {
     const $event = "book name";
-    const action = FindBookPageActions.searchBooks({ query: $event });
+    const payload = { query: $event };
 
     instance.search($event);
 
-    expect(store.dispatch).toHaveBeenCalledWith(action);
+    expect(fromFindBookPage.searchQueryChanged.publish).toHaveBeenCalledWith(
+      payload,
+    );
   });
 });

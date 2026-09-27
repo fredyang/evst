@@ -1,25 +1,28 @@
+import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import { MockStore, provideMockStore } from "@ngrx/store/testing";
-
-import { CollectionPageActions } from "@example-app/books/actions/collection-page.actions";
+import { fromCollectionPage } from "@example-app/books/store/books.events";
 import {
   BookAuthorsComponent,
   BookPreviewComponent,
   BookPreviewListComponent,
 } from "@example-app/books/components";
 import { CollectionPageComponent } from "@example-app/books/containers";
-import * as fromBooks from "@example-app/books/reducers";
+import { booksViews } from "@example-app/books/store/books.state";
 import { AddCommasPipe } from "@example-app/shared/pipes/add-commas.pipe";
 import { EllipsisPipe } from "@example-app/shared/pipes/ellipsis.pipe";
 
 describe("Collection Page", () => {
   let fixture: ComponentFixture<CollectionPageComponent>;
-  let store: MockStore<fromBooks.State>;
+
+  afterEach(() => vi.restoreAllMocks());
 
   beforeEach(() => {
+    vi.spyOn(booksViews.bookCollection, "signal").mockReturnValue(signal([]));
+    vi.spyOn(fromCollectionPage.enter, "publish").mockImplementation(() => {});
+
     TestBed.configureTestingModule({
       imports: [
         NoopAnimationsModule,
@@ -31,17 +34,9 @@ describe("Collection Page", () => {
         AddCommasPipe,
         EllipsisPipe,
       ],
-      providers: [
-        provideMockStore({
-          selectors: [{ selector: fromBooks.selectBookCollection, value: [] }],
-        }),
-      ],
     });
 
     fixture = TestBed.createComponent(CollectionPageComponent);
-    store = TestBed.inject<MockStore<fromBooks.State>>(MockStore);
-
-    vi.spyOn(store, "dispatch");
   });
 
   it("should compile", () => {
@@ -50,11 +45,9 @@ describe("Collection Page", () => {
     expect(fixture).toMatchSnapshot();
   });
 
-  it("should dispatch a collection.Load on init", () => {
-    const action = CollectionPageActions.enter();
-
+  it("should publish enter on init", () => {
     fixture.detectChanges();
 
-    expect(store.dispatch).toHaveBeenCalledWith(action);
+    expect(fromCollectionPage.enter.publish).toHaveBeenCalledWith();
   });
 });

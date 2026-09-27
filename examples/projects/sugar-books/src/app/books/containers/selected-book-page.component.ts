@@ -1,43 +1,33 @@
 import { Component } from "@angular/core";
 
-import { Store } from "@ngrx/store";
-import { Observable } from "rxjs";
-
-import { SelectedBookPageActions } from "@example-app/books/actions/selected-book-page.actions";
 import { Book } from "@example-app/books/models";
-import * as fromBooks from "@example-app/books/reducers";
+import { fromSelectedBookPage } from "@example-app/books/store/books.events";
+import { booksViews } from "@example-app/books/store/books.state";
 import { BookDetailComponent } from "../components/book-detail.component";
-import { AsyncPipe } from "@angular/common";
 
 @Component({
   selector: "bc-selected-book-page",
   template: `
     <bc-book-detail
-      [book]="(book$ | async)!"
-      [inCollection]="(isSelectedBookInCollection$ | async)!"
+      [book]="book()!"
+      [inCollection]="isSelectedBookInCollection()"
       (add)="addToCollection($event)"
       (remove)="removeFromCollection($event)"
     >
     </bc-book-detail>
   `,
-  imports: [BookDetailComponent, AsyncPipe],
+  imports: [BookDetailComponent],
 })
 export class SelectedBookPageComponent {
-  book$: Observable<Book>;
-  isSelectedBookInCollection$: Observable<boolean>;
-
-  constructor(private store: Store) {
-    this.book$ = store.select(fromBooks.selectSelectedBook) as Observable<Book>;
-    this.isSelectedBookInCollection$ = store.select(
-      fromBooks.isSelectedBookInCollection,
-    );
-  }
+  readonly book = booksViews.selectedBook.signal();
+  readonly isSelectedBookInCollection =
+    booksViews.isSelectedBookInCollection.signal();
 
   addToCollection(book: Book) {
-    this.store.dispatch(SelectedBookPageActions.addBook({ book }));
+    fromSelectedBookPage.addBook.publish({ book });
   }
 
   removeFromCollection(book: Book) {
-    this.store.dispatch(SelectedBookPageActions.removeBook({ book }));
+    fromSelectedBookPage.removeBook.publish({ book });
   }
 }

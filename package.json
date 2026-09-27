@@ -21,7 +21,9 @@
     "serve:ngrx-books-moduleless": "ng serve ngrx-books-moduleless --port 4202",
     "serve:sugar-books": "ng serve sugar-books --port 4201",
     "serve:examples": "concurrently \"npm run serve:ngrx-books\" \"npm run serve:sugar-books\" \"npm run serve:ngrx-books-moduleless\"",
-    "lint:sugar-books": "npm run build --workspace @ngrx-sugar/eslint && cd examples/projects/sugar-books && eslint \"src/**/*.ts\""
+    "lint:sugar-books": "npm run build --workspace @ngrx-sugar/eslint && cd examples/projects/sugar-books && eslint \"src/**/*.ts\"",
+    "lint:publisher-ownership": "npm run build --workspace @ngrx-sugar/eslint && cd examples/projects/sugar-books && eslint \"src/**/*.ts\" --rule \"ngrx-sugar/no-unused-views: off\"",
+    "watch:publisher-ownership": "npm run build --workspace @ngrx-sugar/eslint && node .vscode/watch-publisher-ownership.cjs"
   },
   "lint-staged": {
     "*.{cjs,js,json,md,mjs,ts}": "prettier --write"

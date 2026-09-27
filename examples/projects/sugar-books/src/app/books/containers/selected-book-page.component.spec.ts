@@ -1,24 +1,37 @@
+import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 
-import { MockStore, provideMockStore } from "@ngrx/store/testing";
-
-import { SelectedBookPageActions } from "@example-app/books/actions/selected-book-page.actions";
+import { fromSelectedBookPage } from "@example-app/books/store/books.events";
 import {
   BookAuthorsComponent,
   BookDetailComponent,
 } from "@example-app/books/components";
 import { SelectedBookPageComponent } from "@example-app/books/containers";
 import { Book, generateMockBook } from "@example-app/books/models";
-import * as fromBooks from "@example-app/books/reducers";
+import { booksViews } from "@example-app/books/store/books.state";
 import { AddCommasPipe } from "@example-app/shared/pipes/add-commas.pipe";
 
 describe("Selected Book Page", () => {
   let fixture: ComponentFixture<SelectedBookPageComponent>;
-  let store: MockStore<fromBooks.State>;
   let instance: SelectedBookPageComponent;
 
+  afterEach(() => vi.restoreAllMocks());
+
   beforeEach(() => {
+    vi.spyOn(booksViews.selectedBook, "signal").mockReturnValue(
+      signal(undefined),
+    );
+    vi.spyOn(booksViews.isSelectedBookInCollection, "signal").mockReturnValue(
+      signal(false),
+    );
+    vi.spyOn(fromSelectedBookPage.addBook, "publish").mockImplementation(
+      () => {},
+    );
+    vi.spyOn(fromSelectedBookPage.removeBook, "publish").mockImplementation(
+      () => {},
+    );
+
     TestBed.configureTestingModule({
       imports: [
         NoopAnimationsModule,
@@ -27,21 +40,10 @@ describe("Selected Book Page", () => {
         BookAuthorsComponent,
         AddCommasPipe,
       ],
-      providers: [
-        provideMockStore({
-          selectors: [
-            { selector: fromBooks.selectSelectedBook, value: null },
-            { selector: fromBooks.isSelectedBookInCollection, value: false },
-          ],
-        }),
-      ],
     });
 
     fixture = TestBed.createComponent(SelectedBookPageComponent);
     instance = fixture.componentInstance;
-    store = TestBed.inject<MockStore<fromBooks.State>>(MockStore);
-
-    vi.spyOn(store, "dispatch");
   });
 
   it("should compile", () => {
@@ -50,21 +52,25 @@ describe("Selected Book Page", () => {
     expect(fixture).toMatchSnapshot();
   });
 
-  it("should dispatch a collection.AddBook action when addToCollection is called", () => {
+  it("should publish addBook when addToCollection is called", () => {
     const $event: Book = generateMockBook();
-    const action = SelectedBookPageActions.addBook({ book: $event });
+    const payload = { book: $event };
 
     instance.addToCollection($event);
 
-    expect(store.dispatch).toHaveBeenLastCalledWith(action);
+    expect(fromSelectedBookPage.addBook.publish).toHaveBeenLastCalledWith(
+      payload,
+    );
   });
 
-  it("should dispatch a collection.RemoveBook action on removeFromCollection", () => {
+  it("should publish removeBook on removeFromCollection", () => {
     const $event: Book = generateMockBook();
-    const action = SelectedBookPageActions.removeBook({ book: $event });
+    const payload = { book: $event };
 
     instance.removeFromCollection($event);
 
-    expect(store.dispatch).toHaveBeenLastCalledWith(action);
+    expect(fromSelectedBookPage.removeBook.publish).toHaveBeenLastCalledWith(
+      payload,
+    );
   });
 });

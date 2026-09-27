@@ -1,6 +1,10 @@
 import { beforeEach, expect } from "vitest";
 import { Observable } from "rxjs";
-import { TestScheduler, type TestMessage } from "rxjs/testing";
+import { TestScheduler } from "rxjs/testing";
+
+type TestMessage = ReturnType<
+  TestScheduler["createColdObservable"]
+>["messages"][number];
 
 type MarbleObservable<T> = Observable<T> & { messages: TestMessage[] };
 
@@ -86,7 +90,7 @@ expect.extend({
 });
 
 declare module "vitest" {
-  interface Assertion<T = unknown> {
+  interface Assertion<T = any> {
     toBeObservable(
       expected: MarbleObservable<T extends Observable<infer V> ? V : T>,
     ): void;
