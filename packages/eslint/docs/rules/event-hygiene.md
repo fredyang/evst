@@ -1,17 +1,17 @@
 # Enforcing event hygiene
 
-The rule checks string literals passed to `createAction` and static event keys in `events(source, events)`.
+The rule checks string literals passed to `createAction` and literal sources passed to `events(source, events)`.
 
-Names must contain a nonempty `[Source]` followed by an event ending in a recognized past-tense word, or a subject followed by `Success` or `Failure`.
+`createAction` types must contain a nonempty `[Source]` prefix and event text. `events()` sources must be nonempty.
 
 ```ts
 // Accepted
-createAction("[Books Page] Entered");
-events("Books API", { booksLoaded: props(), searchFailure: props() });
+createAction("[Books Page] Load Books");
+events("User", { idle: props(), idleTimedOut: props() });
 
 // Reported
-createAction("[Books Page] Load Books");
-events("Books Page", { loadBooks: props() });
+createAction("Books loaded");
+events("", { idle: props() });
 ```
 
-This is a naming heuristic, not a grammatical or architectural guarantee. Dynamic values, computed keys, spreads, aliased calls, and NgRx `createActionGroup` are not checked. No type information is required.
+Event naming is a domain decision, not a grammatical rule. Dynamic values and aliased calls are not checked. No type information is required.

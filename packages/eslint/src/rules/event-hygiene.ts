@@ -13,34 +13,24 @@ export default createRule<Options, MessageIds>({
   meta: {
     type: "suggestion",
     docs: {
-      description: "Ensures event names describe completed facts.",
+      description: "Ensures event actions declare a nonempty source.",
     },
     schema: [],
     messages: {
       [messageId]:
-        'Action type `{{ actionType }}` must include a nonempty "[Source]" and an event ending in a past-tense verb (for example "[Collection Page] Entered"), or a subject followed by "Success" or "Failure".',
+        'Event type `{{ eventType }}` must include a nonempty "[Source]" prefix.',
     },
   },
   defaultOptions: [],
   create: (context) => {
-    const sourceEventPattern = /^\[[^\]\r\n[]*\S[^\]\r\n[]*\] +([^\r\n]+)$/;
-    const pastTensePattern =
-      /^(?:[a-z]+ed|begun|bound|bought|broken|built|caught|chosen|done|drawn|driven|felt|found|forgotten|given|gone|grown|held|hidden|kept|known|left|lost|made|met|paid|put|read|reset|run|seen|sent|set|shown|sold|spent|split|taken|taught|told|thrown|undone|understood|won|written)$/i;
+    const sourceEventPattern = /^\[[^\]\r\n[]*\S[^\]\r\n[]*\] +\S[\s\S]*$/;
 
-    function checkActionType(node: TSESTree.Node, actionType: string) {
-      const event = sourceEventPattern.exec(actionType)?.[1];
-      const words = event?.trim().split(/\s+/);
-
-      if (
-        words &&
-        (pastTensePattern.test(words[words.length - 1]) ||
-          (words.length >= 2 &&
-            /^(?:success|failure)$/i.test(words[words.length - 1])))
-      ) {
+    function checkActionType(node: TSESTree.Node, eventType: string) {
+      if (sourceEventPattern.test(eventType)) {
         return;
       }
 
-      context.report({ node, messageId, data: { actionType } });
+      context.report({ node, messageId, data: { eventType } });
     }
 
     return {
@@ -58,35 +48,14 @@ export default createRule<Options, MessageIds>({
         checkActionType(node, actionType);
       },
       "CallExpression[callee.name='events']"(node: TSESTree.CallExpression) {
-        const [source, events] = node.arguments;
-        if (
-          source?.type !== "Literal" ||
-          typeof source.value !== "string" ||
-          events?.type !== "ObjectExpression"
-        ) {
+        const [source] = node.arguments;
+        if (source?.type !== "Literal" || typeof source.value !== "string") {
           return;
         }
-
-        for (const property of events.properties) {
-          if (property.type !== "Property" || property.computed) {
-            continue;
-          }
-          const key = property.key;
-          const eventKey =
-            key.type === "Identifier"
-              ? key.name
-              : key.type === "Literal" && typeof key.value === "string"
-                ? key.value
-                : undefined;
-          if (eventKey === undefined) {
-            continue;
-          }
-          const eventLabel = eventKey
-            .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")
-            .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-            .replace(/^./, (letter) => letter.toUpperCase());
-          checkActionType(key, `[${source.value}] ${eventLabel}`);
+        if (source.value.trim()) {
+          return;
         }
+        context.report({ node: source, messageId, data: { eventType: "[]" } });
       },
     };
   },
