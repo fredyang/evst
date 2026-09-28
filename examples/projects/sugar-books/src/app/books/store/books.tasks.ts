@@ -36,11 +36,13 @@ export const booksTasks = tasks((on) => ({
       }),
     );
   }),
+
   // eslint-disable-next-line ngrx-sugar/require-task-event -- Validates the required storage capability when the Books feature initializes.
   checkStorageSupport: on(
     (storage = inject(BookStorageService)) => defer(() => storage.supported()),
     { dispatch: false },
   ),
+
   loadCollection: on(
     fromCollectionPage.enter,
     (pipe, storage = inject(BookStorageService)) =>
@@ -52,6 +54,7 @@ export const booksTasks = tasks((on) => ({
         ),
       ),
   ),
+
   addBook: on(
     fromSelectedBookPage.addBook,
     (pipe, storage = inject(BookStorageService)) =>
@@ -64,6 +67,7 @@ export const booksTasks = tasks((on) => ({
         ),
       ),
   ),
+
   removeBook: on(
     fromSelectedBookPage.removeBook,
     (pipe, storage = inject(BookStorageService)) =>

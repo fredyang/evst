@@ -25,11 +25,13 @@ export const authTasks = tasks((on) => ({
       ),
     ),
   ),
+
   loginSuccess: on(
     fromAuthApi.loginSuccess,
     (pipe, router = inject(Router)) => pipe(tap(() => router.navigate(["/"]))),
     { dispatch: false },
   ),
+
   loginRedirect: on(
     fromAuthGuard.loginRequired,
     fromAuth.logout,
@@ -37,6 +39,7 @@ export const authTasks = tasks((on) => ({
       pipe(tap(() => router.navigate(["/login"]))),
     { dispatch: false },
   ),
+
   logoutConfirmation: on(
     fromAuth.logoutConfirmation,
     (pipe, dialog = inject(MatDialog)) =>
@@ -53,6 +56,7 @@ export const authTasks = tasks((on) => ({
         ),
       ),
   ),
+
   logoutIdleUser: on(fromUser.idleTimeoutElapsed, (pipe) =>
     pipe(map(() => fromAuth.logout())),
   ),

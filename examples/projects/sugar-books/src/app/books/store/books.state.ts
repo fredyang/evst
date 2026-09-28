@@ -54,6 +54,7 @@ export const booksState = state("books", initialState)
       (b, c) => !!b.selectedBookId && c.ids.includes(b.selectedBookId),
     ),
   }))
+
   .on(fromBooksApi.searchSuccess, (s, { books }) => ({
     ...s,
     books: adapter.addMany(books, s.books),
@@ -64,19 +65,23 @@ export const booksState = state("books", initialState)
       query: s.search.query,
     },
   }))
+
   .on(fromCollectionApi.loadBooksSuccess, (s, { books }) => ({
     ...s,
     books: adapter.addMany(books, s.books),
     collection: { loaded: true, loading: false, ids: books.map((x) => x.id) },
   }))
+
   .on(fromBookExistsGuard.loadBook, (s, { book }) => {
     const books = adapter.addOne(book, s.books);
     return books === s.books ? s : { ...s, books };
   })
+
   .on(fromViewBookPage.selectBook, (s, { id }) => ({
     ...s,
     books: { ...s.books, selectedBookId: id },
   }))
+
   .on(fromFindBookPage.searchQueryChanged, (s, { query }) => ({
     ...s,
     search:
@@ -84,14 +89,17 @@ export const booksState = state("books", initialState)
         ? { ids: [], loading: false, error: "", query }
         : { ...s.search, loading: true, error: "", query },
   }))
+
   .on(fromBooksApi.searchFailure, (s, { errorMsg }) => ({
     ...s,
     search: { ...s.search, loading: false, error: errorMsg },
   }))
+
   .on(fromCollectionPage.enter, (s) => ({
     ...s,
     collection: { ...s.collection, loading: true },
   }))
+
   .on(
     fromSelectedBookPage.addBook,
     fromCollectionApi.removeBookFailure,
@@ -106,6 +114,7 @@ export const booksState = state("books", initialState)
             },
           },
   )
+
   .on(
     fromSelectedBookPage.removeBook,
     fromCollectionApi.addBookFailure,
@@ -118,4 +127,5 @@ export const booksState = state("books", initialState)
     }),
   )
   .withTasks(booksTasks);
+
 export const booksViews = booksState.views;
