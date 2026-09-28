@@ -35,9 +35,9 @@ describe("event usage", () => {
         )
         .map((message) => message.message),
       [
-        "Event `addBookSuccess` has no state or task subscription and can be removed.",
-        "Event `removeBookSuccess` has no state or task subscription and can be removed.",
-        "Event `loadBooksFailure` has no state or task subscription and can be removed.",
+        "Event `addBookSuccess` has no subscriber and can be removed.",
+        "Event `removeBookSuccess` has no subscriber and can be removed.",
+        "Event `loadBooksFailure` has no subscriber and can be removed.",
       ],
     );
   });

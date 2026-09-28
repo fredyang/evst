@@ -20,8 +20,7 @@ export default createRule<Options, MessageIds>({
     docs: { description: "Reports events that are never subscribed to." },
     schema: [],
     messages: {
-      [messageId]:
-        "Event `{{ event }}` has no state or task subscription and can be removed.",
+      [messageId]: "Event `{{ event }}` has no subscriber and can be removed.",
     },
   },
   defaultOptions: [],
