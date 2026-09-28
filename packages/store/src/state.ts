@@ -3,6 +3,7 @@ import {
   createReducer,
   on,
   type ActionCreator,
+  type ActionReducer,
   type MemoizedSelector,
   type ReducerTypes,
 } from "@ngrx/store";
@@ -45,17 +46,11 @@ export interface StateDefinition<
 > {
   /** Generated and derived views; root selects the complete feature state. */
   readonly views: StateViews<State> & InjectableViews<ExtraViews>;
-  /** Pure reducer access for unit tests; events are neither published nor handled by tasks. */
-  readonly test: {
-    /**
-     * Returns the next feature state for an action without registering the feature.
-     *
-     * @param state - Current feature state, or `undefined` to use the initial state.
-     * @param event - Event handled by this feature reducer.
-     * @returns The resulting feature state.
-     */
-    getNextState(state: State | undefined, event: Action): State;
-  };
+  /**
+   * Pure NgRx reducer for unit tests and direct Store integration. Events are
+   * neither published nor handled by tasks when this function is called.
+   */
+  readonly reducer: ActionReducer<State, Action>;
   /**
    * Registers this feature reducer and its tasks in an application or route injector.
    * A root Store is required, normally from `provideStoreSugar()`.
@@ -98,7 +93,7 @@ export interface StateDefinition<
  * Defines feature state with typed handlers, memoized views, and optional tasks.
  *
  * `.on()`, `.withViews()`, and `.withTasks()` return new definitions without
- * changing earlier steps. Every step exposes `views`, `provide()`, and `test`;
+ * changing earlier steps. Every step exposes `views`, `reducer`, and `provide()`;
  * no final `.build()` call is required. Registration uses the final definition.
  * Handlers must return state immutably.
  *
@@ -115,7 +110,7 @@ export interface StateDefinition<
  * @param name - Key under which the feature is registered in the root store.
  * @param initialState - Initial feature values, also used to infer handler and
  * view types. Fields should be initialized explicitly; `root` is reserved.
- * @returns A chainable definition with generated views and pure test helpers.
+ * @returns A chainable definition with generated views and a pure reducer.
  * @throws If initialState contains an own property named `root`.
  *
  * @example Defining handlers and derived views
@@ -140,7 +135,7 @@ export interface StateDefinition<
  * // readonly doubled$ = counter.views.doubled.observable();
  *
  * // Pure transition, without publishing or running tasks:
- * counter.test.getNextState(undefined, CounterEvents.added({ amount: 3 }));
+ * counter.reducer(undefined, CounterEvents.added({ amount: 3 }));
  * // { count: 3 }
  * ```
  *
@@ -195,7 +190,7 @@ function chainState<
   const reducer = createReducer(initialState, ...handlers);
   return {
     views,
-    test: { getNextState: reducer },
+    reducer,
     provide: () => provideFeature({ name, reducer }, ...tasks),
     on: (...args) =>
       chainState(

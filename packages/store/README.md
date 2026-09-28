@@ -374,11 +374,11 @@ import { BooksApiEvents, BooksPageEvents } from "./books.events";
 
 it("selects a book after it is loaded", () => {
   const book = { id: "42", title: "The Hobbit" };
-  const loaded = booksState.test.getNextState(
+  const loaded = booksState.reducer(
     undefined,
     BooksApiEvents.booksLoaded({ books: [book] }),
   );
-  const selected = booksState.test.getNextState(
+  const selected = booksState.reducer(
     loaded,
     BooksPageEvents.bookSelected({ id: book.id }),
   );
@@ -393,10 +393,11 @@ it("selects a book after it is loaded", () => {
 });
 ```
 
-`test` is intended for tests by convention. A task collection is tested by
-supplying a controlled event stream to `tasks.toList()` and asserting its
-emitted outcome events with mocked dependencies. Complex or reusable tasks can
-be read from `tasks.testing` for focused tests.
+`reducer` is a standard NgRx reducer and can be used in unit tests without an
+Angular injector or a Store. A task collection is tested by supplying a
+controlled event stream to `tasks.toList()` and asserting its emitted outcome
+events with mocked dependencies. Complex or reusable tasks can be read from
+`tasks.testing` for focused tests.
 
 Component tests that publish events can register
 `provideStoreSugar({ devtools: false })` before `provideMockStore(...)` in TestBed

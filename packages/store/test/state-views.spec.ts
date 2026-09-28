@@ -62,9 +62,7 @@ it("accepts typed handlers and preserves view memoization", () => {
     6,
   );
   expect(calls).toBe(2);
-  expect(
-    feature.test.getNextState(undefined, changed({ amount: 7 })).count,
-  ).toBe(7);
+  expect(feature.reducer(undefined, changed({ amount: 7 })).count).toBe(7);
 });
 
 it("creates standalone views that compose feature views", () => {
@@ -92,8 +90,8 @@ it("creates standalone views that compose feature views", () => {
 
   expect(
     selectedUserWithOrders({
-      users: users.test.getNextState(undefined, { type: "init" }),
-      orders: orders.test.getNextState(undefined, { type: "init" }),
+      users: users.reducer(undefined, { type: "init" }),
+      orders: orders.reducer(undefined, { type: "init" }),
     }),
   ).toEqual({
     id: "user-1",
@@ -183,25 +181,23 @@ function definition() {
     .withTasks({ increment });
 }
 
-it("infers state, payloads, views, and the test reducer", () => {
+it("infers state, payloads, views, and the reducer", () => {
   const feature = definition();
   expectTypeOf<keyof typeof feature>().toEqualTypeOf<
-    "views" | "provide" | "test" | "on" | "withViews" | "withTasks"
+    "views" | "reducer" | "provide" | "on" | "withViews" | "withTasks"
   >();
-  expectTypeOf(feature.test.getNextState).returns.toEqualTypeOf<
-    typeof initialState
-  >();
+  expectTypeOf(feature.reducer).returns.toEqualTypeOf<typeof initialState>();
   expect(Object.keys(feature).sort()).toEqual([
     "on",
     "provide",
-    "test",
+    "reducer",
     "views",
     "withTasks",
     "withViews",
   ]);
   expectTypeOf(feature.views.count).returns.toEqualTypeOf<number>();
   expectTypeOf(feature.views.loading).returns.toEqualTypeOf<boolean>();
-  expect(feature.test.getNextState(undefined, changed({ amount: 3 }))).toEqual({
+  expect(feature.reducer(undefined, changed({ amount: 3 }))).toEqual({
     count: 3,
     loading: false,
   });

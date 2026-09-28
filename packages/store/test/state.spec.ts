@@ -22,9 +22,9 @@ it("infers handlers and preserves independent branches", () => {
   const minus = base.on(add, (state, { amount }) => ({
     count: state.count - amount,
   }));
-  expect(base.test.getNextState(undefined, add({ amount: 3 })).count).toBe(0);
-  expect(plus.test.getNextState(undefined, other({ amount: 3 })).count).toBe(3);
-  expect(minus.test.getNextState(undefined, add({ amount: 3 })).count).toBe(-3);
+  expect(base.reducer(undefined, add({ amount: 3 })).count).toBe(0);
+  expect(plus.reducer(undefined, other({ amount: 3 })).count).toBe(3);
+  expect(minus.reducer(undefined, add({ amount: 3 })).count).toBe(-3);
   expect(plus.views.count).toBe(base.views.count);
 });
 it("composes successive extra views once and retains their types and caches", () => {
