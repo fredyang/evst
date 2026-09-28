@@ -1,6 +1,8 @@
 import eventHygiene from "./rules/event-hygiene";
 import eventPublisherOwnership from "./rules/event-publisher-ownership";
 import noSequentialEventPublishes from "./rules/no-sequential-event-publishes";
+import noUnpublishedEvents from "./rules/no-unpublished-events";
+import noUnsubscribedEvents from "./rules/no-unsubscribed-events";
 import noUnusedViews from "./rules/no-unused-views";
 import requireTaskEvent from "./rules/require-task-event";
 import requireTaskEventSuppressionReason from "./rules/require-task-event-suppression-reason";
@@ -14,6 +16,8 @@ const plugin = {
     "event-hygiene": eventHygiene,
     "event-publisher-ownership": eventPublisherOwnership,
     "no-sequential-event-publishes": noSequentialEventPublishes,
+    "no-unpublished-events": noUnpublishedEvents,
+    "no-unsubscribed-events": noUnsubscribedEvents,
     "no-unused-views": noUnusedViews,
     "require-task-event": requireTaskEvent,
     "require-task-event-suppression-reason": requireTaskEventSuppressionReason,

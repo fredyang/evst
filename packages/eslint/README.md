@@ -31,6 +31,8 @@ export default [
       "ngrx-sugar/event-hygiene": "error",
       "ngrx-sugar/event-publisher-ownership": "warn",
       "ngrx-sugar/no-sequential-event-publishes": "warn",
+      "ngrx-sugar/no-unpublished-events": "warn",
+      "ngrx-sugar/no-unsubscribed-events": "warn",
       "ngrx-sugar/no-unused-views": "warn",
       "ngrx-sugar/require-task-event": "warn",
       "ngrx-sugar/require-task-event-suppression-reason": "error",
@@ -39,7 +41,7 @@ export default [
 ];
 ```
 
-The consuming project needs ESLint 9 and `typescript-eslint`. Rule behavior and limitations are described in the [event hygiene guide](docs/rules/event-hygiene.md), [event publisher ownership guide](docs/rules/event-publisher-ownership.md), [sequential event publication guide](docs/rules/no-sequential-event-publishes.md), [event-driven task guide](docs/rules/require-task-event.md), and [unused state views guide](docs/rules/no-unused-views.md). The unused-views rule requires type-aware linting with a `parserOptions.project` setting.
+The consuming project needs ESLint 9 and `typescript-eslint`. Rule behavior and limitations are described in the [event hygiene guide](docs/rules/event-hygiene.md), [event publisher ownership guide](docs/rules/event-publisher-ownership.md), [sequential event publication guide](docs/rules/no-sequential-event-publishes.md), [unpublished event guide](docs/rules/no-unpublished-events.md), [unsubscribed event guide](docs/rules/no-unsubscribed-events.md), [event-driven task guide](docs/rules/require-task-event.md), and [unused state views guide](docs/rules/no-unused-views.md). The unused-views rule requires type-aware linting with a `parserOptions.project` setting.
 
 ## Developing
 
