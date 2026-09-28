@@ -5,7 +5,7 @@ import { coreTasks } from "./core.tasks";
 
 export const coreState = state("core", { showSidenav: false })
   .on(fromLayout.sidenavOpened, (state) => ({ ...state, showSidenav: true }))
-  .on(fromLayout.sidenaveClosed, (state) => ({ ...state, showSidenav: false }))
+  .on(fromLayout.sidenavClosed, (state) => ({ ...state, showSidenav: false }))
   .on(fromAuth.logoutConfirmation, (state) => ({
     ...state,
     showSidenav: false,

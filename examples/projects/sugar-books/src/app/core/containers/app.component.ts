@@ -61,7 +61,7 @@ export class AppComponent {
   readonly loggedIn = authViews.loggedIn.signal();
 
   closeSidenav() {
-    fromLayout.sidenaveClosed.publish();
+    fromLayout.sidenavClosed.publish();
   }
 
   openSidenav() {

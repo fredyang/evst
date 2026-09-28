@@ -5,5 +5,5 @@ export const fromUser = events("User", { idleTimeoutElapsed: emptyProps() });
 
 export const fromLayout = events("Layout", {
   sidenavOpened: emptyProps(),
-  sidenaveClosed: emptyProps(),
+  sidenavClosed: emptyProps(),
 });
