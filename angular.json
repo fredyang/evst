@@ -22,11 +22,18 @@
               "examples/projects/ngrx-books/src/assets"
             ],
             "styles": ["examples/projects/ngrx-books/src/styles.css"]
+          },
+          "configurations": {
+            "development": {
+              "optimization": false,
+              "sourceMap": true,
+              "extractLicenses": false
+            }
           }
         },
         "serve": {
           "builder": "@angular/build:dev-server",
-          "options": { "buildTarget": "ngrx-books:build" }
+          "options": { "buildTarget": "ngrx-books:build:development" }
         }
       }
     },
@@ -49,11 +56,18 @@
               "examples/projects/sugar-books/src/assets"
             ],
             "styles": ["examples/projects/sugar-books/src/styles.css"]
+          },
+          "configurations": {
+            "development": {
+              "optimization": false,
+              "sourceMap": true,
+              "extractLicenses": false
+            }
           }
         },
         "serve": {
           "builder": "@angular/build:dev-server",
-          "options": { "buildTarget": "sugar-books:build" }
+          "options": { "buildTarget": "sugar-books:build:development" }
         }
       }
     },
@@ -78,11 +92,20 @@
               "examples/projects/ngrx-books-moduleless/src/assets"
             ],
             "styles": ["examples/projects/ngrx-books-moduleless/src/styles.css"]
+          },
+          "configurations": {
+            "development": {
+              "optimization": false,
+              "sourceMap": true,
+              "extractLicenses": false
+            }
           }
         },
         "serve": {
           "builder": "@angular/build:dev-server",
-          "options": { "buildTarget": "ngrx-books-moduleless:build" }
+          "options": {
+            "buildTarget": "ngrx-books-moduleless:build:development"
+          }
         }
       }
     }
