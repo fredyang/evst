@@ -1,0 +1,6 @@
+[mcp_servers.angular_cli]
+command = "node"
+args = ["/home/fredyang/pp/ngrx-sugar/node_modules/@angular/cli/bin/ng.js", "mcp"]
+cwd = "/home/fredyang/pp/ngrx-sugar"
+startup_timeout_sec = 30
+tool_timeout_sec = 120
