@@ -5,6 +5,7 @@ import { fromEvent, map, merge, switchMap, timer } from "rxjs";
 import { fromUser } from "./core.events";
 
 export const coreTasks = tasks((on) => ({
+  // eslint-disable-next-line ngrx-sugar/require-task-event -- Observes browser activity for the application lifetime to publish idle timeouts.
   idle: on((document = inject(DOCUMENT)) =>
     merge(
       fromEvent(document, "click"),

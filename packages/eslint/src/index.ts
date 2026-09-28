@@ -2,6 +2,8 @@ import eventHygiene from "./rules/event-hygiene";
 import eventPublisherOwnership from "./rules/event-publisher-ownership";
 import noSequentialEventPublishes from "./rules/no-sequential-event-publishes";
 import noUnusedViews from "./rules/no-unused-views";
+import requireTaskEvent from "./rules/require-task-event";
+import requireTaskEventSuppressionReason from "./rules/require-task-event-suppression-reason";
 
 /** ESLint plugin providing rules for event-oriented NgRx applications. */
 const plugin = {
@@ -13,6 +15,8 @@ const plugin = {
     "event-publisher-ownership": eventPublisherOwnership,
     "no-sequential-event-publishes": noSequentialEventPublishes,
     "no-unused-views": noUnusedViews,
+    "require-task-event": requireTaskEvent,
+    "require-task-event-suppression-reason": requireTaskEventSuppressionReason,
   },
 };
 

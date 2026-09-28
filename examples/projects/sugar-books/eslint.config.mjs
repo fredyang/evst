@@ -18,6 +18,8 @@ export default tseslint.config(
       "ngrx-sugar/event-publisher-ownership": "warn",
       "ngrx-sugar/no-sequential-event-publishes": "warn",
       "ngrx-sugar/no-unused-views": "warn",
+      "ngrx-sugar/require-task-event": "warn",
+      "ngrx-sugar/require-task-event-suppression-reason": "error",
     },
   },
 );
