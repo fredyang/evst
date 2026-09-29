@@ -5,7 +5,7 @@ export default defineProject((config) =>
   mergeConfig(baseConfig, {
     root: __dirname,
     test: {
-      name: "ngrx-books-moduleless",
+      name: "ngrx-books-standalone",
     },
     define: {
       "import.meta.vitest": config.mode !== "production",

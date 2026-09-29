@@ -71,27 +71,27 @@
         }
       }
     },
-    "ngrx-books-moduleless": {
+    "ngrx-books-standalone": {
       "projectType": "application",
-      "root": "examples/projects/ngrx-books-moduleless",
-      "sourceRoot": "examples/projects/ngrx-books-moduleless/src",
+      "root": "examples/projects/ngrx-books-standalone",
+      "sourceRoot": "examples/projects/ngrx-books-standalone/src",
       "prefix": "bc",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/examples/ngrx-books-moduleless",
-            "index": "examples/projects/ngrx-books-moduleless/src/index.html",
-            "browser": "examples/projects/ngrx-books-moduleless/src/main.ts",
+            "outputPath": "dist/examples/ngrx-books-standalone",
+            "index": "examples/projects/ngrx-books-standalone/src/index.html",
+            "browser": "examples/projects/ngrx-books-standalone/src/main.ts",
             "polyfills": [
-              "examples/projects/ngrx-books-moduleless/src/polyfills.ts"
+              "examples/projects/ngrx-books-standalone/src/polyfills.ts"
             ],
-            "tsConfig": "examples/projects/ngrx-books-moduleless/tsconfig.app.json",
+            "tsConfig": "examples/projects/ngrx-books-standalone/tsconfig.app.json",
             "assets": [
-              "examples/projects/ngrx-books-moduleless/src/favicon.ico",
-              "examples/projects/ngrx-books-moduleless/src/assets"
+              "examples/projects/ngrx-books-standalone/src/favicon.ico",
+              "examples/projects/ngrx-books-standalone/src/assets"
             ],
-            "styles": ["examples/projects/ngrx-books-moduleless/src/styles.css"]
+            "styles": ["examples/projects/ngrx-books-standalone/src/styles.css"]
           },
           "configurations": {
             "development": {
@@ -104,8 +104,42 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "buildTarget": "ngrx-books-moduleless:build:development"
+            "buildTarget": "ngrx-books-standalone:build:development"
           }
+        }
+      }
+    },
+    "books-svc": {
+      "projectType": "application",
+      "root": "examples/projects/books-svc",
+      "sourceRoot": "examples/projects/books-svc/src",
+      "prefix": "bc",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": "dist/examples/books-svc",
+            "index": "examples/projects/books-svc/src/index.html",
+            "browser": "examples/projects/books-svc/src/main.ts",
+            "polyfills": ["examples/projects/books-svc/src/polyfills.ts"],
+            "tsConfig": "examples/projects/books-svc/tsconfig.app.json",
+            "assets": [
+              "examples/projects/books-svc/src/favicon.ico",
+              "examples/projects/books-svc/src/assets"
+            ],
+            "styles": ["examples/projects/books-svc/src/styles.css"]
+          },
+          "configurations": {
+            "development": {
+              "optimization": false,
+              "sourceMap": true,
+              "extractLicenses": false
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": { "buildTarget": "books-svc:build:development" }
         }
       }
     }
