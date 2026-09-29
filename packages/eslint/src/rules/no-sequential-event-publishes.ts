@@ -45,7 +45,7 @@ export default createRule<Options, MessageIds>({
       "FunctionExpression:exit": leaveBoundary,
       "ArrowFunctionExpression:exit": leaveBoundary,
       CallExpression(node: TSESTree.CallExpression) {
-        if (!isPublishCall(node)) return;
+        if (!isPublicationCall(node)) return;
 
         const boundary = boundaries.at(-1);
         if (!boundary) return;
@@ -60,11 +60,16 @@ export default createRule<Options, MessageIds>({
   },
 });
 
-function isPublishCall(node: TSESTree.CallExpression): boolean {
+function isPublicationCall(node: TSESTree.CallExpression): boolean {
+  if (
+    node.callee.type !== "MemberExpression" ||
+    node.callee.computed ||
+    node.callee.property.type !== "Identifier"
+  )
+    return false;
+  if (node.callee.property.name === "publish") return true;
   return (
-    node.callee.type === "MemberExpression" &&
-    !node.callee.computed &&
-    node.callee.property.type === "Identifier" &&
-    node.callee.property.name === "publish"
+    node.callee.property.name === "dispatch" &&
+    node.arguments[0]?.type === "CallExpression"
   );
 }

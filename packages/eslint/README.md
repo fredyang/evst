@@ -16,7 +16,7 @@ The generated `ngrx-sugar-eslint-0.1.0.tgz` can be installed in a consuming proj
 
 ## Configuring ESLint
 
-Flat configuration (`eslint.config.mjs`):
+Flat configuration for an NgRx Sugar application (`eslint.config.mjs`):
 
 ```js
 import tseslint from "typescript-eslint";
@@ -27,16 +27,26 @@ export default [
     files: ["**/*.ts"],
     languageOptions: { parser: tseslint.parser },
     plugins: { "ngrx-sugar": ngrxSugar },
-    rules: {
-      "ngrx-sugar/event-hygiene": "error",
-      "ngrx-sugar/event-publisher-ownership": "warn",
-      "ngrx-sugar/no-sequential-event-publishes": "warn",
-      "ngrx-sugar/no-unpublished-events": "warn",
-      "ngrx-sugar/no-unsubscribed-events": "warn",
-      "ngrx-sugar/no-unused-views": "warn",
-      "ngrx-sugar/require-task-event": "warn",
-      "ngrx-sugar/require-task-event-suppression-reason": "error",
-    },
+    ...ngrxSugar.configs.sugar,
+  },
+];
+```
+
+The `ngrx` preset supports standard NgRx actions and Store dispatches. It
+includes action-type hygiene, repeated action dispatch detection, and multiple
+dispatch detection within one executable boundary. Sugar-only rules remain in
+the `sugar` preset.
+
+```js
+import tseslint from "typescript-eslint";
+import ngrxSugar from "@ngrx-sugar/eslint";
+
+export default [
+  {
+    files: ["**/*.ts"],
+    languageOptions: { parser: tseslint.parser },
+    plugins: { "ngrx-sugar": ngrxSugar },
+    ...ngrxSugar.configs.ngrx,
   },
 ];
 ```

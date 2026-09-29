@@ -28,14 +28,7 @@ export default createRule<readonly [], typeof messageId>({
 
     return {
       CallExpression(node: TSESTree.CallExpression) {
-        if (
-          node.callee.type !== "MemberExpression" ||
-          node.callee.computed ||
-          node.callee.property.type !== "Identifier" ||
-          node.callee.property.name !== "publish"
-        )
-          return;
-        const event = memberName(node.callee.object);
+        const event = publicationName(node);
         if (event) localCalls.push({ node, event });
       },
       "Program:exit"() {
@@ -108,18 +101,55 @@ function publisherSymbol(
   node: ts.Node,
   checker: ts.TypeChecker,
 ): ts.Symbol | undefined {
-  if (
-    !ts.isCallExpression(node) ||
-    !ts.isPropertyAccessExpression(node.expression) ||
-    node.expression.name.text !== "publish"
-  )
-    return undefined;
-  const symbol = checker.getSymbolAtLocation(node.expression.expression);
+  if (!ts.isCallExpression(node)) return undefined;
+  const target = publicationTarget(node);
+  const symbol = target && checker.getSymbolAtLocation(target);
   return (
     symbol &&
     (symbol.flags & ts.SymbolFlags.Alias
       ? checker.getAliasedSymbol(symbol)
       : symbol)
+  );
+}
+
+function publicationName(node: TSESTree.CallExpression): string | undefined {
+  if (!isMethodCall(node, "publish")) return dispatchActionName(node);
+  return memberName(node.callee.object);
+}
+
+function dispatchActionName(node: TSESTree.CallExpression): string | undefined {
+  if (!isMethodCall(node, "dispatch")) return;
+  const [action] = node.arguments;
+  if (!action || action.type !== "CallExpression") return;
+  return memberName(action.callee);
+}
+
+function publicationTarget(node: ts.CallExpression): ts.Expression | undefined {
+  if (isTsMethodCall(node, "publish")) return node.expression.expression;
+  if (!isTsMethodCall(node, "dispatch")) return;
+  const [action] = node.arguments;
+  return action && ts.isCallExpression(action) ? action.expression : undefined;
+}
+
+function isMethodCall(
+  node: TSESTree.CallExpression,
+  method: string,
+): node is TSESTree.CallExpression & { callee: TSESTree.MemberExpression } {
+  return (
+    node.callee.type === "MemberExpression" &&
+    !node.callee.computed &&
+    node.callee.property.type === "Identifier" &&
+    node.callee.property.name === method
+  );
+}
+
+function isTsMethodCall(
+  node: ts.CallExpression,
+  method: string,
+): node is ts.CallExpression & { expression: ts.PropertyAccessExpression } {
+  return (
+    ts.isPropertyAccessExpression(node.expression) &&
+    node.expression.name.text === method
   );
 }
 

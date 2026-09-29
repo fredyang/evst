@@ -13,15 +13,6 @@ export default tseslint.config(
       },
     },
     plugins: { "ngrx-sugar": sugar },
-    rules: {
-      "ngrx-sugar/event-hygiene": "error",
-      "ngrx-sugar/event-publisher-ownership": "warn",
-      "ngrx-sugar/no-sequential-event-publishes": "warn",
-      "ngrx-sugar/no-unpublished-events": "warn",
-      "ngrx-sugar/no-unsubscribed-events": "warn",
-      "ngrx-sugar/no-unused-views": "warn",
-      "ngrx-sugar/require-task-event": "warn",
-      "ngrx-sugar/require-task-event-suppression-reason": "error",
-    },
+    ...sugar.configs.sugar,
   },
 );

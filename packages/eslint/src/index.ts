@@ -22,6 +22,27 @@ const plugin = {
     "require-task-event": requireTaskEvent,
     "require-task-event-suppression-reason": requireTaskEventSuppressionReason,
   },
+  configs: {
+    ngrx: {
+      rules: {
+        "ngrx-sugar/event-hygiene": "error",
+        "ngrx-sugar/event-publisher-ownership": "warn",
+        "ngrx-sugar/no-sequential-event-publishes": "warn",
+      },
+    },
+    sugar: {
+      rules: {
+        "ngrx-sugar/event-hygiene": "error",
+        "ngrx-sugar/event-publisher-ownership": "warn",
+        "ngrx-sugar/no-sequential-event-publishes": "warn",
+        "ngrx-sugar/no-unpublished-events": "warn",
+        "ngrx-sugar/no-unsubscribed-events": "warn",
+        "ngrx-sugar/no-unused-views": "warn",
+        "ngrx-sugar/require-task-event": "warn",
+        "ngrx-sugar/require-task-event-suppression-reason": "error",
+      },
+    },
+  },
 };
 
 export = plugin;

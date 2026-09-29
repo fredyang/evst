@@ -18,6 +18,8 @@ new RuleTester({ languageOptions: { parser } }).run(
       `function load() { BooksEvents.loaded.publish(); } function retry() { BooksEvents.retry.publish(); }`,
       `function load() { BooksEvents.loaded.publish(); return () => BooksEvents.retry.publish(); }`,
       `BooksEvents.loaded.publish();`,
+      `function load() { store.dispatch(BooksActions.loaded()); }`,
+      `function load(action) { store.dispatch(action); store.dispatch(action); }`,
     ],
     invalid: [
       {
@@ -30,6 +32,10 @@ new RuleTester({ languageOptions: { parser } }).run(
       },
       {
         code: `BooksEvents.loaded.publish(); BooksEvents.saved.publish();`,
+        errors: [{ messageId }],
+      },
+      {
+        code: `function load() { store.dispatch(BooksActions.loaded()); store.dispatch(BooksActions.saved()); }`,
         errors: [{ messageId }],
       },
     ],
