@@ -2,8 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./src",
-    "paths": { "@example-app/*": ["app/*"] },
-    "types": ["vitest/globals", "node"]
+    "paths": { "@example-app/*": ["app/*"] }
   },
   "files": [],
   "include": ["src/**/*.ts"]

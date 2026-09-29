@@ -1,11 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 
-import { Store } from "@ngrx/store";
-import { Observable } from "rxjs";
-
-import { CollectionPageActions } from "@example-app/books/actions/collection-page.actions";
-import { Book } from "@example-app/books/models";
-import * as fromBooks from "@example-app/books/reducers";
+import { BooksService } from "@example-app/books/services/books.service";
 import { MatCard, MatCardTitle } from "@angular/material/card";
 import { BookPreviewListComponent } from "../components/book-preview-list.component";
 import { AsyncPipe } from "@angular/common";
@@ -17,7 +12,7 @@ import { AsyncPipe } from "@angular/common";
       <mat-card-title>My Collection</mat-card-title>
     </mat-card>
 
-    <bc-book-preview-list [books]="(books$ | async)!"></bc-book-preview-list>
+    <bc-book-preview-list [books]="books.collection()"></bc-book-preview-list>
   `,
   /**
    * Container components are permitted to have just enough styles
@@ -34,16 +29,12 @@ import { AsyncPipe } from "@angular/common";
       }
     `,
   ],
-  imports: [MatCard, MatCardTitle, BookPreviewListComponent, AsyncPipe],
+  imports: [MatCard, MatCardTitle, BookPreviewListComponent],
 })
 export class CollectionPageComponent implements OnInit {
-  books$: Observable<Book[]>;
-
-  constructor(private store: Store) {
-    this.books$ = store.select(fromBooks.selectBookCollection);
-  }
+  constructor(readonly books: BooksService) {}
 
   ngOnInit() {
-    this.store.dispatch(CollectionPageActions.enter());
+    this.books.loadCollection();
   }
 }

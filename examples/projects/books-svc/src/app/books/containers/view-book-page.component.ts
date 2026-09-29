@@ -1,10 +1,7 @@
 import { Component, OnDestroy } from "@angular/core";
 import { ActivatedRoute } from "@angular/router";
-import { Store } from "@ngrx/store";
 import { Subscription } from "rxjs";
-import { map } from "rxjs/operators";
-
-import { ViewBookPageActions } from "@example-app/books/actions/view-book-page.actions";
+import { BooksService } from "@example-app/books/services/books.service";
 import { SelectedBookPageComponent } from "./selected-book-page.component";
 
 /**
@@ -25,10 +22,10 @@ import { SelectedBookPageComponent } from "./selected-book-page.component";
 export class ViewBookPageComponent implements OnDestroy {
   actionsSubscription: Subscription;
 
-  constructor(store: Store, route: ActivatedRoute) {
-    this.actionsSubscription = route.params
-      .pipe(map((params) => ViewBookPageActions.selectBook({ id: params.id })))
-      .subscribe((action) => store.dispatch(action));
+  constructor(books: BooksService, route: ActivatedRoute) {
+    this.actionsSubscription = route.params.subscribe((params) =>
+      books.selectBook(params["id"]),
+    );
   }
 
   ngOnDestroy() {

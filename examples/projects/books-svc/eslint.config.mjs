@@ -1,4 +1,3 @@
-import sugar from "@ngrx-sugar/eslint";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
@@ -12,7 +11,6 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    plugins: { "ngrx-sugar": sugar },
-    ...sugar.configs.ngrx,
+    rules: {},
   },
 );

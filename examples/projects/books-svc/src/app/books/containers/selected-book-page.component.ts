@@ -1,11 +1,7 @@
 import { Component } from "@angular/core";
 
-import { Store } from "@ngrx/store";
-import { Observable } from "rxjs";
-
-import { SelectedBookPageActions } from "@example-app/books/actions/selected-book-page.actions";
 import { Book } from "@example-app/books/models";
-import * as fromBooks from "@example-app/books/reducers";
+import { BooksService } from "@example-app/books/services/books.service";
 import { BookDetailComponent } from "../components/book-detail.component";
 import { AsyncPipe } from "@angular/common";
 
@@ -13,31 +9,23 @@ import { AsyncPipe } from "@angular/common";
   selector: "bc-selected-book-page",
   template: `
     <bc-book-detail
-      [book]="(book$ | async)!"
-      [inCollection]="(isSelectedBookInCollection$ | async)!"
+      [book]="books.selectedBook()!"
+      [inCollection]="books.selectedBookInCollection()"
       (add)="addToCollection($event)"
       (remove)="removeFromCollection($event)"
     >
     </bc-book-detail>
   `,
-  imports: [BookDetailComponent, AsyncPipe],
+  imports: [BookDetailComponent],
 })
 export class SelectedBookPageComponent {
-  book$: Observable<Book>;
-  isSelectedBookInCollection$: Observable<boolean>;
-
-  constructor(private store: Store) {
-    this.book$ = store.select(fromBooks.selectSelectedBook) as Observable<Book>;
-    this.isSelectedBookInCollection$ = store.select(
-      fromBooks.isSelectedBookInCollection,
-    );
-  }
+  constructor(readonly books: BooksService) {}
 
   addToCollection(book: Book) {
-    this.store.dispatch(SelectedBookPageActions.addBook({ book }));
+    this.books.addToCollection(book);
   }
 
   removeFromCollection(book: Book) {
-    this.store.dispatch(SelectedBookPageActions.removeBook({ book }));
+    this.books.removeFromCollection(book);
   }
 }
