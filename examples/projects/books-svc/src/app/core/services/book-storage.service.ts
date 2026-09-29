@@ -1,4 +1,4 @@
-import { Inject, Injectable, InjectionToken } from "@angular/core";
+import { inject, Injectable, InjectionToken } from "@angular/core";
 
 import { Observable, of, throwError } from "rxjs";
 import { map, tap } from "rxjs/operators";
@@ -18,6 +18,7 @@ export const LOCAL_STORAGE_TOKEN = new InjectionToken(
 
 @Injectable({ providedIn: "root" })
 export class BookStorageService {
+  private readonly storage = inject(LOCAL_STORAGE_TOKEN) as Storage;
   private collectionKey = "books-app";
 
   supported(): Observable<boolean> {
@@ -56,6 +57,4 @@ export class BookStorageService {
       tap(() => this.storage.removeItem(this.collectionKey)),
     );
   }
-
-  constructor(@Inject(LOCAL_STORAGE_TOKEN) private storage: Storage) {}
 }

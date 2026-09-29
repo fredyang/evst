@@ -1,4 +1,4 @@
-import { computed, Injectable, signal } from "@angular/core";
+import { computed, inject, Injectable, signal } from "@angular/core";
 import { Observable, of } from "rxjs";
 import { catchError, map, tap } from "rxjs/operators";
 import { Book } from "@example-app/books/models";
@@ -10,6 +10,8 @@ import {
 /** A feature-owned store implemented with Angular signals and RxJS services. */
 @Injectable({ providedIn: "root" })
 export class BooksService {
+  private readonly storage = inject(BookStorageService);
+  private readonly googleBooks = inject(GoogleBooksService);
   private readonly entitiesState = signal<Record<string, Book>>({});
   private readonly collectionIdsState = signal<string[]>([]);
   private readonly searchIdsState = signal<string[]>([]);
@@ -33,11 +35,6 @@ export class BooksService {
     const id = this.selectedIdState();
     return id !== null && this.collectionIdsState().includes(id);
   });
-
-  constructor(
-    private readonly storage: BookStorageService,
-    private readonly googleBooks: GoogleBooksService,
-  ) {}
 
   loadCollection(): void {
     if (this.collectionLoading() || this.collectionLoaded()) return;

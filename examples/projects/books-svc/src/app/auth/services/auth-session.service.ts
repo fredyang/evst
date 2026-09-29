@@ -1,4 +1,4 @@
-import { computed, Injectable, signal } from "@angular/core";
+import { computed, inject, Injectable, signal } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { Credentials, User } from "@example-app/auth/models";
@@ -8,17 +8,14 @@ import { AuthService } from "./auth.service";
 /** Owns authentication state and the commands that change it. */
 @Injectable({ providedIn: "root" })
 export class AuthSessionService {
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
   private readonly userState = signal<User | null>(null);
   readonly pending = signal(false);
   readonly error = signal<string | null>(null);
   readonly user = this.userState.asReadonly();
   readonly loggedIn = computed(() => this.userState() !== null);
-
-  constructor(
-    private readonly auth: AuthService,
-    private readonly router: Router,
-    private readonly dialog: MatDialog,
-  ) {}
 
   login(credentials: Credentials): void {
     if (this.pending()) return;

@@ -10,7 +10,7 @@ export const routes: Routes = [
   {
     path: "books",
     loadChildren: () =>
-      import("@example-app/books/books-routing.config").then((m) => m.routes),
+      import("@example-app/books/books.routes").then((m) => m.routes),
     canActivate: [authGuard],
   },
   {

@@ -7,6 +7,7 @@ import { LayoutComponent } from "../components/layout.component";
 import { NavItemComponent } from "../components/nav-item.component";
 import { SidenavComponent } from "../components/sidenav.component";
 import { ToolbarComponent } from "../components/toolbar.component";
+import { IdleTimeoutService } from "../services/idle-timeout.service";
 
 @Component({
   selector: "bc-app",
@@ -54,7 +55,10 @@ export class AppComponent {
   constructor(
     readonly session: AuthSessionService,
     readonly ui: AppUiService,
-  ) {}
+    idleTimeout: IdleTimeoutService,
+  ) {
+    idleTimeout.initialize();
+  }
 
   logout(): void {
     this.ui.closeSidenav();
