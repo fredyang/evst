@@ -11,6 +11,7 @@ import {
   fromViewBookPage,
 } from "./books.events";
 import { booksTasks } from "./books.tasks";
+import { fromAuth } from "@example-app/auth/store/auth.events";
 interface EntityBooksState extends EntityState<Book> {
   selectedBookId: string | null;
 }
@@ -54,7 +55,8 @@ export const booksState = state("books", initialState)
       (b, c) => !!b.selectedBookId && c.ids.includes(b.selectedBookId),
     ),
   }))
-
+  // Reset state on logout
+  .on(fromAuth.logout, () => initialState)
   .on(fromBooksApi.searchSuccess, (s, { books }) => ({
     ...s,
     books: adapter.addMany(books, s.books),
