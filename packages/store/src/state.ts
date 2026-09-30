@@ -9,8 +9,10 @@ import {
 } from "@ngrx/store";
 import {
   provideFeature,
+  type TasksInput,
   type TasksRegistrationInput,
 } from "./provide-feature.js";
+import type { FunctionalEffect } from "@ngrx/effects";
 import type { Action } from "@ngrx/store";
 import { attachViewMethods, type ViewMethods, view } from "./view.js";
 
@@ -46,6 +48,11 @@ export interface StateDefinition<
 > {
   /** Generated and derived views; root selects the complete feature state. */
   readonly views: StateViews<State> & InjectableViews<ExtraViews>;
+  /**
+   * Effects from the most recently attached task collection, or `null` when
+   * this definition has no task collection.
+   */
+  readonly effects: Readonly<Record<string, FunctionalEffect>> | null;
   /**
    * Pure NgRx reducer for unit tests and direct Store integration. Events are
    * neither published nor handled by tasks when this function is called.
@@ -174,7 +181,7 @@ export function state<State extends object>(
     ),
     root: attachViewMethods(root),
   } as StateViews<State>;
-  return chainState(name, initialState, [], [], views);
+  return chainState(name, initialState, [], [], null, views);
 }
 
 function chainState<
@@ -185,11 +192,13 @@ function chainState<
   initialState: State,
   handlers: readonly ReducerTypes<State, any>[],
   tasks: readonly TasksRegistrationInput[],
+  effects: Readonly<Record<string, FunctionalEffect>> | null,
   views: StateViews<State> & InjectableViews<ExtraViews>,
 ): StateDefinition<State, ExtraViews> {
   const reducer = createReducer(initialState, ...handlers);
   return {
     views,
+    effects,
     reducer,
     provide: () => provideFeature({ name, reducer }, ...tasks),
     on: (...args) =>
@@ -198,6 +207,7 @@ function chainState<
         initialState,
         [...handlers, (on as StateOn<State>)(...args)],
         tasks,
+        effects,
         views,
       ),
     withViews: (build) => {
@@ -218,9 +228,30 @@ function chainState<
           ]),
         ),
       } as StateViews<State> & InjectableViews<ExtraViews & typeof added>;
-      return chainState(name, initialState, handlers, tasks, combined);
+      return chainState(name, initialState, handlers, tasks, effects, combined);
     },
     withTasks: (added) =>
-      chainState(name, initialState, handlers, [...tasks, added], views),
+      chainState(
+        name,
+        initialState,
+        handlers,
+        [...tasks, added],
+        taskEffects(added) ?? effects,
+        views,
+      ),
   };
+}
+
+function taskEffects(
+  input: TasksRegistrationInput,
+): Readonly<Record<string, FunctionalEffect>> | undefined {
+  if (
+    typeof input === "object" &&
+    input !== null &&
+    "effects" in input &&
+    "provide" in input &&
+    typeof input.provide === "function"
+  ) {
+    return (input as TasksInput).effects;
+  }
 }

@@ -6,9 +6,9 @@ import {
 } from "@angular/core";
 import { Actions, createEffect, ofType } from "@ngrx/effects";
 import { createAction, props, provideStore, Store } from "@ngrx/store";
-import { map } from "rxjs";
+import { EMPTY, map } from "rxjs";
 import { expect, expectTypeOf, it, vi } from "vitest";
-import { state, view } from "../src/index.js";
+import { state, tasks, view } from "../src/index.js";
 
 const add = createAction("[Counter] Add", props<{ amount: number }>());
 const other = createAction("[Counter] Other", props<{ amount: number }>());
@@ -92,4 +92,15 @@ it("registers chained handlers and appends effects", () => {
   } finally {
     injector.destroy();
   }
+});
+
+it("exposes the effects from an attached task collection", () => {
+  const counterTasks = tasks((on) => ({
+    increment: on(() => EMPTY),
+  }));
+  const beforeTasks = state("counter", { count: 0 });
+  const withTasks = beforeTasks.withTasks(counterTasks);
+
+  expect(beforeTasks.effects).toBeNull();
+  expect(withTasks.effects).toBe(counterTasks.effects);
 });
