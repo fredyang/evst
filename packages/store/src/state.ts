@@ -114,6 +114,48 @@ export interface FeatureStateDefinition<
  * Views remain callable NgRx selectors. Their `.signal()` and `.observable()`
  * methods use the Store registered through `provideStoreEventify()`.
  *
+ * @example Generated and composed feature views
+ * ```ts
+ * import type { EntityState } from '@ngrx/entity';
+ * import { state, view } from '@ngrx-eventify/store';
+ *
+ * interface Book {
+ *   id: string;
+ *   title: string;
+ * }
+ *
+ * interface EntityBooksState extends EntityState<Book> {
+ *   selectedBookId: string | null;
+ * }
+ *
+ * interface BooksState {
+ *   books: EntityBooksState;
+ *   search: { ids: string[]; loading: boolean; error: string; query: string };
+ *   collection: { loaded: boolean; loading: boolean; ids: string[] };
+ * }
+ *
+ * const initialState: BooksState = {
+ *   books: { ids: [], entities: {}, selectedBookId: null },
+ *   search: { ids: [], loading: false, error: '', query: '' },
+ *   collection: { loaded: false, loading: false, ids: [] },
+ * };
+ *
+ * const booksState = state('books', initialState).withViews(
+ *   ({ books, search, collection }) => ({
+ *     selectedBook: view(books, books =>
+ *       books.selectedBookId ? books.entities[books.selectedBookId] : undefined,
+ *     ),
+ *     searchBookIds: view(search, search => search.ids),
+ *     collectionBookIds: view(collection, collection => collection.ids),
+ *   }),
+ * );
+ *
+ * // Generated views: booksState.views.root, booksState.views.books,
+ * // booksState.views.search, and booksState.views.collection.
+ * // Composed views: booksState.views.selectedBook,
+ * // booksState.views.searchBookIds, and booksState.views.collectionBookIds.
+ * ```
+ *
  * `.provide()` registers the feature and its tasks in an application or route
  * injector. `provideStoreEventify()` normally supplies the required root Store.
  * Defining state alone does not register it or execute tasks.
