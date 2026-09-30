@@ -3,6 +3,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { Credentials, User } from "@example-app/auth/models";
 import { LogoutConfirmationDialogComponent } from "@example-app/auth/components";
+import { Subject } from "rxjs";
 import { AuthService } from "./auth.service";
 
 /** Owns authentication state and the commands that change it. */
@@ -12,10 +13,12 @@ export class AuthSessionService {
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly userState = signal<User | null>(null);
+  private readonly loggedOutSubject = new Subject<void>();
   readonly pending = signal(false);
   readonly error = signal<string | null>(null);
   readonly user = this.userState.asReadonly();
   readonly loggedIn = computed(() => this.userState() !== null);
+  readonly loggedOut$ = this.loggedOutSubject.asObservable();
 
   login(credentials: Credentials): void {
     if (this.pending()) return;
@@ -50,6 +53,7 @@ export class AuthSessionService {
     this.auth.logout().subscribe(() => {
       this.userState.set(null);
       this.error.set(null);
+      this.loggedOutSubject.next();
       void this.router.navigate(["/login"]);
     });
   }

@@ -2,6 +2,7 @@ import { computed, inject, Injectable, signal } from "@angular/core";
 import { Observable, of } from "rxjs";
 import { catchError, map, tap } from "rxjs/operators";
 import { Book } from "@example-app/books/models";
+import { AuthSessionService } from "@example-app/auth/services";
 import {
   BookStorageService,
   GoogleBooksService,
@@ -12,6 +13,7 @@ import {
 export class BooksService {
   private readonly storage = inject(BookStorageService);
   private readonly googleBooks = inject(GoogleBooksService);
+  private readonly authSession = inject(AuthSessionService);
   private readonly entitiesState = signal<Record<string, Book>>({});
   private readonly collectionIdsState = signal<string[]>([]);
   private readonly searchIdsState = signal<string[]>([]);
@@ -35,6 +37,10 @@ export class BooksService {
     const id = this.selectedIdState();
     return id !== null && this.collectionIdsState().includes(id);
   });
+
+  private readonly logoutSubscription = this.authSession.loggedOut$.subscribe(
+    () => this.reset(),
+  );
 
   loadCollection(): void {
     if (this.collectionLoading() || this.collectionLoaded()) return;
@@ -108,6 +114,19 @@ export class BooksService {
           ids.filter((id) => id !== book.id),
         ),
     });
+  }
+
+  /** Clears all in-memory feature state after the authenticated session ends. */
+  reset(): void {
+    this.entitiesState.set({});
+    this.collectionIdsState.set([]);
+    this.searchIdsState.set([]);
+    this.selectedIdState.set(null);
+    this.collectionLoaded.set(false);
+    this.collectionLoading.set(false);
+    this.searchQuery.set("");
+    this.searchLoading.set(false);
+    this.searchError.set("");
   }
 
   private cache(books: Book[]): void {
