@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, inject } from "@angular/core";
 
 import { Book } from "@example-app/books/models";
 import { BooksService } from "@example-app/books/services/books.service";
@@ -9,8 +9,8 @@ import { AsyncPipe } from "@angular/common";
   selector: "bc-selected-book-page",
   template: `
     <bc-book-detail
-      [book]="books.selectedBook()!"
-      [inCollection]="books.selectedBookInCollection()"
+      [book]="selectedBook()!"
+      [inCollection]="selectedBookInCollection()"
       (add)="addToCollection($event)"
       (remove)="removeFromCollection($event)"
     >
@@ -19,13 +19,15 @@ import { AsyncPipe } from "@angular/common";
   imports: [BookDetailComponent],
 })
 export class SelectedBookPageComponent {
-  constructor(readonly books: BooksService) {}
+  readonly booksService = inject(BooksService);
+  selectedBook = this.booksService.selectedBook;
+  selectedBookInCollection = this.booksService.selectedBookInCollection;
 
   addToCollection(book: Book) {
-    this.books.addToCollection(book);
+    this.booksService.addToCollection(book);
   }
 
   removeFromCollection(book: Book) {
-    this.books.removeFromCollection(book);
+    this.booksService.removeFromCollection(book);
   }
 }

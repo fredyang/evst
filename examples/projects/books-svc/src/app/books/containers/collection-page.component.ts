@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, inject, OnInit } from "@angular/core";
 
 import { BooksService } from "@example-app/books/services/books.service";
 import { MatCard, MatCardTitle } from "@angular/material/card";
@@ -12,7 +12,7 @@ import { AsyncPipe } from "@angular/common";
       <mat-card-title>My Collection</mat-card-title>
     </mat-card>
 
-    <bc-book-preview-list [books]="books.collection()"></bc-book-preview-list>
+    <bc-book-preview-list [books]="books"></bc-book-preview-list>
   `,
   /**
    * Container components are permitted to have just enough styles
@@ -32,9 +32,11 @@ import { AsyncPipe } from "@angular/common";
   imports: [MatCard, MatCardTitle, BookPreviewListComponent],
 })
 export class CollectionPageComponent implements OnInit {
-  constructor(readonly books: BooksService) {}
+  readonly booksService = inject(BooksService);
+
+  books = this.booksService.collection();
 
   ngOnInit() {
-    this.books.loadCollection();
+    this.booksService.loadCollection();
   }
 }
