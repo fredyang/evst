@@ -1,4 +1,4 @@
-import { state } from "@ngrx-sugar/store";
+import { state } from "@ngrx-eventify/store";
 import { fromAuth } from "../../auth/store/auth.events";
 import { fromLayout } from "./core.events";
 import { coreTasks } from "./core.tasks";

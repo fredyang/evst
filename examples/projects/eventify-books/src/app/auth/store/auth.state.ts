@@ -1,4 +1,4 @@
-import { state, view } from "@ngrx-sugar/store";
+import { state, view } from "@ngrx-eventify/store";
 import type { User } from "../models/user";
 import { fromAuth, fromAuthApi, fromLoginPage } from "./auth.events";
 import { authTasks } from "./auth.tasks";

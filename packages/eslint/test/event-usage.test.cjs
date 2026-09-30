@@ -5,7 +5,7 @@ const { ESLint } = require("eslint");
 
 const project = path.resolve(
   __dirname,
-  "../../../examples/projects/sugar-books",
+  "../../../examples/projects/eventify-books",
 );
 const config = path.join(project, "eslint.config.mjs");
 
@@ -20,7 +20,7 @@ describe("event usage", () => {
     const messages = await lint("src/app/books/store/books.events.ts");
     assert.deepEqual(
       messages.filter(
-        (message) => message.ruleId === "ngrx-sugar/no-unpublished-events",
+        (message) => message.ruleId === "ngrx-eventify/no-unpublished-events",
       ),
       [],
     );
@@ -31,7 +31,8 @@ describe("event usage", () => {
     assert.deepEqual(
       messages
         .filter(
-          (message) => message.ruleId === "ngrx-sugar/no-unsubscribed-events",
+          (message) =>
+            message.ruleId === "ngrx-eventify/no-unsubscribed-events",
         )
         .map((message) => message.message),
       [

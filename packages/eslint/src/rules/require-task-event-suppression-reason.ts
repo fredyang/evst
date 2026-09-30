@@ -5,7 +5,7 @@ export const messageId = "missingSuppressionReason";
 
 type MessageIds = typeof messageId;
 type Options = readonly [];
-const ruleName = "ngrx-sugar/require-task-event";
+const ruleName = "ngrx-eventify/require-task-event";
 const directivePattern = new RegExp(
   `eslint-(?:disable(?:-next-line|-line)?|enable)\\s+[^\\n]*\\b${ruleName}\\b`,
 );
@@ -22,7 +22,7 @@ export default createRule<Options, MessageIds>({
     schema: [],
     messages: {
       [messageId]:
-        "Suppressions of `ngrx-sugar/require-task-event` must include a reason after `--`.",
+        "Suppressions of `ngrx-eventify/require-task-event` must include a reason after `--`.",
     },
   },
   defaultOptions: [],

@@ -56,7 +56,7 @@ it("uses a recognizable default DevTools name in development", () => {
   );
   injectors.push(disabled);
 
-  expect(defaults.get(INITIAL_OPTIONS).name).toBe("NgRx Sugar Store");
+  expect(defaults.get(INITIAL_OPTIONS).name).toBe("NgRx Eventify Store");
   expect(custom.get(INITIAL_OPTIONS).name).toBe("Books");
   expect(disabled.get(INITIAL_OPTIONS, null)).toBeNull();
 });

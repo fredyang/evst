@@ -1,7 +1,7 @@
 {
-  "name": "@ngrx-sugar/store",
+  "name": "@ngrx-eventify/store",
   "version": "0.1.0",
-  "description": "Typed event and reducer utilities for NgRx.",
+  "description": "Event-first state-management utilities for Angular and NgRx.",
   "type": "module",
   "license": "MIT",
   "sideEffects": false,

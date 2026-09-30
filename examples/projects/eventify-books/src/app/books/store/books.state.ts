@@ -1,5 +1,5 @@
 import { createEntityAdapter, type EntityState } from "@ngrx/entity";
-import { state, view } from "@ngrx-sugar/store";
+import { state, view } from "@ngrx-eventify/store";
 import type { Book } from "../models/book";
 import {
   fromBookExistsGuard,

@@ -21,7 +21,7 @@ let _store: Store | undefined;
 
 /** Configuration for the root Sugar Store and development-time Redux DevTools. */
 export type StoreSugarConfig = RootStoreConfig<object> & {
-  /** Omitted options use "NgRx Sugar Store" in development; false disables DevTools. */
+  /** Omitted options use "NgRx Eventify Store" in development; false disables DevTools. */
   devtools?: StoreDevtoolsOptions | false;
 };
 
@@ -33,7 +33,7 @@ export type StoreSugarConfig = RootStoreConfig<object> & {
  * The empty root reducer map means no reducer is registered directly at the
  * root; registered feature keys still form the Store's runtime state object.
  * Redux DevTools is registered only when Angular development mode is enabled,
- * using "NgRx Sugar Store" when DevTools options are omitted. Supplied objects
+ * using "NgRx Eventify Store" when DevTools options are omitted. Supplied objects
  * and option factories are passed through to NgRx without merging defaults.
  * Pass `devtools: false` to omit it in development, or options such as
  * `{ name: "Books" }` to configure the browser extension connection.
@@ -67,7 +67,7 @@ export function provideStoreSugar(
 ): EnvironmentProviders {
   let { devtools, ...storeConfig } = config;
   // Default omitted options without overriding an explicit false or custom options.
-  devtools ??= { name: "NgRx Sugar Store" };
+  devtools ??= { name: "NgRx Eventify Store" };
   return makeEnvironmentProviders([
     provideStore({}, storeConfig),
     ...(isDevMode() && devtools !== false
@@ -78,7 +78,7 @@ export function provideStoreSugar(
       const destroyRef = inject(DestroyRef);
       if (_store && _store !== store) {
         throw new Error(
-          "NgRx Sugar already has an active Store. Use NgRx providers and an injected Store for independent stores.",
+          "NgRx Eventify already has an active Store. Use NgRx providers and an injected Store for independent stores.",
         );
       }
       _store = store;
@@ -100,7 +100,7 @@ export function publishEvent(event: Action): void {
 export function cachedStore(): Store {
   if (!_store) {
     throw new Error(
-      "Register provideStoreSugar() before using NgRx Sugar events or views.",
+      "Register provideStoreSugar() before using NgRx Eventify events or views.",
     );
   }
   return _store;

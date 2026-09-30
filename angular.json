@@ -37,25 +37,25 @@
         }
       }
     },
-    "sugar-books": {
+    "eventify-books": {
       "projectType": "application",
-      "root": "examples/projects/sugar-books",
-      "sourceRoot": "examples/projects/sugar-books/src",
+      "root": "examples/projects/eventify-books",
+      "sourceRoot": "examples/projects/eventify-books/src",
       "prefix": "bc",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/examples/sugar-books",
-            "index": "examples/projects/sugar-books/src/index.html",
-            "browser": "examples/projects/sugar-books/src/main.ts",
-            "polyfills": ["examples/projects/sugar-books/src/polyfills.ts"],
-            "tsConfig": "examples/projects/sugar-books/tsconfig.app.json",
+            "outputPath": "dist/examples/eventify-books",
+            "index": "examples/projects/eventify-books/src/index.html",
+            "browser": "examples/projects/eventify-books/src/main.ts",
+            "polyfills": ["examples/projects/eventify-books/src/polyfills.ts"],
+            "tsConfig": "examples/projects/eventify-books/tsconfig.app.json",
             "assets": [
-              "examples/projects/sugar-books/src/favicon.ico",
-              "examples/projects/sugar-books/src/assets"
+              "examples/projects/eventify-books/src/favicon.ico",
+              "examples/projects/eventify-books/src/assets"
             ],
-            "styles": ["examples/projects/sugar-books/src/styles.css"]
+            "styles": ["examples/projects/eventify-books/src/styles.css"]
           },
           "configurations": {
             "development": {
@@ -67,7 +67,7 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
-          "options": { "buildTarget": "sugar-books:build:development" }
+          "options": { "buildTarget": "eventify-books:build:development" }
         }
       }
     },

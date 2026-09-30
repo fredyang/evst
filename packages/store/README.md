@@ -1,15 +1,15 @@
-# NgRx Sugar
+# NgRx Eventify
 
 > **write less, do more**
 
-This is the spirit of jQuery. Now NgRx Sugar bring it to NgRx Store.
+This is the spirit of jQuery. Now NgRx Eventify bring it to NgRx Store.
 We will have less to learn, less to remember, less to wire up.
 Just five entry points to remember: `events`, `state`, `view`, `tasks`, and
 `provideStoreSugar`, with a fluent API guiding the rest.
 
 ## Built on NgRx
 
-NgRx Sugar is a small, event-driven syntax for NgRx Store. It does not replace
+NgRx Eventify is a small, event-driven syntax for NgRx Store. It does not replace
 NgRx or create a separate state system.
 
 Sugar events are NgRx actions, Sugar state is an NgRx feature reducer, Sugar
@@ -58,7 +58,7 @@ separate event sources.
 ```ts
 // books.events.ts
 import { emptyProps, props } from "@ngrx/store";
-import { events } from "@ngrx-sugar/store";
+import { events } from "@ngrx-eventify/store";
 
 export interface Book {
   id: string;
@@ -101,7 +101,7 @@ already available on the definition.
 ```ts
 // books.state.ts
 import { loadBooks } from "./books.tasks";
-import { state, view } from "@ngrx-sugar/store";
+import { state, view } from "@ngrx-eventify/store";
 import { BooksApiEvents, BooksPageEvents, type Book } from "./books.events";
 
 interface BooksState {
@@ -167,7 +167,7 @@ Standalone views compose views from more than one feature without assigning the
 result to either feature:
 
 ```ts
-import { view } from "@ngrx-sugar/store";
+import { view } from "@ngrx-eventify/store";
 import { ordersState } from "./orders.state";
 import { usersState } from "./users.state";
 
@@ -195,7 +195,7 @@ returns an API outcome event, which the state handles independently.
 // books.tasks.ts
 import { inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { tasks } from "@ngrx-sugar/store";
+import { tasks } from "@ngrx-eventify/store";
 import { catchError, exhaustMap, map, of } from "rxjs";
 import { BooksApiEvents, BooksPageEvents, type Book } from "./books.events";
 
@@ -315,7 +315,7 @@ tasks and registers the feature through the same fluent API:
 // app.config.ts
 import { type ApplicationConfig } from "@angular/core";
 import { provideHttpClient } from "@angular/common/http";
-import { provideStoreSugar } from "@ngrx-sugar/store";
+import { provideStoreSugar } from "@ngrx-eventify/store";
 import { booksState } from "./books.state";
 
 export const appConfig: ApplicationConfig = {
@@ -341,14 +341,14 @@ forms.
 
 ## Understanding registration and compatibility
 
-NgRx Sugar reduces the public surface while retaining NgRx interoperability.
+NgRx Eventify reduces the public surface while retaining NgRx interoperability.
 Events are NgRx actions, views are memoized selectors, and NgRx types such as
 `Action` retain their original names. The package also exports `StateDefinition`,
 `Task`, `Tasks`, and `StoreSugarConfig` types.
 
 `provideStoreSugar()` starts with an empty root reducer map. Features registered
 through `.provide()` or NgRx's `provideState()` supply the state keys. DevTools
-uses the default name `NgRx Sugar Store`; `devtools: false` disables it. Custom
+uses the default name `NgRx Eventify Store`; `devtools: false` disables it. Custom
 options are forwarded without merging, and production mode skips registration.
 
 Direct event publishing uses one active Store per loaded Sugar module. Module
@@ -414,8 +414,8 @@ From the repository root:
 
 ```sh
 npm install
-npm test --workspace @ngrx-sugar/store
-npm pack --workspace @ngrx-sugar/store
+npm test --workspace @ngrx-eventify/store
+npm pack --workspace @ngrx-eventify/store
 ```
 
 The test command builds the package, checks test types, and runs the unit tests.

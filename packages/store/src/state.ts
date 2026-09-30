@@ -116,7 +116,7 @@ export interface StateDefinition<
  * @example Defining handlers and derived views
  * ```ts
  * import { props } from '@ngrx/store';
- * import { events, state, view } from '@ngrx-sugar/store';
+ * import { events, state, view } from '@ngrx-eventify/store';
  *
  * const CounterEvents = events('Counter', {
  *   added: props<{ amount: number }>(),
@@ -141,7 +141,7 @@ export interface StateDefinition<
  *
  * @example Adding tasks and registering state
  * ```ts
- * import { state, provideStoreSugar } from '@ngrx-sugar/store';
+ * import { state, provideStoreSugar } from '@ngrx-eventify/store';
  * import { BooksEvents } from './books.events';
  * import { booksTasks } from './books.tasks';
  * import { initialBooksState } from './books.initial-state';

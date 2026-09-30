@@ -1,5 +1,5 @@
 import { emptyProps } from "@ngrx/store";
-import { events } from "@ngrx-sugar/store";
+import { events } from "@ngrx-eventify/store";
 
 export const fromUser = events("User", { idleTimeoutElapsed: emptyProps() });
 

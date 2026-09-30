@@ -1,4 +1,4 @@
-# NgRx Sugar ESLint plugin
+# NgRx Eventify ESLint plugin
 
 ESLint rules for event-oriented NgRx applications.
 
@@ -8,45 +8,45 @@ From the workspace root:
 
 ```sh
 npm install
-npm test --workspace @ngrx-sugar/eslint
-npm pack --workspace @ngrx-sugar/eslint
+npm test --workspace @ngrx-eventify/eslint
+npm pack --workspace @ngrx-eventify/eslint
 ```
 
-The generated `ngrx-sugar-eslint-0.1.0.tgz` can be installed in a consuming project with `npm install --save-dev /path/to/ngrx-sugar-eslint-0.1.0.tgz`.
+The generated `ngrx-eventify-eslint-0.1.0.tgz` can be installed in a consuming project with `npm install --save-dev /path/to/ngrx-eventify-eslint-0.1.0.tgz`.
 
 ## Configuring ESLint
 
-Flat configuration for an NgRx Sugar application (`eslint.config.mjs`):
+Flat configuration for an NgRx Eventify application (`eslint.config.mjs`):
 
 ```js
 import tseslint from "typescript-eslint";
-import ngrxSugar from "@ngrx-sugar/eslint";
+import ngrxEventify from "@ngrx-eventify/eslint";
 
 export default [
   {
     files: ["**/*.ts"],
     languageOptions: { parser: tseslint.parser },
-    plugins: { "ngrx-sugar": ngrxSugar },
-    ...ngrxSugar.configs.sugar,
+    plugins: { "ngrx-eventify": ngrxEventify },
+    ...ngrxEventify.configs.sugar,
   },
 ];
 ```
 
 The `ngrx` preset supports standard NgRx actions and Store dispatches. It
 includes action-type hygiene, repeated action dispatch detection, and multiple
-dispatch detection within one executable boundary. Sugar-only rules, including
-source-oriented event-group naming, remain in the `sugar` preset.
+dispatch detection within one executable boundary. Eventify-specific rules,
+including source-oriented event-group naming, remain in the `sugar` preset.
 
 ```js
 import tseslint from "typescript-eslint";
-import ngrxSugar from "@ngrx-sugar/eslint";
+import ngrxEventify from "@ngrx-eventify/eslint";
 
 export default [
   {
     files: ["**/*.ts"],
     languageOptions: { parser: tseslint.parser },
-    plugins: { "ngrx-sugar": ngrxSugar },
-    ...ngrxSugar.configs.ngrx,
+    plugins: { "ngrx-eventify": ngrxEventify },
+    ...ngrxEventify.configs.ngrx,
   },
 ];
 ```

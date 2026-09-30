@@ -9,7 +9,7 @@ import {
   TitleStrategy,
   withHashLocation,
 } from "@angular/router";
-import { provideStoreSugar } from "@ngrx-sugar/store";
+import { provideStoreSugar } from "@ngrx-eventify/store";
 import { routes } from "./app.routes";
 import { authState } from "./auth/store/auth.state";
 import { AppTitleStrategy } from "./core/app-title.strategy";

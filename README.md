@@ -1,11 +1,11 @@
-# NgRx Sugar
+# NgRx Eventify
 
-Utilities and an ESLint plugin for event-oriented NgRx applications.
+Event-first state-management utilities and an ESLint plugin for Angular and NgRx applications.
 
-| Package                                         | Purpose                                            |
-| ----------------------------------------------- | -------------------------------------------------- |
-| [@ngrx-sugar/store](packages/store/README.md)   | `events`, `state`, `task`, and `provideStoreSugar` |
-| [@ngrx-sugar/eslint](packages/eslint/README.md) | The `good-action-hygiene` ESLint rule              |
+| Package                                            | Purpose                                             |
+| -------------------------------------------------- | --------------------------------------------------- |
+| [@ngrx-eventify/store](packages/store/README.md)   | `events`, `state`, `tasks`, and `provideStoreSugar` |
+| [@ngrx-eventify/eslint](packages/eslint/README.md) | Event-first ESLint rules                            |
 
 Each package has its own manifest, source, tests, and build output. The root is a private npm workspace.
 
@@ -19,7 +19,7 @@ npm run build
 npm test
 ```
 
-A single package can be tested with `npm test --workspace @ngrx-sugar/store` or `npm test --workspace @ngrx-sugar/eslint`.
+A single package can be tested with `npm test --workspace @ngrx-eventify/store` or `npm test --workspace @ngrx-eventify/eslint`.
 
 ## Packaging
 
@@ -27,7 +27,7 @@ A single package can be tested with `npm test --workspace @ngrx-sugar/store` or 
 npm run pack:all
 ```
 
-This builds both packages and creates separate installable archives. A single package can be packed with `npm pack --workspace @ngrx-sugar/store` or `npm pack --workspace @ngrx-sugar/eslint`.
+This builds both packages and creates separate installable archives. A single package can be packed with `npm pack --workspace @ngrx-eventify/store` or `npm pack --workspace @ngrx-eventify/eslint`.
 
 ## Using the utilities locally
 

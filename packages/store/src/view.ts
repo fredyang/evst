@@ -115,7 +115,7 @@ export interface ViewBuilder {
  *
  * @example Combining views from two features
  * ```ts
- * import { view } from '@ngrx-sugar/store';
+ * import { view } from '@ngrx-eventify/store';
  * import { ordersState } from './orders.state';
  * import { usersState } from './users.state';
  *

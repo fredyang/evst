@@ -11,7 +11,7 @@ import requireTaskEventSuppressionReason from "./rules/require-task-event-suppre
 /** ESLint plugin providing rules for event-oriented NgRx applications. */
 const plugin = {
   /** Package identity reported to ESLint. */
-  meta: { name: "@ngrx-sugar/eslint", version: "0.1.0" },
+  meta: { name: "@ngrx-eventify/eslint", version: "0.1.0" },
   /** Available rules, keyed by their names within the plugin namespace. */
   rules: {
     "event-hygiene": eventHygiene,
@@ -27,22 +27,22 @@ const plugin = {
   configs: {
     ngrx: {
       rules: {
-        "ngrx-sugar/event-hygiene": "error",
-        "ngrx-sugar/event-publisher-ownership": "warn",
-        "ngrx-sugar/no-sequential-event-publishes": "warn",
+        "ngrx-eventify/event-hygiene": "error",
+        "ngrx-eventify/event-publisher-ownership": "warn",
+        "ngrx-eventify/no-sequential-event-publishes": "warn",
       },
     },
     sugar: {
       rules: {
-        "ngrx-sugar/event-hygiene": "error",
-        "ngrx-sugar/event-group-source-prefix": "warn",
-        "ngrx-sugar/event-publisher-ownership": "warn",
-        "ngrx-sugar/no-sequential-event-publishes": "warn",
-        "ngrx-sugar/no-unpublished-events": "warn",
-        "ngrx-sugar/no-unsubscribed-events": "warn",
-        "ngrx-sugar/no-unused-views": "warn",
-        "ngrx-sugar/require-task-event": "warn",
-        "ngrx-sugar/require-task-event-suppression-reason": "error",
+        "ngrx-eventify/event-hygiene": "error",
+        "ngrx-eventify/event-group-source-prefix": "warn",
+        "ngrx-eventify/event-publisher-ownership": "warn",
+        "ngrx-eventify/no-sequential-event-publishes": "warn",
+        "ngrx-eventify/no-unpublished-events": "warn",
+        "ngrx-eventify/no-unsubscribed-events": "warn",
+        "ngrx-eventify/no-unused-views": "warn",
+        "ngrx-eventify/require-task-event": "warn",
+        "ngrx-eventify/require-task-event-suppression-reason": "error",
       },
     },
   },

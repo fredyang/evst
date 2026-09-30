@@ -1,5 +1,5 @@
 {
-  "name": "ngrx-sugar-workspace",
+  "name": "ngrx-eventify-workspace",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -14,20 +14,20 @@
     "build:ngrx-books": "ng build ngrx-books",
     "build:ngrx-books-standalone": "ng build ngrx-books-standalone",
     "build:books-svc": "ng build books-svc",
-    "build:sugar-books": "ng build sugar-books",
+    "build:eventify-books": "ng build eventify-books",
     "test:ngrx-books": "vitest run --config examples/projects/ngrx-books/vitest.config.mts",
     "test:ngrx-books-standalone": "vitest run --config examples/projects/ngrx-books-standalone/vitest.config.mts",
-    "test:sugar-books": "vitest run --config examples/projects/sugar-books/vitest.config.mts",
+    "test:eventify-books": "vitest run --config examples/projects/eventify-books/vitest.config.mts",
     "serve:ngrx-books": "ng serve ngrx-books --port 4200",
     "serve:ngrx-books-standalone": "ng serve ngrx-books-standalone --port 4202",
     "serve:books-svc": "ng serve books-svc --port 4203",
-    "serve:sugar-books": "ng serve sugar-books --port 4200",
-    "serve:examples": "concurrently \"npm run serve:ngrx-books\" \"npm run serve:sugar-books\" \"npm run serve:ngrx-books-standalone\" \"npm run serve:books-svc\"",
-    "lint:sugar-books": "npm run build --workspace @ngrx-sugar/eslint && cd examples/projects/sugar-books && eslint \"src/**/*.ts\"",
-    "lint:ngrx-books-standalone": "npm run build --workspace @ngrx-sugar/eslint && cd examples/projects/ngrx-books-standalone && eslint \"src/**/*.ts\"",
+    "serve:eventify-books": "ng serve eventify-books --port 4201",
+    "serve:examples": "concurrently \"npm run serve:ngrx-books\" \"npm run serve:eventify-books\" \"npm run serve:ngrx-books-standalone\" \"npm run serve:books-svc\"",
+    "lint:eventify-books": "npm run build --workspace @ngrx-eventify/eslint && cd examples/projects/eventify-books && eslint \"src/**/*.ts\"",
+    "lint:ngrx-books-standalone": "npm run build --workspace @ngrx-eventify/eslint && cd examples/projects/ngrx-books-standalone && eslint \"src/**/*.ts\"",
     "lint:books-svc": "cd examples/projects/books-svc && eslint \"src/**/*.ts\"",
-    "lint:publisher-ownership": "npm run build --workspace @ngrx-sugar/eslint && cd examples/projects/sugar-books && eslint \"src/**/*.ts\" --rule \"ngrx-sugar/no-unused-views: off\"",
-    "watch:publisher-ownership": "npm run build --workspace @ngrx-sugar/eslint && node .vscode/watch-publisher-ownership.cjs"
+    "lint:publisher-ownership": "npm run build --workspace @ngrx-eventify/eslint && cd examples/projects/eventify-books && eslint \"src/**/*.ts\" --rule \"ngrx-eventify/no-unused-views: off\"",
+    "watch:publisher-ownership": "npm run build --workspace @ngrx-eventify/eslint && node .vscode/watch-publisher-ownership.cjs"
   },
   "lint-staged": {
     "*.{cjs,js,json,md,mjs,ts}": "prettier --write"

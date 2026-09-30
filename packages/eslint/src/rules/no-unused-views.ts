@@ -18,7 +18,7 @@ export default createRule<Options, MessageIds>({
   meta: {
     type: "suggestion",
     docs: {
-      description: "Reports statically unused NgRx Sugar state views.",
+      description: "Reports statically unused NgRx Eventify state views.",
     },
     schema: [],
     messages: {

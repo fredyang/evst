@@ -1,7 +1,7 @@
 {
-  "name": "@ngrx-sugar/eslint",
+  "name": "@ngrx-eventify/eslint",
   "version": "0.1.0",
-  "description": "ESLint rules for event-oriented NgRx applications.",
+  "description": "ESLint rules for event-first Angular and NgRx applications.",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
