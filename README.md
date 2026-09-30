@@ -2,10 +2,10 @@
 
 Event-first state-management utilities and an ESLint plugin for Angular and NgRx applications.
 
-| Package                                            | Purpose                                             |
-| -------------------------------------------------- | --------------------------------------------------- |
-| [@ngrx-eventify/store](packages/store/README.md)   | `events`, `state`, `tasks`, and `provideStoreSugar` |
-| [@ngrx-eventify/eslint](packages/eslint/README.md) | Event-first ESLint rules                            |
+| Package                                            | Purpose                                                |
+| -------------------------------------------------- | ------------------------------------------------------ |
+| [@ngrx-eventify/store](packages/store/README.md)   | `events`, `state`, `tasks`, and `provideStoreEventify` |
+| [@ngrx-eventify/eslint](packages/eslint/README.md) | Event-first ESLint rules                               |
 
 Each package has its own manifest, source, tests, and build output. The root is a private npm workspace.
 

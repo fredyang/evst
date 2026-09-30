@@ -10,7 +10,7 @@ import {
 import { provideState, type Action, type ActionReducer } from "@ngrx/store";
 
 type EffectSource = Parameters<typeof provideEffects>[number];
-/** A Sugar task collection that exposes its named functional effects. */
+/** An Eventify task collection that exposes its named functional effects. */
 export interface TasksInput {
   readonly effects: Readonly<Record<string, FunctionalEffect>>;
   provide(): EnvironmentProviders;
@@ -26,7 +26,7 @@ const functionalSources = new WeakMap<
 >();
 
 /**
- * Converts Sugar task inputs into sources accepted by NgRx `provideEffects()`.
+ * Converts Eventify task inputs into sources accepted by NgRx `provideEffects()`.
  * Recursively flattens nested arrays and wraps individual functional tasks in
  * `{ effect }` records. NgRx effect metadata distinguishes functional effects
  * from effect classes; classes and existing named records pass through unchanged.

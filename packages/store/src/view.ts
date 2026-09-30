@@ -6,19 +6,19 @@ import {
   type Selector,
   type SelectSignalOptions,
 } from "@ngrx/store";
-import { cachedStore } from "./provide-store-sugar.js";
+import { cachedStore } from "./provide-store-eventify.js";
 
 /** Injection helpers attached to a memoized view. */
 export type ViewMethods<Result> = {
   /**
-   * Reads this view as a signal from the registered Sugar Store.
+   * Reads this view as a signal from the registered Eventify Store.
    *
    * @param options - Signal selection options, including an optional equality function.
    * @returns A signal containing the current view result.
    */
   signal(options?: SelectSignalOptions<Result>): Signal<Result>;
   /**
-   * Reads this view as an observable from the registered Sugar Store.
+   * Reads this view as an observable from the registered Eventify Store.
    *
    * @returns An observable of view results.
    */
@@ -46,7 +46,7 @@ export function attachViewMethods<
 }
 
 /**
- * Creates memoized NgRx selectors with Sugar signal and observable readers.
+ * Creates memoized NgRx selectors with Eventify signal and observable readers.
  *
  * `view()` supports one or more input selectors followed by a projector.
  */
@@ -106,7 +106,7 @@ export interface ViewBuilder {
 }
 
 /**
- * Creates a standalone Sugar view.
+ * Creates a standalone Eventify view.
  *
  * The result is also a standard NgRx memoized selector, so it can compose
  * feature views or be used with NgRx Store APIs.

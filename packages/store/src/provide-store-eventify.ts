@@ -19,14 +19,14 @@ import {
 
 let _store: Store | undefined;
 
-/** Configuration for the root Sugar Store and development-time Redux DevTools. */
-export type StoreSugarConfig = RootStoreConfig<object> & {
+/** Configuration for the root Eventify Store and development-time Redux DevTools. */
+export type StoreEventifyConfig = RootStoreConfig<object> & {
   /** Omitted options use "NgRx Eventify Store" in development; false disables DevTools. */
   devtools?: StoreDevtoolsOptions | false;
 };
 
 /**
- * Provides an empty NgRx root Store, development Redux DevTools, and Sugar's
+ * Provides an empty NgRx root Store, development Redux DevTools, and Eventify's
  * event publishing registration.
  *
  * Feature state belongs in `state(...).provide()` or NgRx's `provideState()`.
@@ -39,7 +39,7 @@ export type StoreSugarConfig = RootStoreConfig<object> & {
  * `{ name: "Books" }` to configure the browser extension connection.
  *
  * Event creator `.publish()` methods and state view methods use the Store
- * registered by this provider. One active Store is supported per loaded Sugar module. A
+ * registered by this provider. One active Store is supported per loaded Eventify module. A
  * second, different Store is rejected; concurrent SSR applications and
  * independent Stores require NgRx's own providers and an injected Store instead
  * of this provider and the shared `.publish()` methods.
@@ -48,12 +48,12 @@ export type StoreSugarConfig = RootStoreConfig<object> & {
  *
  * @param config - NgRx root Store configuration and optional DevTools options.
  * @returns Environment providers for the root Store, DevTools in development,
- * and Sugar event publishing.
+ * and Eventify event publishing.
  * @example Configuring an application root Store
  * ```ts
  * const appConfig = {
  *   providers: [
- *     provideStoreSugar({
+ *     provideStoreEventify({
  *       runtimeChecks: { strictActionSerializability: true },
  *       devtools: { name: "Books" },
  *     }),
@@ -62,8 +62,8 @@ export type StoreSugarConfig = RootStoreConfig<object> & {
  * };
  * ```
  */
-export function provideStoreSugar(
-  config: StoreSugarConfig = {},
+export function provideStoreEventify(
+  config: StoreEventifyConfig = {},
 ): EnvironmentProviders {
   let { devtools, ...storeConfig } = config;
   // Default omitted options without overriding an explicit false or custom options.
@@ -96,11 +96,11 @@ export function publishEvent(event: Action): void {
   cachedStore().dispatch(event);
 }
 
-/** @internal Returns the Store captured during Sugar application initialization. */
+/** @internal Returns the Store captured during Eventify application initialization. */
 export function cachedStore(): Store {
   if (!_store) {
     throw new Error(
-      "Register provideStoreSugar() before using NgRx Eventify events or views.",
+      "Register provideStoreEventify() before using NgRx Eventify events or views.",
     );
   }
   return _store;

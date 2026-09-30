@@ -60,7 +60,7 @@ export interface StateDefinition<
   readonly reducer: ActionReducer<State, Action>;
   /**
    * Registers this feature reducer and its tasks in an application or route injector.
-   * A root Store is required, normally from `provideStoreSugar()`.
+   * A root Store is required, normally from `provideStoreEventify()`.
    *
    * @returns Environment providers for the feature reducer and its tasks.
    */
@@ -108,10 +108,10 @@ export interface StateDefinition<
  * `views.root` selects the complete feature state. Extra views can compose
  * generated or previously added views, but cannot overwrite existing names.
  * Views remain callable NgRx selectors. Their `.signal()` and `.observable()`
- * methods use the Store registered through `provideStoreSugar()`.
+ * methods use the Store registered through `provideStoreEventify()`.
  *
  * `.provide()` registers the feature and its tasks in an application or route
- * injector. `provideStoreSugar()` normally supplies the required root Store.
+ * injector. `provideStoreEventify()` normally supplies the required root Store.
  * Defining state alone does not register it or execute tasks.
  *
  * @param name - Key under which the feature is registered in the root store.
@@ -148,7 +148,7 @@ export interface StateDefinition<
  *
  * @example Adding tasks and registering state
  * ```ts
- * import { state, provideStoreSugar } from '@ngrx-eventify/store';
+ * import { state, provideStoreEventify } from '@ngrx-eventify/store';
  * import { BooksEvents } from './books.events';
  * import { booksTasks } from './books.tasks';
  * import { initialBooksState } from './books.initial-state';
@@ -158,7 +158,7 @@ export interface StateDefinition<
  *   .withTasks(booksTasks);
  *
  * const appConfig = {
- *   providers: [provideStoreSugar(), books.provide()],
+ *   providers: [provideStoreEventify(), books.provide()],
  * };
  * ```
  */

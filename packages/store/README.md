@@ -5,16 +5,16 @@
 This is the spirit of jQuery. Now NgRx Eventify bring it to NgRx Store.
 We will have less to learn, less to remember, less to wire up.
 Just five entry points to remember: `events`, `state`, `view`, `tasks`, and
-`provideStoreSugar`, with a fluent API guiding the rest.
+`provideStoreEventify`, with a fluent API guiding the rest.
 
 ## Built on NgRx
 
 NgRx Eventify is a small, event-driven syntax for NgRx Store. It does not replace
 NgRx or create a separate state system.
 
-Sugar events are NgRx actions, Sugar state is an NgRx feature reducer, Sugar
-views are NgRx selectors, and Sugar tasks are functional NgRx effects. Sugar
-and standard NgRx APIs can coexist in the same application. Sugar fits the
+Eventify events are NgRx actions, Eventify state is an NgRx feature reducer, Eventify
+views are NgRx selectors, and Eventify tasks are functional NgRx effects. Eventify
+and standard NgRx APIs can coexist in the same application. Eventify fits the
 common feature flow; specialized APIs such as `@ngrx/entity`, router state,
 and meta-reducers remain available when they are the clearer fit.
 
@@ -298,7 +298,7 @@ can use a component field such as:
 readonly books$ = booksState.views.books.observable();
 ```
 
-View methods use the Store registered by `provideStoreSugar()`, so they work in
+View methods use the Store registered by `provideStoreEventify()`, so they work in
 component fields, methods, and asynchronous callbacks. Observable subscriptions
 may happen later. Views also remain usable as regular NgRx memoized selectors.
 
@@ -315,22 +315,26 @@ tasks and registers the feature through the same fluent API:
 // app.config.ts
 import { type ApplicationConfig } from "@angular/core";
 import { provideHttpClient } from "@angular/common/http";
-import { provideStoreSugar } from "@ngrx-eventify/store";
+import { provideStoreEventify } from "@ngrx-eventify/store";
 import { booksState } from "./books.state";
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideHttpClient(), provideStoreSugar(), booksState.provide()],
+  providers: [
+    provideHttpClient(),
+    provideStoreEventify(),
+    booksState.provide(),
+  ],
 };
 ```
 
-`provideStoreSugar()` registers the root Store, enables publishing, and adds
+`provideStoreEventify()` registers the root Store, enables publishing, and adds
 Redux DevTools in Angular development mode. Separate `provideStore()` and
 `provideStoreDevtools()` calls are unnecessary. Its options also accept NgRx
 root Store configuration, such as `runtimeChecks` and `metaReducers`.
 
 `booksState.provide()` registers the feature and the tasks attached with
 `.withTasks(booksTasks)` in its definition. Feature
-providers can live in route providers instead; `provideStoreSugar()` belongs
+providers can live in route providers instead; `provideStoreEventify()` belongs
 at the application root.
 
 A task collection can be registered independently with
@@ -344,15 +348,15 @@ forms.
 NgRx Eventify reduces the public surface while retaining NgRx interoperability.
 Events are NgRx actions, views are memoized selectors, and NgRx types such as
 `Action` retain their original names. The package also exports `StateDefinition`,
-`Task`, `Tasks`, and `StoreSugarConfig` types.
+`Task`, `Tasks`, and `StoreEventifyConfig` types.
 
-`provideStoreSugar()` starts with an empty root reducer map. Features registered
+`provideStoreEventify()` starts with an empty root reducer map. Features registered
 through `.provide()` or NgRx's `provideState()` supply the state keys. DevTools
 uses the default name `NgRx Eventify Store`; `devtools: false` disables it. Custom
 options are forwarded without merging, and production mode skips registration.
 
-Direct event publishing uses one active Store per loaded Sugar module. Module
-federation can share the root Store and Sugar singleton while remotes register
+Direct event publishing uses one active Store per loaded Eventify module. Module
+federation can share the root Store and Eventify singleton while remotes register
 features. Concurrent SSR applications or independent Stores require NgRx
 providers and an injected Store for publishing and reading views. Destroying the
 owning injector releases the publishing registration; a different active Store
@@ -400,7 +404,7 @@ events with mocked dependencies. Complex or reusable tasks can be read from
 `tasks.testing` for focused tests.
 
 Component tests that publish events can register
-`provideStoreSugar({ devtools: false })` before `provideMockStore(...)` in TestBed
+`provideStoreEventify({ devtools: false })` before `provideMockStore(...)` in TestBed
 providers. TestBed initialization captures the mock Store, and injector teardown
 releases the registration.
 

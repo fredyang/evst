@@ -1,4 +1,4 @@
-import { publishEvent } from "./provide-store-sugar.js";
+import { publishEvent } from "./provide-store-eventify.js";
 import { createAction } from "@ngrx/store";
 import type {
   Action,
@@ -115,7 +115,7 @@ type EventGroupConfig<Events extends Record<string, EventConfig>> = Events & {
 };
 
 type Publishable<Creator extends (...args: any[]) => Action> = Creator & {
-  /** Publishes an event through the Store registered by provideStoreSugar(). */
+  /** Publishes an event through the Store registered by provideStoreEventify(). */
   publish(...args: Parameters<Creator>): void;
 };
 
@@ -138,7 +138,7 @@ type EventGroup<
  * Creator parameters require explicit types, including parameters with default values.
  * Calling a creator returns a plain NgRx Action without publishing it.
  * Its `.publish(...args)` method accepts the same arguments and dispatches the
- * created event after provideStoreSugar() initializes. Publishing can run
+ * created event after provideStoreEventify() initializes. Publishing can run
  * outside an injection context; event creation requires no store registration.
  *
  * @param source - String literal identifying the event source.
@@ -170,7 +170,7 @@ type EventGroup<
  * booksPageEvents.bookSelected.type;
  * // '[Books Page] Book Selected'
  *
- * // In a handler, after provideStoreSugar() initializes:
+ * // In a handler, after provideStoreEventify() initializes:
  * booksPageEvents.bookSelected.publish({ id: '42' });
  * ```
  */
