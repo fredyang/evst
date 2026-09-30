@@ -42,7 +42,7 @@ type StateOn<State> = <Creators extends readonly ActionCreator[]>(
 ) => ReducerTypes<State, Creators>;
 
 /** An immutable state definition with composable handlers, views, and tasks. */
-export interface StateDefinition<
+export interface FeatureStateDefinition<
   State extends object,
   ExtraViews extends Record<string, MemoizedSelector<object, any>> = {},
 > {
@@ -50,7 +50,9 @@ export interface StateDefinition<
   readonly views: StateViews<State> & InjectableViews<ExtraViews>;
   /**
    * Effects from the most recently attached task collection, or `null` when
-   * this definition has no task collection.
+   * this definition has no task collection. This is provided for unit-test
+   * inspection only; reading it does not register effects. Use `withTasks()`
+   * followed by `provide()` to register tasks.
    */
   readonly effects: Readonly<Record<string, FunctionalEffect>> | null;
   /**
@@ -73,7 +75,7 @@ export interface StateDefinition<
    */
   on<Creators extends readonly ActionCreator[]>(
     ...args: [...Creators, ReducerTypes<State, Creators>["reducer"]]
-  ): StateDefinition<State, ExtraViews>;
+  ): FeatureStateDefinition<State, ExtraViews>;
   /**
    * Optionally adds named, derived views alongside the default field and `root`
    * views. The callback runs once; use the exported `view()` builder for each
@@ -84,7 +86,7 @@ export interface StateDefinition<
    */
   withViews<Added extends Record<string, MemoizedSelector<object, any>>>(
     build: (views: StateViews<State> & InjectableViews<ExtraViews>) => Added,
-  ): StateDefinition<State, ExtraViews & Added>;
+  ): FeatureStateDefinition<State, ExtraViews & Added>;
   /**
    * Optionally appends tasks so this definition's `provide()` method registers
    * both the feature state and its tasks. Task collections, functional effects,
@@ -93,7 +95,9 @@ export interface StateDefinition<
    * @param tasks - Tasks to register with this feature.
    * @returns A new definition containing the added tasks.
    */
-  withTasks(tasks: TasksRegistrationInput): StateDefinition<State, ExtraViews>;
+  withTasks(
+    tasks: TasksRegistrationInput,
+  ): FeatureStateDefinition<State, ExtraViews>;
 }
 
 /**
@@ -165,7 +169,7 @@ export interface StateDefinition<
 export function state<State extends object>(
   name: string,
   initialState: State,
-): StateDefinition<State> {
+): FeatureStateDefinition<State> {
   if (Object.hasOwn(initialState, "root")) {
     throw new Error(
       'Feature state cannot contain the reserved view name "root".',
@@ -194,7 +198,7 @@ function chainState<
   tasks: readonly TasksRegistrationInput[],
   effects: Readonly<Record<string, FunctionalEffect>> | null,
   views: StateViews<State> & InjectableViews<ExtraViews>,
-): StateDefinition<State, ExtraViews> {
+): FeatureStateDefinition<State, ExtraViews> {
   const reducer = createReducer(initialState, ...handlers);
   return {
     views,

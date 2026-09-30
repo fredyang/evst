@@ -347,7 +347,7 @@ forms.
 
 NgRx Eventify reduces the public surface while retaining NgRx interoperability.
 Events are NgRx actions, views are memoized selectors, and NgRx types such as
-`Action` retain their original names. The package also exports `StateDefinition`,
+`Action` retain their original names. The package also exports `FeatureStateDefinition`,
 `Task`, `Tasks`, and `StoreEventifyConfig` types.
 
 `provideStoreEventify()` starts with an empty root reducer map. Features registered
