@@ -1,5 +1,6 @@
 import eventHygiene from "./rules/event-hygiene";
 import eventPublisherOwnership from "./rules/event-publisher-ownership";
+import eventGroupSourcePrefix from "./rules/event-group-source-prefix";
 import noSequentialEventPublishes from "./rules/no-sequential-event-publishes";
 import noUnpublishedEvents from "./rules/no-unpublished-events";
 import noUnsubscribedEvents from "./rules/no-unsubscribed-events";
@@ -15,6 +16,7 @@ const plugin = {
   rules: {
     "event-hygiene": eventHygiene,
     "event-publisher-ownership": eventPublisherOwnership,
+    "event-group-source-prefix": eventGroupSourcePrefix,
     "no-sequential-event-publishes": noSequentialEventPublishes,
     "no-unpublished-events": noUnpublishedEvents,
     "no-unsubscribed-events": noUnsubscribedEvents,
@@ -33,6 +35,7 @@ const plugin = {
     sugar: {
       rules: {
         "ngrx-sugar/event-hygiene": "error",
+        "ngrx-sugar/event-group-source-prefix": "warn",
         "ngrx-sugar/event-publisher-ownership": "warn",
         "ngrx-sugar/no-sequential-event-publishes": "warn",
         "ngrx-sugar/no-unpublished-events": "warn",

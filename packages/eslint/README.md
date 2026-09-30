@@ -34,8 +34,8 @@ export default [
 
 The `ngrx` preset supports standard NgRx actions and Store dispatches. It
 includes action-type hygiene, repeated action dispatch detection, and multiple
-dispatch detection within one executable boundary. Sugar-only rules remain in
-the `sugar` preset.
+dispatch detection within one executable boundary. Sugar-only rules, including
+source-oriented event-group naming, remain in the `sugar` preset.
 
 ```js
 import tseslint from "typescript-eslint";
@@ -51,7 +51,7 @@ export default [
 ];
 ```
 
-The consuming project needs ESLint 9 and `typescript-eslint`. Rule behavior and limitations are described in the [event hygiene guide](docs/rules/event-hygiene.md), [event publisher ownership guide](docs/rules/event-publisher-ownership.md), [sequential event publication guide](docs/rules/no-sequential-event-publishes.md), [unpublished event guide](docs/rules/no-unpublished-events.md), [unsubscribed event guide](docs/rules/no-unsubscribed-events.md), [event-driven task guide](docs/rules/require-task-event.md), and [unused state views guide](docs/rules/no-unused-views.md). The unused-views rule requires type-aware linting with a `parserOptions.project` setting.
+The consuming project needs ESLint 9 and `typescript-eslint`. Rule behavior and limitations are described in the [event hygiene guide](docs/rules/event-hygiene.md), [event-group source-prefix guide](docs/rules/event-group-source-prefix.md), [event publisher ownership guide](docs/rules/event-publisher-ownership.md), [sequential event publication guide](docs/rules/no-sequential-event-publishes.md), [unpublished event guide](docs/rules/no-unpublished-events.md), [unsubscribed event guide](docs/rules/no-unsubscribed-events.md), [event-driven task guide](docs/rules/require-task-event.md), and [unused state views guide](docs/rules/no-unused-views.md). The unused-views rule requires type-aware linting with a `parserOptions.project` setting.
 
 ## Developing
 
