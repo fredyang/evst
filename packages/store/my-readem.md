@@ -138,7 +138,7 @@ export class BooksPageComponent implements OnInit {
 
 ```ts
 // bundle state with tasks and register together
-state.withTasks(taskCllection);
+taskCllection.provide();
 
 provider: [state.provide()];
 

@@ -19,7 +19,7 @@ common feature flow; specialized APIs such as `@ngrx/entity`, router state,
 and meta-reducers remain available when they are the clearer fit.
 
 Defining state is fluent and discoverable. Starting with `state(...)`, editor
-completion leads to `.on()`, `.withViews()`, `.withTasks()`, and `.provide()`.
+completion leads to `.on()`, `.withViews()`, and `.provide()`.
 Handlers, derived views, and registration fit together without remembering a
 collection of separate setup functions.
 
@@ -144,8 +144,7 @@ export const booksState = state("books", initialState)
       selectedId,
       (books, id) => books.find((book) => book.id === id) ?? null,
     ),
-  }))
-  .withTasks(booksTasks);
+  }));
 ```
 
 Every initialized state field gets a view automatically: `views.books`,
@@ -308,8 +307,8 @@ and asynchronous callbacks without an injection context.
 
 ## Registering state
 
-The application supplies the root Store once. A state definition attaches its
-tasks and registers the feature through the same fluent API:
+The application supplies the root Store once. State and task definitions can be
+registered separately:
 
 ```ts
 // app.config.ts
@@ -317,12 +316,14 @@ import { type ApplicationConfig } from "@angular/core";
 import { provideHttpClient } from "@angular/common/http";
 import { provideStoreEventify } from "@ngrx-eventify/store";
 import { booksState } from "./books.state";
+import { booksTasks } from "./books.tasks";
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(),
     provideStoreEventify(),
     booksState.provide(),
+    booksTasks.provide(),
   ],
 };
 ```
@@ -332,16 +333,25 @@ Redux DevTools in Angular development mode. Separate `provideStore()` and
 `provideStoreDevtools()` calls are unnecessary. Its options also accept NgRx
 root Store configuration, such as `runtimeChecks` and `metaReducers`.
 
-`booksState.provide()` registers the feature and the tasks attached with
-`.withTasks(booksTasks)` in its definition. Feature
-providers can live in route providers instead; `provideStoreEventify()` belongs
-at the application root.
+`booksState.provide()` registers the feature. `booksTasks.provide()` registers
+its tasks. Feature and task providers can live in route providers instead;
+`provideStoreEventify()` belongs at the application root.
 
-A task collection can be registered independently with
-`booksTasks.provide()`. A collection should be registered once, either through
-its state or independently. `.withTasks()` also accepts individual functional
-tasks, task classes, named functional-task records, and arrays combining these
-forms.
+A task collection is registered with `booksTasks.provide()`. A collection should
+be registered once in the injector where it belongs.
+
+`bundle()` provides a concise form when a state definition and its task
+collection belong in the same injector:
+
+```ts
+import { bundle } from "@ngrx-eventify/store";
+
+export const booksBundle = bundle(booksState, booksTasks);
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideStoreEventify(), booksBundle.provide()],
+};
+```
 
 ## Understanding registration and compatibility
 

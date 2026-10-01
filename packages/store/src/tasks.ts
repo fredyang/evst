@@ -119,8 +119,8 @@ export interface Tasks<Effects extends Record<string, TaskDefinition> = {}> {
   /**
    * Generated NgRx functional effects, keyed by task name.
    *
-   * Effects are normally registered through `withTasks()` or `provide()` rather
-   * than consumed directly. This property is primarily useful in unit tests.
+   * Effects are normally registered through `provide()` rather than consumed
+   * directly. This property is primarily useful in unit tests.
    */
   readonly effects: Readonly<Effects>;
   /**
@@ -145,7 +145,7 @@ class TasksCollection<
  * task and exposed under `.effects` with the same name.
  *
  * @param build - Creates named tasks with the supplied `on` builder.
- * @returns A task collection for `withTasks()` or `provide()` registration.
+ * @returns A task collection for `provide()` registration.
  * @throws If a returned task was not created with the supplied `on` builder.
  *
  * @example

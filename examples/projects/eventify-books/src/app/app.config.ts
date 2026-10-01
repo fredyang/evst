@@ -10,10 +10,9 @@ import {
   withHashLocation,
 } from "@angular/router";
 import { provideStoreEventify } from "@ngrx-eventify/store";
+import { rootBundle } from "./app.bundle";
 import { routes } from "./app.routes";
-import { authState } from "./auth/store/auth.state";
 import { AppTitleStrategy } from "./core/app-title.strategy";
-import { coreState } from "./core/store/core.state";
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -31,7 +30,6 @@ export const appConfig: ApplicationConfig = {
       devtools: { name: "NgRx Book Store App" },
     }),
     { provide: TitleStrategy, useClass: AppTitleStrategy },
-    authState.provide(),
-    coreState.provide(),
+    rootBundle.provide(),
   ],
 };

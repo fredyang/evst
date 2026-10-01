@@ -6,6 +6,7 @@ import {
 import { provideStore, Store } from "@ngrx/store";
 import { expect, it } from "vitest";
 import { circularState } from "./fixtures/circular-state.js";
+import { circularTasks } from "./fixtures/circular-tasks.js";
 
 it("reads views after a circularly imported functional effect is initialized", () => {
   const injector = createEnvironmentInjector(
@@ -14,6 +15,7 @@ it("reads views after a circularly imported functional effect is initialized", (
       ErrorHandler,
       provideStore(),
       circularState.provide(),
+      circularTasks.provide(),
     ],
     null!,
   );

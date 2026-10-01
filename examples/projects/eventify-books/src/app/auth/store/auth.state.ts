@@ -1,7 +1,6 @@
 import { state, view } from "@ngrx-eventify/store";
 import type { User } from "../models/user";
 import { fromAuth, fromAuthApi, fromLoginPage } from "./auth.events";
-import { authTasks } from "./auth.tasks";
 
 export interface StatusState {
   user: User | null;
@@ -49,7 +48,6 @@ export const authState = state("auth", {
     loginPageError: view(loginPage, (value) => value.error),
 
     loginPagePending: view(loginPage, (value) => value.pending),
-  }))
-  .withTasks(authTasks);
+  }));
 
 export const authViews = authState.views;

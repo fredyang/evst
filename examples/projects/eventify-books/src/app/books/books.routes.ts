@@ -6,12 +6,12 @@ import {
   ViewBookPageComponent,
 } from "@example-app/books/containers";
 import { bookExistsGuard } from "@example-app/books/guards";
-import { booksState } from "./store/books.state";
+import { booksBundle } from "./store/books.bundle";
 
 export const booksRoutes: Routes = [
   {
     path: "",
-    providers: [booksState.provide()],
+    providers: [booksBundle.provide()],
     children: [
       {
         path: "find",

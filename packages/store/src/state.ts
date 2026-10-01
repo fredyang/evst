@@ -7,12 +7,7 @@ import {
   type MemoizedSelector,
   type ReducerTypes,
 } from "@ngrx/store";
-import {
-  provideFeature,
-  type TasksInput,
-  type TasksRegistrationInput,
-} from "./provide-feature.js";
-import type { FunctionalEffect } from "@ngrx/effects";
+import { provideFeature } from "./provide-feature.js";
 import type { Action } from "@ngrx/store";
 import { attachViewMethods, type ViewMethods, view } from "./view.js";
 
@@ -41,7 +36,7 @@ type StateOn<State> = <Creators extends readonly ActionCreator[]>(
   ...args: [...Creators, ReducerTypes<State, Creators>["reducer"]]
 ) => ReducerTypes<State, Creators>;
 
-/** An immutable state definition with composable handlers, views, and tasks. */
+/** An immutable state definition with composable handlers and views. */
 export interface FeatureStateDefinition<
   State extends object,
   ExtraViews extends Record<string, MemoizedSelector<object, any>> = {},
@@ -49,22 +44,15 @@ export interface FeatureStateDefinition<
   /** Generated and derived views; root selects the complete feature state. */
   readonly views: StateViews<State> & InjectableViews<ExtraViews>;
   /**
-   * Effects from the most recently attached task collection, or `null` when
-   * this definition has no task collection. This is provided for unit-test
-   * inspection only; reading it does not register effects. Use `withTasks()`
-   * followed by `provide()` to register tasks.
-   */
-  readonly effects: Readonly<Record<string, FunctionalEffect>> | null;
-  /**
    * Pure NgRx reducer for unit tests and direct Store integration. Events are
    * neither published nor handled by tasks when this function is called.
    */
   readonly reducer: ActionReducer<State, Action>;
   /**
-   * Registers this feature reducer and its tasks in an application or route injector.
+   * Registers this feature reducer in an application or route injector.
    * A root Store is required, normally from `provideStoreEventify()`.
    *
-   * @returns Environment providers for the feature reducer and its tasks.
+   * @returns Environment providers for the feature reducer.
    */
   provide(): ReturnType<typeof provideFeature>;
   /**
@@ -87,23 +75,12 @@ export interface FeatureStateDefinition<
   withViews<Added extends Record<string, MemoizedSelector<object, any>>>(
     build: (views: StateViews<State> & InjectableViews<ExtraViews>) => Added,
   ): FeatureStateDefinition<State, ExtraViews & Added>;
-  /**
-   * Optionally appends tasks so this definition's `provide()` method registers
-   * both the feature state and its tasks. Task collections, functional effects,
-   * named records, and nested arrays are supported.
-   *
-   * @param tasks - Tasks to register with this feature.
-   * @returns A new definition containing the added tasks.
-   */
-  withTasks(
-    tasks: TasksRegistrationInput,
-  ): FeatureStateDefinition<State, ExtraViews>;
 }
 
 /**
- * Defines feature state with typed handlers, memoized views, and optional tasks.
+ * Defines feature state with typed handlers and memoized views.
  *
- * `.on()`, `.withViews()`, and `.withTasks()` return new definitions without
+ * `.on()` and `.withViews()` return new definitions without
  * changing earlier steps. Every step exposes `views`, `reducer`, and `provide()`;
  * no final `.build()` call is required. Registration uses the final definition.
  * Handlers must return state immutably.
@@ -156,7 +133,7 @@ export interface FeatureStateDefinition<
  * // booksState.views.searchBookIds, and booksState.views.collectionBookIds.
  * ```
  *
- * `.provide()` registers the feature and its tasks in an application or route
+ * `.provide()` registers the feature in an application or route
  * injector. `provideStoreEventify()` normally supplies the required root Store.
  * Defining state alone does not register it or execute tasks.
  *
@@ -192,19 +169,20 @@ export interface FeatureStateDefinition<
  * // { count: 3 }
  * ```
  *
- * @example Adding tasks and registering state
+ * @example Registering state and tasks
  * ```ts
  * import { state, provideStoreEventify } from '@ngrx-eventify/store';
  * import { BooksEvents } from './books.events';
  * import { booksTasks } from './books.tasks';
  * import { initialBooksState } from './books.initial-state';
  *
- * const books = state('books', initialBooksState)
- *   .on(BooksEvents.loaded, (current, { books }) => ({ ...current, books }))
- *   .withTasks(booksTasks);
+ * const books = state('books', initialBooksState).on(
+ *   BooksEvents.loaded,
+ *   (current, { books }) => ({ ...current, books }),
+ * );
  *
  * const appConfig = {
- *   providers: [provideStoreEventify(), books.provide()],
+ *   providers: [provideStoreEventify(), books.provide(), booksTasks.provide()],
  * };
  * ```
  */
@@ -227,7 +205,7 @@ export function state<State extends object>(
     ),
     root: attachViewMethods(root),
   } as StateViews<State>;
-  return chainState(name, initialState, [], [], null, views);
+  return chainState(name, initialState, [], views);
 }
 
 function chainState<
@@ -237,23 +215,18 @@ function chainState<
   name: string,
   initialState: State,
   handlers: readonly ReducerTypes<State, any>[],
-  tasks: readonly TasksRegistrationInput[],
-  effects: Readonly<Record<string, FunctionalEffect>> | null,
   views: StateViews<State> & InjectableViews<ExtraViews>,
 ): FeatureStateDefinition<State, ExtraViews> {
   const reducer = createReducer(initialState, ...handlers);
   return {
     views,
-    effects,
     reducer,
-    provide: () => provideFeature({ name, reducer }, ...tasks),
+    provide: () => provideFeature({ name, reducer }),
     on: (...args) =>
       chainState(
         name,
         initialState,
         [...handlers, (on as StateOn<State>)(...args)],
-        tasks,
-        effects,
         views,
       ),
     withViews: (build) => {
@@ -274,30 +247,7 @@ function chainState<
           ]),
         ),
       } as StateViews<State> & InjectableViews<ExtraViews & typeof added>;
-      return chainState(name, initialState, handlers, tasks, effects, combined);
+      return chainState(name, initialState, handlers, combined);
     },
-    withTasks: (added) =>
-      chainState(
-        name,
-        initialState,
-        handlers,
-        [...tasks, added],
-        taskEffects(added) ?? effects,
-        views,
-      ),
   };
-}
-
-function taskEffects(
-  input: TasksRegistrationInput,
-): Readonly<Record<string, FunctionalEffect>> | undefined {
-  if (
-    typeof input === "object" &&
-    input !== null &&
-    "effects" in input &&
-    "provide" in input &&
-    typeof input.provide === "function"
-  ) {
-    return (input as TasksInput).effects;
-  }
 }

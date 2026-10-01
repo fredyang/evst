@@ -4,7 +4,7 @@ import {
   inject,
   ɵINJECTOR_SCOPE,
 } from "@angular/core";
-import { Actions, createEffect, ofType } from "@ngrx/effects";
+import { Actions, createEffect, ofType, provideEffects } from "@ngrx/effects";
 import { createAction, on, props, provideStore, Store } from "@ngrx/store";
 import { map } from "rxjs";
 import { expect, expectTypeOf, it } from "vitest";
@@ -39,8 +39,7 @@ it("accepts typed handlers and preserves view memoization", () => {
         expectTypeOf(loading).toEqualTypeOf<boolean>();
         return loading ? "Loading…" : `${count} items`;
       }),
-    }))
-    .withTasks({ increment });
+    }));
   const state = { typed: initialState };
   expect(feature.views.root(state)).toBe(initialState);
   expect(feature.views.count(state)).toBe(0);
@@ -172,34 +171,27 @@ it("composes views and preserves the projector type", () => {
 });
 
 function definition() {
-  return createState("counter", initialState)
-    .on(changed, (state, { amount }) => {
+  return createState("counter", initialState).on(
+    changed,
+    (state, { amount }) => {
       expectTypeOf(state).toEqualTypeOf<typeof initialState>();
       expectTypeOf(amount).toEqualTypeOf<number>();
       return { ...state, count: state.count + amount };
-    })
-    .withTasks({ increment });
+    },
+  );
 }
 
 it("infers state, payloads, views, and the reducer", () => {
   const feature = definition();
   expectTypeOf<keyof typeof feature>().toEqualTypeOf<
-    | "effects"
-    | "views"
-    | "reducer"
-    | "provide"
-    | "on"
-    | "withViews"
-    | "withTasks"
+    "views" | "reducer" | "provide" | "on" | "withViews"
   >();
   expectTypeOf(feature.reducer).returns.toEqualTypeOf<typeof initialState>();
   expect(Object.keys(feature).sort()).toEqual([
-    "effects",
     "on",
     "provide",
     "reducer",
     "views",
-    "withTasks",
     "withViews",
   ]);
   expectTypeOf(feature.views.count).returns.toEqualTypeOf<number>();
@@ -249,7 +241,7 @@ it("rejects collisions with generated views", () => {
   ).toThrow("conflicts with an existing view");
 });
 
-it("registers all effects from the state definition", () => {
+it("registers state and effects independently", () => {
   const more = createAction("[Counter] More");
   const extra = createEffect(
     (actions = inject(Actions)) =>
@@ -259,12 +251,13 @@ it("registers all effects from the state definition", () => {
       ),
     { functional: true },
   );
-  const feature = createState("counter", initialState)
-    .on(changed, (state, { amount }) => ({
+  const feature = createState("counter", initialState).on(
+    changed,
+    (state, { amount }) => ({
       ...state,
       count: state.count + amount,
-    }))
-    .withTasks([{ increment }, { extra }]);
+    }),
+  );
   expectTypeOf(feature.provide).parameters.toEqualTypeOf<[]>();
   const injector = createEnvironmentInjector(
     [
@@ -272,6 +265,7 @@ it("registers all effects from the state definition", () => {
       ErrorHandler,
       provideStore(),
       feature.provide(),
+      provideEffects({ increment, extra }),
     ],
     null!,
   );

@@ -1,7 +1,6 @@
 import { state } from "@ngrx-eventify/store";
 import { fromAuth } from "../../auth/store/auth.events";
 import { fromLayout } from "./core.events";
-import { coreTasks } from "./core.tasks";
 
 export const coreState = state("core", { showSidenav: false })
   .on(fromLayout.sidenavOpened, (state) => ({ ...state, showSidenav: true }))
@@ -9,7 +8,6 @@ export const coreState = state("core", { showSidenav: false })
   .on(fromAuth.logoutConfirmation, (state) => ({
     ...state,
     showSidenav: false,
-  }))
-  .withTasks(coreTasks);
+  }));
 
 export const coreViews = coreState.views;

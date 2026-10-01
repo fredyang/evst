@@ -4,7 +4,7 @@ import {
   inject,
   ɵINJECTOR_SCOPE,
 } from "@angular/core";
-import { Actions, createEffect, ofType } from "@ngrx/effects";
+import { Actions, createEffect, ofType, provideEffects } from "@ngrx/effects";
 import {
   createAction,
   createFeature,
@@ -13,9 +13,9 @@ import {
   provideStore,
   Store,
 } from "@ngrx/store";
-import { map, tap } from "rxjs";
+import { map } from "rxjs";
 import { expect, it } from "vitest";
-import { state, tasks } from "../src/index.js";
+import { state } from "../src/index.js";
 import { provideFeature } from "../src/provide-feature.js";
 
 const clicked = createAction("[Counter] Clicked");
@@ -45,20 +45,14 @@ class CounterEffects {
   );
 }
 
-it.each([
-  ["functional effects", { count }],
-  ["functional effect arrays", [count]],
-  ["individual functional effects", count],
-  ["repeated functional effects", [count, count]],
-  ["class effects", CounterEffects],
-] as const)("registers state and %s", (_, effects) => {
+it("registers state without effects", () => {
   const injector = createEnvironmentInjector(
     [
       // Model an application root so NgRx's providedIn: 'root' services resolve.
       { provide: ɵINJECTOR_SCOPE, useValue: "root" },
       ErrorHandler,
       provideStore(),
-      provideFeature(feature, effects),
+      provideFeature(feature),
     ],
     null!,
   );
@@ -66,50 +60,31 @@ it.each([
     const store = injector.get(Store);
     const value = store.selectSignal(feature.selectCounterState);
     expect(value()).toBe(0);
-    store.dispatch(clicked());
+    store.dispatch(counted());
     expect(value()).toBe(1);
   } finally {
     injector.destroy();
   }
 });
 
-it("combines configured arrays, named records, and classes through state", () => {
-  let observed = 0;
-  const feature = state("arrayCounter", { count: 0 })
-    .on(counted, (state) => ({ count: state.count + 1 }))
-    .withTasks([{ count }, CounterEffects] as const)
-    .withTasks(
-      tasks((on) => ({
-        count: on((actions = inject(Actions)) =>
-          actions.pipe(
-            ofType(clicked),
-            map(() => counted()),
-          ),
-        ),
-        observe: on(
-          (actions = inject(Actions)) =>
-            actions.pipe(
-              ofType(clicked),
-              tap(() => observed++),
-            ),
-          { dispatch: false },
-        ),
-      })),
-    );
+it("registers a state definition and effects independently", () => {
+  const feature = state("arrayCounter", { count: 0 }).on(counted, (state) => ({
+    count: state.count + 1,
+  }));
   const injector = createEnvironmentInjector(
     [
       { provide: ɵINJECTOR_SCOPE, useValue: "root" },
       ErrorHandler,
       provideStore(),
       feature.provide(),
+      provideEffects({ count }, CounterEffects),
     ],
     null!,
   );
   try {
     const store = injector.get(Store);
     store.dispatch(clicked());
-    expect(store.selectSignal(feature.views.count)()).toBe(3);
-    expect(observed).toBe(1);
+    expect(store.selectSignal(feature.views.count)()).toBe(2);
   } finally {
     injector.destroy();
   }

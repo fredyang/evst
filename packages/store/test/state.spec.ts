@@ -4,11 +4,11 @@ import {
   inject,
   ɵINJECTOR_SCOPE,
 } from "@angular/core";
-import { Actions, createEffect, ofType } from "@ngrx/effects";
+import { Actions, createEffect, ofType, provideEffects } from "@ngrx/effects";
 import { createAction, props, provideStore, Store } from "@ngrx/store";
-import { EMPTY, map } from "rxjs";
+import { map } from "rxjs";
 import { expect, expectTypeOf, it, vi } from "vitest";
-import { state, tasks, view } from "../src/index.js";
+import { state, view } from "../src/index.js";
 
 const add = createAction("[Counter] Add", props<{ amount: number }>());
 const other = createAction("[Counter] Other", props<{ amount: number }>());
@@ -61,7 +61,7 @@ it("composes successive extra views once and retains their types and caches", ()
   );
   expect(() => state("bad", { root: 0 })).toThrow("reserved");
 });
-it("registers chained handlers and appends effects", () => {
+it("registers state and effects independently", () => {
   const trigger = createAction("[Counter] Trigger");
   const effect = (amount: number) =>
     createEffect(
@@ -75,13 +75,14 @@ it("registers chained handlers and appends effects", () => {
   const base = state("counter", { count: 0 }).on(add, (s, { amount }) => ({
     count: s.count + amount,
   }));
-  const definition = base.withTasks(effect(2)).withTasks(effect(3));
+  const definition = base;
   const injector = createEnvironmentInjector(
     [
       { provide: ɵINJECTOR_SCOPE, useValue: "root" },
       ErrorHandler,
       provideStore(),
       definition.provide(),
+      provideEffects({ first: effect(2), second: effect(3) }),
     ],
     null!,
   );
@@ -92,15 +93,4 @@ it("registers chained handlers and appends effects", () => {
   } finally {
     injector.destroy();
   }
-});
-
-it("exposes the effects from an attached task collection", () => {
-  const counterTasks = tasks((on) => ({
-    increment: on(() => EMPTY),
-  }));
-  const beforeTasks = state("counter", { count: 0 });
-  const withTasks = beforeTasks.withTasks(counterTasks);
-
-  expect(beforeTasks.effects).toBeNull();
-  expect(withTasks.effects).toBe(counterTasks.effects);
 });

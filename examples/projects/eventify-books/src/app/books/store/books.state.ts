@@ -10,7 +10,6 @@ import {
   fromSelectedBookPage,
   fromViewBookPage,
 } from "./books.events";
-import { booksTasks } from "./books.tasks";
 import { fromAuth } from "@example-app/auth/store/auth.events";
 interface EntityBooksState extends EntityState<Book> {
   selectedBookId: string | null;
@@ -152,7 +151,6 @@ export const booksState = state("books", initialState)
         ids: current.collection.ids.filter((id) => id !== book.id),
       },
     }),
-  )
-  .withTasks(booksTasks);
+  );
 
 export const booksViews = booksState.views;
