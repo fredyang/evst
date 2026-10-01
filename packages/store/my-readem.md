@@ -47,9 +47,9 @@ This `ngrx-eventify` make event-first as the core value.
 flowchart TB
   component[Component] -->|reads| view[View]
   component -->|publishes| event[Event]
+  task -->|publishes| event
   event -->|handled by| state[State]
   event -->|handled by| task[Task]
-  task -->|publishes| event
   state -->|exposes| view
 ```
 
