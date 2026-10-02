@@ -3,7 +3,7 @@
 table of content
 
 1. why `'ngrx-entifiy`
-2.
+2. ..
 
 embed full source code url
 
@@ -14,7 +14,7 @@ I want to talk to about the intention of the this library
 1. Fundermentially, NgRx has an event driven achitecture inside. It separate tranditonal
    object.method with action and handler. However, lots of adopter do not understand
    the power of this separation, continue to to use command driven mindset, and lots
-   of ngrx project fail eventually fail the realize this important feature.
+   of ngrx project fail eventually because of this.
 
 NgRx team clearly understand this,
 
@@ -39,34 +39,14 @@ This `ngrx-eventify` make event-first as the core value.
    `ngrx-eventify` want to present them together in a more unified way, using fluet API. and
    hide some of the concept like store, selector, dispath.
 
-### technical
+## Coding model and workflow
 
-`eventify` try to simplify object model as below
+The coding model revolve 4 object, `Event`, `State`, `View` and `Task`
+The following show the relationship and their method.
 
-```mermaid
-flowchart TB
-  component[Component] -->|reads| view[View]
-  component -->|publishes| event[Event]
-  task -->|publishes| event
-  event -->|handled by| state[State]
-  event -->|handled by| task[Task]
-  state -->|exposes| view
-```
+![](../../images/ngrx-evntify-coding-model.png)
 
-### providing state
-
-1. state respond event with its handler (state transition function)
-2. view readonly projection of state
-3. taskCollection respond event with its handler task
-
-### consuming state
-
-1. component use view get readonly data from state
-1. component publish events about what happened to itself
-
-## typical workflow
-
-### providing state
+### Provider Code
 
 #### Modeling event
 
@@ -168,3 +148,12 @@ export const appConfig: ApplicationConfig = {
 ```
 
 ## use eslint to enforce event-driven programming
+
+PLAYER FED NAD DJO MUR TOT
+Wawrinka 3 3 6 9 21
+Del Potro 7 6 4 3 20
+Berdych 6 4 3 6 19
+Thiem 5 6 5 2 18
+Tsonga 6 4 6 2 18
+Ljubičić 3 2 2 3 10
+Nishikori 3 2 2 2 9

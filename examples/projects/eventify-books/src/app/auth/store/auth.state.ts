@@ -5,15 +5,21 @@ import { fromAuth, fromAuthApi, fromLoginPage } from "./auth.events";
 export interface StatusState {
   user: User | null;
 }
+
 export interface LoginPageState {
   error: string | null;
   pending: boolean;
 }
+
 export interface AuthState {
   status: StatusState;
   loginPage: LoginPageState;
 }
-export const initialStatusState: StatusState = { user: null };
+
+export const initialStatusState: StatusState = {
+  user: null,
+};
+
 export const initialLoginPageState: LoginPageState = {
   error: null,
   pending: false,
@@ -25,21 +31,40 @@ export const authState = state("auth", {
 })
   .on(fromLoginPage.login, (current) => ({
     ...current,
-    loginPage: { ...current.loginPage, error: null, pending: true },
+    loginPage: {
+      ...current.loginPage,
+      error: null,
+      pending: true,
+    },
   }))
+
   .on(fromAuthApi.loginSuccess, (current, { user }) => ({
     ...current,
-    status: { ...current.status, user },
-    loginPage: { ...current.loginPage, error: null, pending: false },
+    status: {
+      ...current.status,
+      user,
+    },
+    loginPage: {
+      ...current.loginPage,
+      error: null,
+      pending: false,
+    },
   }))
+
   .on(fromAuthApi.loginFailure, (current, { error }) => ({
     ...current,
-    loginPage: { ...current.loginPage, error, pending: false },
+    loginPage: {
+      ...current.loginPage,
+      error,
+      pending: false,
+    },
   }))
+
   .on(fromAuth.logout, (current) => ({
     ...current,
     status: initialStatusState,
   }))
+
   .withViews(({ status, loginPage }) => ({
     user: view(status, (value) => value.user),
 

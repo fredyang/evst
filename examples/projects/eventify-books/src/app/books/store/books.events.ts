@@ -1,13 +1,16 @@
 import { emptyProps, props } from "@ngrx/store";
 import { events } from "@ngrx-eventify/store";
 import type { Book } from "../models/book";
+
 export const fromBookExistsGuard = events("Book Exists Guard", {
   loadBook: props<{ book: Book }>(),
 });
+
 export const fromBooksApi = events("Books/API", {
   searchSuccess: props<{ books: Book[] }>(),
   searchFailure: props<{ errorMsg: string }>(),
 });
+
 export const fromCollectionApi = events("Collection/API", {
   addBookSuccess: props<{ book: Book }>(),
 
