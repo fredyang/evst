@@ -16,7 +16,7 @@ suppression must state why it is appropriate.
 
 ```ts
 const booksTasks = tasks((on) => ({
-  // eslint-disable-next-line ngrx-eventify/require-task-event -- Validates the required storage capability when the Books feature initializes.
+  // eslint-disable-next-line evst/require-task-event -- Validates the required storage capability when the Books feature initializes.
   checkStorageSupport: on(() => storage.supported(), { dispatch: false }),
 }));
 ```

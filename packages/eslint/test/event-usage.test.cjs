@@ -5,7 +5,7 @@ const { ESLint } = require("eslint");
 
 const project = path.resolve(
   __dirname,
-  "../../../examples/projects/eventify-books",
+  "../../../examples/projects/evst-books",
 );
 const config = path.join(project, "eslint.config.mjs");
 
@@ -20,7 +20,7 @@ describe("event usage", () => {
     const messages = await lint("src/app/books/store/books.events.ts");
     assert.deepEqual(
       messages.filter(
-        (message) => message.ruleId === "ngrx-eventify/no-unpublished-events",
+        (message) => message.ruleId === "evst/no-unpublished-events",
       ),
       [],
     );
@@ -30,10 +30,7 @@ describe("event usage", () => {
     const messages = await lint("src/app/books/store/books.events.ts");
     assert.deepEqual(
       messages
-        .filter(
-          (message) =>
-            message.ruleId === "ngrx-eventify/no-unsubscribed-events",
-        )
+        .filter((message) => message.ruleId === "evst/no-unsubscribed-events")
         .map((message) => message.message),
       [
         "Event `addBookSuccess` has no subscriber and can be removed.",

@@ -11,7 +11,7 @@ import requireTaskEventSuppressionReason from "./rules/require-task-event-suppre
 /** ESLint plugin providing rules for event-oriented NgRx applications. */
 const plugin = {
   /** Package identity reported to ESLint. */
-  meta: { name: "@ngrx-eventify/eslint", version: "0.1.0" },
+  meta: { name: "@evst/eslint", version: "0.1.0" },
   /** Available rules, keyed by their names within the plugin namespace. */
   rules: {
     "event-hygiene": eventHygiene,
@@ -27,22 +27,22 @@ const plugin = {
   configs: {
     ngrx: {
       rules: {
-        "ngrx-eventify/event-hygiene": "error",
-        "ngrx-eventify/event-publisher-ownership": "warn",
-        "ngrx-eventify/no-sequential-event-publishes": "warn",
+        "evst/event-hygiene": "error",
+        "evst/event-publisher-ownership": "warn",
+        "evst/no-sequential-event-publishes": "warn",
       },
     },
-    sugar: {
+    evst: {
       rules: {
-        "ngrx-eventify/event-hygiene": "error",
-        "ngrx-eventify/event-group-source-prefix": "warn",
-        "ngrx-eventify/event-publisher-ownership": "warn",
-        "ngrx-eventify/no-sequential-event-publishes": "warn",
-        "ngrx-eventify/no-unpublished-events": "warn",
-        "ngrx-eventify/no-unsubscribed-events": "warn",
-        "ngrx-eventify/no-unused-views": "warn",
-        "ngrx-eventify/require-task-event": "warn",
-        "ngrx-eventify/require-task-event-suppression-reason": "error",
+        "evst/event-hygiene": "error",
+        "evst/event-group-source-prefix": "warn",
+        "evst/event-publisher-ownership": "warn",
+        "evst/no-sequential-event-publishes": "warn",
+        "evst/no-unpublished-events": "warn",
+        "evst/no-unsubscribed-events": "warn",
+        "evst/no-unused-views": "warn",
+        "evst/require-task-event": "warn",
+        "evst/require-task-event-suppression-reason": "error",
       },
     },
   },

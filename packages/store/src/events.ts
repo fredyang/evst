@@ -1,4 +1,4 @@
-import { publishEvent } from "./provide-store-eventify.js";
+import { publishEvent } from "./provide-evst.js";
 import { createAction } from "@ngrx/store";
 import type {
   Action,
@@ -115,7 +115,7 @@ type EventGroupConfig<Events extends Record<string, EventConfig>> = Events & {
 };
 
 type Publishable<Creator extends (...args: any[]) => Action> = Creator & {
-  /** Publishes an event through the Store registered by provideStoreEventify(). */
+  /** Publishes an event through the Store registered by provideEvst(). */
   publish(...args: Parameters<Creator>): void;
 };
 
@@ -138,7 +138,7 @@ type EventGroup<
  * Creator parameters require explicit types, including parameters with default values.
  * Calling a creator returns a plain NgRx Action without publishing it.
  * Its `.publish(...args)` method accepts the same arguments and dispatches the
- * created event after provideStoreEventify() initializes. Publishing can run
+ * created event after provideEvst() initializes. Publishing can run
  * outside an injection context; event creation requires no store registration.
  *
  * @param source - String literal identifying the event source.
@@ -150,7 +150,7 @@ type EventGroup<
  * @example
  * ```ts
  * import { emptyProps, props } from '@ngrx/store';
- * import { events } from '@ngrx-eventify/store';
+ * import { events } from '@evst/store';
  *
  * const booksPageEvents = events('Books Page', {
  *   entered: emptyProps(),
@@ -170,7 +170,7 @@ type EventGroup<
  * booksPageEvents.bookSelected.type;
  * // '[Books Page] Book Selected'
  *
- * // In a handler, after provideStoreEventify() initializes:
+ * // In a handler, after provideEvst() initializes:
  * booksPageEvents.bookSelected.publish({ id: '42' });
  * ```
  */

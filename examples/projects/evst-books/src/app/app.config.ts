@@ -9,7 +9,7 @@ import {
   TitleStrategy,
   withHashLocation,
 } from "@angular/router";
-import { provideStoreEventify } from "@ngrx-eventify/store";
+import { provideEvst } from "@evst/store";
 import { rootBundle } from "./app.bundle";
 import { routes } from "./app.routes";
 import { AppTitleStrategy } from "./core/app-title.strategy";
@@ -20,7 +20,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideHttpClient(),
     provideRouter(routes, withHashLocation()),
-    provideStoreEventify({
+    provideEvst({
       runtimeChecks: {
         strictStateSerializability: true,
         strictActionSerializability: true,

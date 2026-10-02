@@ -114,7 +114,7 @@ export interface TaskBuilder {
   ): TaskDefinition;
 }
 
-/** A named collection of Eventify tasks that can be registered together. */
+/** A named collection of EVST tasks that can be registered together. */
 export interface Tasks<Effects extends Record<string, TaskDefinition> = {}> {
   /**
    * Generated NgRx functional effects, keyed by task name.

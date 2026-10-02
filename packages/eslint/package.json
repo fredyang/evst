@@ -1,7 +1,7 @@
 {
-  "name": "@ngrx-eventify/eslint",
+  "name": "@evst/eslint",
   "version": "0.1.0",
-  "description": "ESLint rules for event-first Angular and NgRx applications.",
+  "description": "ESLint rules for EVST event-first state management.",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,7 +12,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.json",
     "test": "npm run build && node --test test/*.test.cjs",
     "prepack": "npm run build"
   },

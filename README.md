@@ -1,11 +1,11 @@
-# NgRx Eventify
+# EVST
 
-Event-first state-management utilities and an ESLint plugin for Angular and NgRx applications.
+Event-first state management, built on NgRx.
 
-| Package                                            | Purpose                                                |
-| -------------------------------------------------- | ------------------------------------------------------ |
-| [@ngrx-eventify/store](packages/store/README.md)   | `events`, `state`, `tasks`, and `provideStoreEventify` |
-| [@ngrx-eventify/eslint](packages/eslint/README.md) | Event-first ESLint rules                               |
+| Package                                   | Purpose                                       |
+| ----------------------------------------- | --------------------------------------------- |
+| [@evst/store](packages/store/README.md)   | `events`, `state`, `tasks`, and `provideEvst` |
+| [@evst/eslint](packages/eslint/README.md) | Event-first ESLint rules                      |
 
 Each package has its own manifest, source, tests, and build output. The root is a private npm workspace.
 
@@ -19,7 +19,7 @@ npm run build
 npm test
 ```
 
-A single package can be tested with `npm test --workspace @ngrx-eventify/store` or `npm test --workspace @ngrx-eventify/eslint`.
+A single package can be tested with `npm test --workspace @evst/store` or `npm test --workspace @evst/eslint`.
 
 ## Packaging
 
@@ -27,7 +27,7 @@ A single package can be tested with `npm test --workspace @ngrx-eventify/store` 
 npm run pack:all
 ```
 
-This builds both packages and creates separate installable archives. A single package can be packed with `npm pack --workspace @ngrx-eventify/store` or `npm pack --workspace @ngrx-eventify/eslint`.
+This builds both packages and creates separate installable archives. A single package can be packed with `npm pack --workspace @evst/store` or `npm pack --workspace @evst/eslint`.
 
 ## Using the utilities locally
 

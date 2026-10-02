@@ -50,7 +50,7 @@ export interface FeatureStateDefinition<
   readonly reducer: ActionReducer<State, Action>;
   /**
    * Registers this feature reducer in an application or route injector.
-   * A root Store is required, normally from `provideStoreEventify()`.
+   * A root Store is required, normally from `provideEvst()`.
    *
    * @returns Environment providers for the feature reducer.
    */
@@ -89,12 +89,12 @@ export interface FeatureStateDefinition<
  * `views.root` selects the complete feature state. Extra views can compose
  * generated or previously added views, but cannot overwrite existing names.
  * Views remain callable NgRx selectors. Their `.signal()` and `.observable()`
- * methods use the Store registered through `provideStoreEventify()`.
+ * methods use the Store registered through `provideEvst()`.
  *
  * @example Generated and composed feature views
  * ```ts
  * import type { EntityState } from '@ngrx/entity';
- * import { state, view } from '@ngrx-eventify/store';
+ * import { state, view } from '@evst/store';
  *
  * interface Book {
  *   id: string;
@@ -134,7 +134,7 @@ export interface FeatureStateDefinition<
  * ```
  *
  * `.provide()` registers the feature in an application or route
- * injector. `provideStoreEventify()` normally supplies the required root Store.
+ * injector. `provideEvst()` normally supplies the required root Store.
  * Defining state alone does not register it or execute tasks.
  *
  * @param name - Key under which the feature is registered in the root store.
@@ -146,7 +146,7 @@ export interface FeatureStateDefinition<
  * @example Defining handlers and derived views
  * ```ts
  * import { props } from '@ngrx/store';
- * import { events, state, view } from '@ngrx-eventify/store';
+ * import { events, state, view } from '@evst/store';
  *
  * const CounterEvents = events('Counter', {
  *   added: props<{ amount: number }>(),
@@ -171,7 +171,7 @@ export interface FeatureStateDefinition<
  *
  * @example Registering state and tasks
  * ```ts
- * import { state, provideStoreEventify } from '@ngrx-eventify/store';
+ * import { state, provideEvst } from '@evst/store';
  * import { BooksEvents } from './books.events';
  * import { booksTasks } from './books.tasks';
  * import { initialBooksState } from './books.initial-state';
@@ -182,7 +182,7 @@ export interface FeatureStateDefinition<
  * );
  *
  * const appConfig = {
- *   providers: [provideStoreEventify(), books.provide(), booksTasks.provide()],
+ *   providers: [provideEvst(), books.provide(), booksTasks.provide()],
  * };
  * ```
  */

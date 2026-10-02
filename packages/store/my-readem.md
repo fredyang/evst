@@ -1,4 +1,4 @@
-# NgRx-Eventify
+# EVST
 
 table of content
 
@@ -7,7 +7,7 @@ table of content
 
 embed full source code url
 
-## Why `ngrx-eventify`
+## Why `evst`
 
 I want to talk to about the intention of the this library
 
@@ -28,7 +28,7 @@ the success of the NgRx project. NgRx does not force user to use event-driven st
 to use NgRx. And most developer tend to model the action using command, and they
 get it wrong at the first step.
 
-This `ngrx-eventify` make event-first as the core value.
+This `evst` make event-first as the core value.
 
 2. NgRx is techincal sound framework, it has loose API to to put things together, people call
    it boilterplate. Such as you need to create actions, reducer, selector, effects, register
@@ -36,7 +36,7 @@ This `ngrx-eventify` make event-first as the core value.
    function like createActionGroup, createFeature, but they feels like still not cohesive
    , and I feelt like it is ducktape.
 
-   `ngrx-eventify` want to present them together in a more unified way, using fluet API. and
+   `evst` want to present them together in a more unified way, using fluet API. and
    hide some of the concept like store, selector, dispath.
 
 ## Coding model and workflow
@@ -130,7 +130,7 @@ provider: [state.provide(), taskCollection.provide()];
 export const appConfig: ApplicationConfig = {
   providers: [
     // required
-    provideStoreEventify({
+    provideEvst({
       runtimeChecks: {
         strictStateSerializability: true,
         strictActionSerializability: true,

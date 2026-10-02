@@ -4,7 +4,7 @@
     "baseUrl": "./src",
     "paths": {
       "@example-app/*": ["app/*"],
-      "@ngrx-eventify/store": ["../../../../packages/store/src/index.ts"]
+      "@evst/store": ["../../../../packages/store/src/index.ts"]
     },
     "types": ["vitest/globals", "node"]
   },

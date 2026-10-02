@@ -9,7 +9,7 @@ import {
 import { Store, emptyProps, props } from "@ngrx/store";
 import { INITIAL_OPTIONS } from "@ngrx/store-devtools";
 import { afterEach, expect, expectTypeOf, it, vi } from "vitest";
-import { events, state, provideStoreEventify } from "../src/index.js";
+import { events, state, provideEvst } from "../src/index.js";
 
 const page = events("Page", {
   entered: emptyProps(),
@@ -23,10 +23,7 @@ afterEach(() => {
 });
 function context(store = { dispatch: vi.fn() }) {
   const injector = createEnvironmentInjector(
-    [
-      provideStoreEventify({ devtools: false }),
-      { provide: Store, useValue: store },
-    ],
+    [provideEvst({ devtools: false }), { provide: Store, useValue: store }],
     null!,
   );
   injectors.push(injector);
@@ -41,29 +38,29 @@ it("uses a recognizable default DevTools name in development", () => {
   expect(isDevMode()).toBe(true);
 
   const defaults = createEnvironmentInjector(
-    [ErrorHandler, provideStoreEventify()],
+    [ErrorHandler, provideEvst()],
     null!,
   );
   injectors.push(defaults);
   const custom = createEnvironmentInjector(
-    [ErrorHandler, provideStoreEventify({ devtools: { name: "Books" } })],
+    [ErrorHandler, provideEvst({ devtools: { name: "Books" } })],
     null!,
   );
   injectors.push(custom);
   const disabled = createEnvironmentInjector(
-    [ErrorHandler, provideStoreEventify({ devtools: false })],
+    [ErrorHandler, provideEvst({ devtools: false })],
     null!,
   );
   injectors.push(disabled);
 
-  expect(defaults.get(INITIAL_OPTIONS).name).toBe("NgRx Eventify Store");
+  expect(defaults.get(INITIAL_OPTIONS).name).toBe("EVST Store");
   expect(custom.get(INITIAL_OPTIONS).name).toBe("Books");
   expect(disabled.get(INITIAL_OPTIONS, null)).toBeNull();
 });
 
 it("provides and captures an empty root Store", () => {
   const injector = createEnvironmentInjector(
-    [provideStoreEventify({ devtools: false })],
+    [provideEvst({ devtools: false })],
     null!,
   );
   injectors.push(injector);
@@ -89,7 +86,7 @@ it("publishes through a registered feature and forwards root configuration", () 
     [
       { provide: ɵINJECTOR_SCOPE, useValue: "root" },
       ErrorHandler,
-      provideStoreEventify({
+      provideEvst({
         devtools: false,
         metaReducers: [
           (reducer) => (value, event) => {
@@ -118,9 +115,9 @@ it("publishes through a registered feature and forwards root configuration", () 
 it("requires initialization and keeps created events plain", () => {
   expect(page.entered()).toEqual({ type: "[Page] Entered" });
   expect(page.entered()).not.toHaveProperty("publish");
-  expect(() => page.entered.publish()).toThrow("provideStoreEventify");
+  expect(() => page.entered.publish()).toThrow("provideEvst");
   const app = context();
-  expect(() => page.entered.publish()).toThrow("provideStoreEventify");
+  expect(() => page.entered.publish()).toThrow("provideEvst");
   app.initialize();
   page.entered.publish();
   page.selected.publish({ id: "42" });
@@ -148,7 +145,7 @@ it("releases registration when its root injector is destroyed", () => {
   const first = context();
   first.initialize();
   first.injector.destroy();
-  expect(() => page.entered.publish()).toThrow("provideStoreEventify");
+  expect(() => page.entered.publish()).toThrow("provideEvst");
   const next = context();
   next.initialize();
   page.entered.publish();

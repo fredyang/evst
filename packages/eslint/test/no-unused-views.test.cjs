@@ -5,7 +5,7 @@ const { ESLint } = require("eslint");
 
 const project = path.resolve(
   __dirname,
-  "../../../examples/projects/eventify-books",
+  "../../../examples/projects/evst-books",
 );
 const file = path.join(project, "src/app/auth/store/auth.state.ts");
 
@@ -19,7 +19,7 @@ describe("no-unused-views", () => {
 
     assert.deepEqual(
       result.messages
-        .filter((message) => message.ruleId === "ngrx-eventify/no-unused-views")
+        .filter((message) => message.ruleId === "evst/no-unused-views")
         .map((message) => message.message),
       ["View `user` is not referenced and can be removed."],
     );

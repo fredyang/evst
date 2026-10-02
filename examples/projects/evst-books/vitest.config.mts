@@ -5,7 +5,7 @@ export default defineProject((config) =>
   mergeConfig(baseConfig, {
     root: __dirname,
     test: {
-      name: "eventify-books",
+      name: "evst-books",
     },
     define: {
       "import.meta.vitest": config.mode !== "production",

@@ -1,5 +1,5 @@
 import { inject } from "@angular/core";
-import { tasks } from "@ngrx-eventify/store";
+import { tasks } from "@evst/store";
 import { defer, EMPTY, of } from "rxjs";
 import {
   catchError,
@@ -45,7 +45,7 @@ export const booksTasks = tasks((on) => ({
     );
   }),
 
-  // eslint-disable-next-line ngrx-eventify/require-task-event -- Validates the required storage capability when the Books feature initializes.
+  // eslint-disable-next-line evst/require-task-event -- Validates the required storage capability when the Books feature initializes.
   checkStorageSupport: on(
     (storage = inject(BookStorageService)) => defer(() => storage.supported()),
     { dispatch: false },

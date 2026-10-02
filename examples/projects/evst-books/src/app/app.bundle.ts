@@ -1,4 +1,4 @@
-import { bundle } from "@ngrx-eventify/store";
+import { bundle } from "@evst/store";
 import { authState } from "./auth/store/auth.state";
 import { authTasks } from "./auth/store/auth.tasks";
 import { coreState } from "./core/store/core.state";

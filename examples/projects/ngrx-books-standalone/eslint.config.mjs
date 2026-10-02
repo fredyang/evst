@@ -1,4 +1,4 @@
-import sugar from "@ngrx-eventify/eslint";
+import evst from "@evst/eslint";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
@@ -12,7 +12,7 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    plugins: { "ngrx-eventify": sugar },
-    ...sugar.configs.ngrx,
+    plugins: { evst },
+    ...evst.configs.ngrx,
   },
 );

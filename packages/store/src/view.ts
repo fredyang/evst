@@ -6,19 +6,19 @@ import {
   type Selector,
   type SelectSignalOptions,
 } from "@ngrx/store";
-import { cachedStore } from "./provide-store-eventify.js";
+import { cachedStore } from "./provide-evst.js";
 
 /** Injection helpers attached to a memoized view. */
 export type ViewMethods<Result> = {
   /**
-   * Reads this view as a signal from the registered Eventify Store.
+   * Reads this view as a signal from the registered EVST Store.
    *
    * @param options - Signal selection options, including an optional equality function.
    * @returns A signal containing the current view result.
    */
   signal(options?: SelectSignalOptions<Result>): Signal<Result>;
   /**
-   * Reads this view as an observable from the registered Eventify Store.
+   * Reads this view as an observable from the registered EVST Store.
    *
    * @returns An observable of view results.
    */
@@ -46,7 +46,7 @@ export function attachViewMethods<
 }
 
 /**
- * Creates memoized NgRx selectors with Eventify signal and observable readers.
+ * Creates memoized NgRx selectors with EVST signal and observable readers.
  *
  * `view()` supports one or more input selectors followed by a projector.
  */
@@ -106,7 +106,7 @@ export interface ViewBuilder {
 }
 
 /**
- * Creates a standalone Eventify view.
+ * Creates a standalone EVST view.
  *
  * The result is also a standard NgRx memoized selector, so it can compose
  * feature views or be used with NgRx Store APIs.
@@ -115,7 +115,7 @@ export interface ViewBuilder {
  *
  * @example Combining views from two features
  * ```ts
- * import { view } from '@ngrx-eventify/store';
+ * import { view } from '@evst/store';
  * import { ordersState } from './orders.state';
  * import { usersState } from './users.state';
  *

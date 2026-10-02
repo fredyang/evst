@@ -9,7 +9,7 @@ const BooksEvents = events("Books", {
 });
 ```
 
-State handlers and event-driven Sugar tasks are subscriptions.
+State handlers and event-driven EVST tasks are subscriptions.
 
 ```ts
 const booksState = state("books", initialState).on(

@@ -19,27 +19,27 @@ import {
 
 let _store: Store | undefined;
 
-/** Configuration for the root Eventify Store and development-time Redux DevTools. */
-export type StoreEventifyConfig = RootStoreConfig<object> & {
-  /** Omitted options use "NgRx Eventify Store" in development; false disables DevTools. */
+/** Configuration for the root EVST Store and development-time Redux DevTools. */
+export type EvstConfig = RootStoreConfig<object> & {
+  /** Omitted options use "EVST Store" in development; false disables DevTools. */
   devtools?: StoreDevtoolsOptions | false;
 };
 
 /**
- * Provides an empty NgRx root Store, development Redux DevTools, and Eventify's
+ * Provides an empty NgRx root Store, development Redux DevTools, and EVST's
  * event publishing registration.
  *
  * Feature state belongs in `state(...).provide()` or NgRx's `provideState()`.
  * The empty root reducer map means no reducer is registered directly at the
  * root; registered feature keys still form the Store's runtime state object.
  * Redux DevTools is registered only when Angular development mode is enabled,
- * using "NgRx Eventify Store" when DevTools options are omitted. Supplied objects
+ * using "EVST Store" when DevTools options are omitted. Supplied objects
  * and option factories are passed through to NgRx without merging defaults.
  * Pass `devtools: false` to omit it in development, or options such as
  * `{ name: "Books" }` to configure the browser extension connection.
  *
  * Event creator `.publish()` methods and state view methods use the Store
- * registered by this provider. One active Store is supported per loaded Eventify module. A
+ * registered by this provider. One active Store is supported per loaded EVST module. A
  * second, different Store is rejected; concurrent SSR applications and
  * independent Stores require NgRx's own providers and an injected Store instead
  * of this provider and the shared `.publish()` methods.
@@ -48,12 +48,12 @@ export type StoreEventifyConfig = RootStoreConfig<object> & {
  *
  * @param config - NgRx root Store configuration and optional DevTools options.
  * @returns Environment providers for the root Store, DevTools in development,
- * and Eventify event publishing.
+ * and EVST event publishing.
  * @example Configuring an application root Store
  * ```ts
  * const appConfig = {
  *   providers: [
- *     provideStoreEventify({
+ *     provideEvst({
  *       runtimeChecks: { strictActionSerializability: true },
  *       devtools: { name: "Books" },
  *     }),
@@ -62,12 +62,10 @@ export type StoreEventifyConfig = RootStoreConfig<object> & {
  * };
  * ```
  */
-export function provideStoreEventify(
-  config: StoreEventifyConfig = {},
-): EnvironmentProviders {
+export function provideEvst(config: EvstConfig = {}): EnvironmentProviders {
   let { devtools, ...storeConfig } = config;
   // Default omitted options without overriding an explicit false or custom options.
-  devtools ??= { name: "NgRx Eventify Store" };
+  devtools ??= { name: "EVST Store" };
   return makeEnvironmentProviders([
     provideStore({}, storeConfig),
     ...(isDevMode() && devtools !== false
@@ -78,7 +76,7 @@ export function provideStoreEventify(
       const destroyRef = inject(DestroyRef);
       if (_store && _store !== store) {
         throw new Error(
-          "NgRx Eventify already has an active Store. Use NgRx providers and an injected Store for independent stores.",
+          "EVST already has an active Store. Use NgRx providers and an injected Store for independent stores.",
         );
       }
       _store = store;
@@ -96,11 +94,11 @@ export function publishEvent(event: Action): void {
   cachedStore().dispatch(event);
 }
 
-/** @internal Returns the Store captured during Eventify application initialization. */
+/** @internal Returns the Store captured during EVST application initialization. */
 export function cachedStore(): Store {
   if (!_store) {
     throw new Error(
-      "Register provideStoreEventify() before using NgRx Eventify events or views.",
+      "Register provideEvst() before using EVST events or views.",
     );
   }
   return _store;

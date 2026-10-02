@@ -37,25 +37,25 @@
         }
       }
     },
-    "eventify-books": {
+    "evst-books": {
       "projectType": "application",
-      "root": "examples/projects/eventify-books",
-      "sourceRoot": "examples/projects/eventify-books/src",
+      "root": "examples/projects/evst-books",
+      "sourceRoot": "examples/projects/evst-books/src",
       "prefix": "bc",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/examples/eventify-books",
-            "index": "examples/projects/eventify-books/src/index.html",
-            "browser": "examples/projects/eventify-books/src/main.ts",
-            "polyfills": ["examples/projects/eventify-books/src/polyfills.ts"],
-            "tsConfig": "examples/projects/eventify-books/tsconfig.app.json",
+            "outputPath": "dist/examples/evst-books",
+            "index": "examples/projects/evst-books/src/index.html",
+            "browser": "examples/projects/evst-books/src/main.ts",
+            "polyfills": ["examples/projects/evst-books/src/polyfills.ts"],
+            "tsConfig": "examples/projects/evst-books/tsconfig.app.json",
             "assets": [
-              "examples/projects/eventify-books/src/favicon.ico",
-              "examples/projects/eventify-books/src/assets"
+              "examples/projects/evst-books/src/favicon.ico",
+              "examples/projects/evst-books/src/assets"
             ],
-            "styles": ["examples/projects/eventify-books/src/styles.css"]
+            "styles": ["examples/projects/evst-books/src/styles.css"]
           },
           "configurations": {
             "development": {
@@ -67,7 +67,7 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
-          "options": { "buildTarget": "eventify-books:build:development" }
+          "options": { "buildTarget": "evst-books:build:development" }
         }
       }
     },

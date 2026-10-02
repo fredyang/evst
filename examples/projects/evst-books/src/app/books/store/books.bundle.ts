@@ -1,4 +1,4 @@
-import { bundle } from "@ngrx-eventify/store";
+import { bundle } from "@evst/store";
 import { booksState } from "./books.state";
 import { booksTasks } from "./books.tasks";
 

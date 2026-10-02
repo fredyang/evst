@@ -43,15 +43,15 @@ new RuleTester({ languageOptions: { parser } }).run(
 
 new RuleTester({
   languageOptions: { parser },
-  plugins: { "ngrx-eventify": { rules: { "require-task-event": rule } } },
+  plugins: { evst: { rules: { "require-task-event": rule } } },
 }).run("require-task-event-suppression-reason", suppressionReasonRule, {
   valid: [
-    `// eslint-disable-next-line ngrx-eventify/require-task-event -- Subscribes to an external socket for the application lifetime.\ntasks((on) => ({ startup: on(() => source$) }));`,
+    `// eslint-disable-next-line evst/require-task-event -- Subscribes to an external socket for the application lifetime.\ntasks((on) => ({ startup: on(() => source$) }));`,
     `// eslint-disable-next-line no-console\nconsole.log("allowed");`,
   ],
   invalid: [
     {
-      code: `// eslint-disable-next-line ngrx-eventify/require-task-event\ntasks((on) => ({ startup: on(() => source$) }));`,
+      code: `// eslint-disable-next-line evst/require-task-event\ntasks((on) => ({ startup: on(() => source$) }));`,
       errors: [{ messageId: suppressionReasonMessageId }],
     },
   ],

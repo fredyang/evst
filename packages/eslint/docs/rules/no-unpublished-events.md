@@ -9,7 +9,7 @@ const BooksEvents = events("Books", {
 });
 ```
 
-The rule recognizes direct publications and events emitted from Sugar tasks.
+The rule recognizes direct publications and events emitted from EVST tasks.
 
 ```ts
 BooksEvents.loaded.publish();

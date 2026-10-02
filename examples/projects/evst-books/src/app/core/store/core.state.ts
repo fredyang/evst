@@ -1,4 +1,4 @@
-import { state } from "@ngrx-eventify/store";
+import { state } from "@evst/store";
 import { fromAuth } from "../../auth/store/auth.events";
 import { fromLayout } from "./core.events";
 

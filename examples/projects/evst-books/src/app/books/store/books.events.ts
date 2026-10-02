@@ -1,5 +1,5 @@
 import { emptyProps, props } from "@ngrx/store";
-import { events } from "@ngrx-eventify/store";
+import { events } from "@evst/store";
 import type { Book } from "../models/book";
 
 export const fromBookExistsGuard = events("Book Exists Guard", {

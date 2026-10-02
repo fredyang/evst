@@ -17,7 +17,7 @@ interface Provideable {
  * Combines independently defined state and task collections into one provider.
  * Bundling does not change any definition or make state responsible for tasks.
  *
- * @param definitions - State definitions, task collections, or other Eventify providers.
+ * @param definitions - State definitions, task collections, or other EVST providers.
  * @returns A bundle whose `provide()` registers every supplied definition.
  *
  * @example
@@ -25,7 +25,7 @@ interface Provideable {
  * const books = bundle(booksState, booksTasks);
  *
  * const appConfig = {
- *   providers: [provideStoreEventify(), books.provide()],
+ *   providers: [provideEvst(), books.provide()],
  * };
  * ```
  */
