@@ -52,7 +52,7 @@ The following show the relationship and their method.
 
 ### Provider Code
 
-#### Modeling event
+#### define event
 
 Event describe what happened to the publisher, publisher publish an event without who
 is subscribe to the event, and how it is being handle.
@@ -75,7 +75,7 @@ event variable has naming convention `fromSource`, this is ensure that
 developer is aware that event belongs to the event source, not event handler.
 Which is oposite of command. Show example of bad naming.
 
-#### Modeling state
+#### define state
 
 1. create state witih initliazed value of strongly type interface
 2. expose view to be consumed by componnet
@@ -89,7 +89,7 @@ const xxxState = state(stateName, initialState);
 .on(event, fn)
 ```
 
-#### define task collection
+#### define tasks
 
 Task collection subscribe events with task funtion
 We use similar syntax with state `on(xx, fn)`
@@ -103,7 +103,7 @@ const taskCollection = tasks((on) => ({
 }));
 ```
 
-### Povider code
+### Consumber code
 
 @ai: expand this part
 

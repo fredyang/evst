@@ -1,216 +1,155 @@
 # EVST
 
-> **Event-first state management, built on NgRx.**
+> Event-first state management, built on NgRx.
 
-EVST provides less to learn, less to remember, and less to wire up.
-Just five entry points to remember: `events`, `state`, `view`, `tasks`, and
-`provideEvst`, with a fluent API guiding the rest.
+EVST is a small API for building Angular features around four concepts:
+**Event**, **View**, **State**, and **Task**. NgRx Store, selectors, effects,
+and DevTools remain the runtime foundation.
 
-## Built on NgRx
+- [Why EVST?](#why-evst)
+- [Understanding the model](#understanding-the-model)
+- [Provider code](#provider-code)
+  - [Defining Events](#defining-events)
+  - [Defining State](#defining-state)
+  - [Defining Tasks](#defining-tasks)
+- [Consumer code](#consumer-code)
+- [Registering state](#registering-state)
+- [Using the ESLint rules](#using-the-eslint-rules)
+- [Working with NgRx](#working-with-ngrx)
+- [Testing and developing](#testing-and-developing)
 
-EVST is a small, event-driven syntax for NgRx Store. It does not replace
-NgRx or create a separate state system.
+## Why EVST?
 
-EVST events are NgRx actions, EVST state is an NgRx feature reducer, EVST
-views are NgRx selectors, and EVST tasks are functional NgRx effects. EVST
-and standard NgRx APIs can coexist in the same application. EVST fits the
-common feature flow; specialized APIs such as `@ngrx/entity`, router state,
-and meta-reducers remain available when they are the clearer fit.
+NgRx is event-driven at its core. Actions describe things that happened;
+reducers and effects decide how the application responds. EVST makes that model
+the starting point for application code.
 
-Defining state is fluent and discoverable. Starting with `state(...)`, editor
-completion leads to `.on()`, `.withViews()`, and `.provide()`.
-Handlers, derived views, and registration fit together without remembering a
-collection of separate setup functions.
+An Event describes something that happened at its source. A component publishes
+an Event without coordinating the State or Task that responds to it. This
+separates the occurrence from the response and avoids command-shaped component
+APIs.
 
-This guide covers the common path rather than every option. The fluent API and
-editor completion expose the available choices as a definition takes shape.
+EVST also groups common NgRx feature pieces into cohesive definitions. State
+defines transitions and Views together. Tasks handle Events and return outcome
+Events. Components read Views and publish Events without injecting a Store,
+wiring selectors, or dispatching actions directly.
 
-Consuming state is equally direct. Events expose `.publish()`; views expose
-`.signal()` and `.observable()`. Components need no injected Store, `dispatch()`
-calls, or selector wiring. NgRx's Store, reducers, memoized selectors, effects,
-and DevTools still power the application underneath.
+## Understanding the model
 
-The API encourages an event-driven mindset: components describe **what happened**,
-and state handlers and tasks decide how to respond. This discourages components
-from issuing commands that coordinate the rest of the application.
+The four EVST objects form the provider API. Components are consumer code and
+interact only with Views and Events.
 
-```mermaid
-flowchart TB
-  component[Component] -->|reads| view[View]
-  component -->|publishes| event[Event]
-  event -->|handled by| state[State]
-  event -->|handled by| task[Task]
-  task -->|publishes| event
-  state -->|exposes| view
-```
+![EVST coding model](../../images/ngrx-evntify-coding-model.png)
 
-The Store and reducer are intentionally absent from this model. It remains NgRx
-infrastructure underneath; application code works with events, state, views,
-and tasks instead.
+| Object    | Role                                                                                  |
+| --------- | ------------------------------------------------------------------------------------- |
+| **Event** | Describes something that happened and is published by its source.                     |
+| **View**  | Exposes read-only state to consumer code.                                             |
+| **State** | Handles Events through pure state transitions and provides Views.                     |
+| **Task**  | Handles Events, performs asynchronous or imperative work, and returns outcome Events. |
 
-## Defining events
+## Provider code
 
-This guide builds a small books page. Entering the page starts loading books;
-selecting a book displays its title. Page interactions and API outcomes have
-separate event sources.
+Provider code defines the Event, State, View, and Task contracts consumed by
+the rest of the application.
+
+### Defining Events
+
+Events are grouped by their authoritative source. The `fromXxx` naming
+convention makes the publisher visible at every use site and discourages
+command-oriented names.
 
 ```ts
-// books.events.ts
 import { emptyProps, props } from "@ngrx/store";
 import { events } from "@evst/store";
 
-export interface Book {
+interface Book {
   id: string;
   title: string;
 }
 
-export const BooksPageEvents = events("Books Page", {
+export const fromBooksPage = events("Books Page", {
   entered: emptyProps(),
   bookSelected: props<{ id: string }>(),
 });
 
-export const BooksApiEvents = events("Books API", {
-  booksLoaded: props<{ books: Book[] }>(),
-  booksLoadFailed: props<{ message: string }>(),
+export const fromBooksApi = events("Books API", {
+  loaded: props<{ books: Book[] }>(),
+  loadFailed: props<{ message: string }>(),
 });
 ```
 
-`entered` reports a page interaction. The component does not need to know that
-one listener sets a loading flag and another fetches books. More listeners can
-react to that event without changing the component.
+`events()` creates typed NgRx action creators. Calling a creator returns an
+action; calling `.publish()` dispatches it after `provideEvst()` registers the
+application Store.
 
-Calling a creator constructs a plain NgRx action. Publishing it is a separate
-operation, shown in the component below.
+### Defining State
 
-```ts
-BooksPageEvents.bookSelected({ id: "42" });
-// { type: '[Books Page] Book Selected', id: '42' }
-```
-
-Event keys use camelCase; generated labels separate words and preserve acronyms.
-Keys start with a lowercase ASCII letter and contain only ASCII letters and
-digits. Payload creator functions are supported as well as `props()`.
-
-## Defining state and views
-
-`state()` starts with a feature name and initial values. `.on()` describes how
-state responds to an event. `.withViews()` adds derived values using the views
-already available on the definition.
+`state()` defines feature state. `.on()` adds pure Event handlers, while
+`.withViews()` defines derived Views. Every field in the initial state also
+receives a View automatically.
 
 ```ts
-// books.state.ts
-import { loadBooks } from "./books.tasks";
 import { state, view } from "@evst/store";
-import { BooksApiEvents, BooksPageEvents, type Book } from "./books.events";
+import { fromBooksApi, fromBooksPage } from "./books.events";
 
-interface BooksState {
-  books: Book[];
-  selectedId: string | null;
-  loading: boolean;
-  error: string | null;
-}
-
-const initialState: BooksState = {
-  books: [],
-  selectedId: null,
+const initialState = {
+  books: [] as Book[],
+  selectedId: null as string | null,
   loading: false,
-  error: null,
 };
 
 export const booksState = state("books", initialState)
-  .on(BooksPageEvents.entered, (state) => ({
-    ...state,
-    loading: true,
-    error: null,
-  }))
-  .on(BooksApiEvents.booksLoaded, (state, { books }) => ({
-    ...state,
-    books,
-    loading: false,
-  }))
-  .on(BooksApiEvents.booksLoadFailed, (state, { message }) => ({
-    ...state,
-    loading: false,
-    error: message,
-  }))
-  .on(BooksPageEvents.bookSelected, (state, { id }) => ({
-    ...state,
-    selectedId: id,
-  }))
   .withViews(({ books, selectedId }) => ({
     selectedBook: view(
       books,
       selectedId,
       (books, id) => books.find((book) => book.id === id) ?? null,
     ),
+  }))
+  .on(fromBooksPage.entered, (current) => ({
+    ...current,
+    loading: true,
+  }))
+  .on(fromBooksApi.loaded, (current, { books }) => ({
+    ...current,
+    books,
+    loading: false,
+  }))
+  .on(fromBooksPage.bookSelected, (current, { id }) => ({
+    ...current,
+    selectedId: id,
   }));
+
+export const booksViews = booksState.views;
 ```
 
-Every initialized state field gets a view automatically: `views.books`,
-`views.loading`, and so on. `views.root` reads the whole feature state.
-`views.selectedBook` is the derived view added above.
+`view()` uses NgRx selectors and preserves their memoization. State handlers
+must return immutable state. One State definition should handle each Event once.
 
-`view()` uses NgRx's `createSelector`, with type inference and memoization.
-`selectedBook` recalculates when `books` or `selectedId`
-changes, and reuses its result when only `loading` or `error` changes. State
-updates must remain immutable.
+### Defining Tasks
 
-The chain needs no final `.build()` call. Each call returns a new definition,
-preserving existing definitions and view identities. `.on()` also accepts
-multiple event creators before a handler. Additional `.withViews()` calls
-can compose earlier views; duplicate names and the reserved name `root` are
-not allowed.
-
-Standalone views compose views from more than one feature without assigning the
-result to either feature:
+Tasks respond to Events and return outcome Events. Multiple independent Tasks
+may handle the same Event; this fan-out is useful for requests, analytics, and
+storage.
 
 ```ts
-import { view } from "@evst/store";
-import { ordersState } from "./orders.state";
-import { usersState } from "./users.state";
-
-export const selectedUserWithOrders = view(
-  usersState.views.users,
-  usersState.views.selectedId,
-  ordersState.views.orders,
-  (users, selectedId, orders) => {
-    const user = users.find((user) => user.id === selectedId);
-    return user
-      ? { ...user, orders: orders.filter((order) => order.userId === user.id) }
-      : null;
-  },
-);
-```
-
-Standalone views expose `.signal()` and `.observable()` just like feature views.
-
-## Defining tasks
-
-The same `entered` event that sets `loading` also triggers a request. The task
-returns an API outcome event, which the state handles independently.
-
-```ts
-// books.tasks.ts
-import { inject } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
+import { inject } from "@angular/core";
 import { tasks } from "@evst/store";
 import { catchError, exhaustMap, map, of } from "rxjs";
-import { BooksApiEvents, BooksPageEvents, type Book } from "./books.events";
+import { fromBooksApi, fromBooksPage } from "./books.events";
 
 export const booksTasks = tasks((on) => ({
-  load: on(BooksPageEvents.entered, (pipe) => {
+  load: on(fromBooksPage.entered, (pipe) => {
     const http = inject(HttpClient);
 
     return pipe(
       exhaustMap(() =>
         http.get<Book[]>("/api/books").pipe(
-          map((books) => BooksApiEvents.booksLoaded({ books })),
+          map((books) => fromBooksApi.loaded({ books })),
           catchError(() =>
-            of(
-              BooksApiEvents.booksLoadFailed({
-                message: "Books could not be loaded.",
-              }),
-            ),
+            of(fromBooksApi.loadFailed({ message: "Could not load books." })),
           ),
         ),
       ),
@@ -219,42 +158,19 @@ export const booksTasks = tasks((on) => ({
 }));
 ```
 
-The example expects `/api/books` to return a JSON array of books. `exhaustMap`
-ignores repeated entries while a request is pending. Catching errors inside the
-request keeps the task listening for future events.
+NgRx dispatches Events emitted by `tasks()` automatically. A Task may also use
+an arbitrary Observable source, such as a socket or browser API. This is an
+intentional exception because the Task is not driven by an Event.
 
-NgRx dispatches events emitted by `tasks()` automatically. The `pipe`
-callback composes operators in their execution order. Multiple event creators
-can precede the callback, and its pipe then emits their union. `exhaustMap`
-ignores repeated entries while a request is pending; `switchMap` keeps only
-the latest request; `concatMap` queues requests; and `mergeMap` runs
-independent requests in parallel.
+## Consumer code
 
-`on()` also creates tasks from arbitrary Observable sources, such as sockets,
-timers, and browser APIs. Non-dispatching tasks use `{ dispatch: false }`:
+Consumer code reads a View and publishes an Event. It does not need to know
+which State or Task reacts to the Event.
 
 ```ts
-const appTasks = tasks((on) => ({
-  connection: on(
-    () => inject(SocketService).connected$.pipe(tap(reportConnection)),
-    { dispatch: false },
-  ),
-}));
-```
-
-Both forms create NgRx observable effects underneath; Angular's signal-based
-`effect()` is a separate API.
-
-## Consuming events and views
-
-The component reads views and announces interactions. It does not inject a Store
-or coordinate the request and its state changes.
-
-```ts
-// books-page.component.ts
-import { Component, type OnInit } from "@angular/core";
-import { BooksPageEvents } from "./books.events";
-import { booksState } from "./books.state";
+import { Component } from "@angular/core";
+import { fromBooksPage } from "./books.events";
+import { booksViews } from "./books.state";
 
 @Component({
   selector: "app-books-page",
@@ -262,85 +178,55 @@ import { booksState } from "./books.state";
     @if (loading()) {
       <p>Loading books…</p>
     }
-    @if (error(); as message) {
-      <p>{{ message }}</p>
-    }
     @for (book of books(); track book.id) {
       <button (click)="selectBook(book.id)">{{ book.title }}</button>
     }
-    @if (selectedBook(); as book) {
-      <h2>Selected: {{ book.title }}</h2>
-    }
   `,
 })
-export class BooksPageComponent implements OnInit {
-  readonly books = booksState.views.books.signal();
-  readonly loading = booksState.views.loading.signal();
-  readonly error = booksState.views.error.signal();
-  readonly selectedBook = booksState.views.selectedBook.signal();
+export class BooksPageComponent {
+  readonly books = booksViews.books.signal();
+  readonly loading = booksViews.loading.signal();
 
-  ngOnInit() {
-    BooksPageEvents.entered.publish();
+  enter(): void {
+    fromBooksPage.entered.publish();
   }
 
-  selectBook(id: string) {
-    BooksPageEvents.bookSelected.publish({ id });
+  selectBook(id: string): void {
+    fromBooksPage.bookSelected.publish({ id });
   }
 }
 ```
 
-Every view supports `.signal(options?)` and `.observable()`. RxJS consumers
-can use a component field such as:
+`.signal()` is the default for component rendering. Views also expose
+`.observable()` for RxJS composition or template use with Angular's `AsyncPipe`:
 
 ```ts
-readonly books$ = booksState.views.books.observable();
+readonly books$ = booksViews.books.observable();
 ```
 
-View methods use the Store registered by `provideEvst()`, so they work in
-component fields, methods, and asynchronous callbacks. Observable subscriptions
-may happen later. Views also remain usable as regular NgRx memoized selectors.
+```html
+@if (books$ | async; as books) {
+<!-- render books -->
+}
+```
 
-Event `.publish()` methods accept the same typed arguments as their creators.
-After application initialization, they work in lifecycle hooks, event handlers,
-and asynchronous callbacks without an injection context.
+Manual View subscriptions are normally unnecessary. Angular manages the
+lifecycle of Signals and `AsyncPipe` subscriptions. Imperative integrations can
+use a documented ESLint suppression with automatic teardown.
 
 ## Registering state
 
-The application supplies the root Store once. State and task definitions can be
-registered separately:
+`provideEvst()` registers the root NgRx Store and EVST publishing support once.
+State and Tasks can be registered separately or as one `bundle()`.
 
 ```ts
-// app.config.ts
 import { type ApplicationConfig } from "@angular/core";
-import { provideHttpClient } from "@angular/common/http";
 import { provideEvst } from "@evst/store";
-import { booksState } from "./books.state";
-import { booksTasks } from "./books.tasks";
 
 export const appConfig: ApplicationConfig = {
-  providers: [
-    provideHttpClient(),
-    provideEvst(),
-    booksState.provide(),
-    booksTasks.provide(),
-  ],
+  providers: [provideEvst(), booksState.provide(), booksTasks.provide()],
 };
 ```
-
-`provideEvst()` registers the root Store, enables publishing, and adds
-Redux DevTools in Angular development mode. Separate `provideStore()` and
-`provideStoreDevtools()` calls are unnecessary. Its options also accept NgRx
-root Store configuration, such as `runtimeChecks` and `metaReducers`.
-
-`booksState.provide()` registers the feature. `booksTasks.provide()` registers
-its tasks. Feature and task providers can live in route providers instead;
-`provideEvst()` belongs at the application root.
-
-A task collection is registered with `booksTasks.provide()`. A collection should
-be registered once in the injector where it belongs.
-
-`bundle()` provides a concise form when a state definition and its task
-collection belong in the same injector:
 
 ```ts
 import { bundle } from "@evst/store";
@@ -352,76 +238,71 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-## Understanding registration and compatibility
+## Using the ESLint rules
 
-EVST reduces the public surface while retaining NgRx interoperability.
-Events are NgRx actions, views are memoized selectors, and NgRx types such as
-`Action` retain their original names. The package also exports `FeatureStateDefinition`,
-`Task`, `Tasks`, and `EvstConfig` types.
+`@evst/eslint` encodes the Event-first conventions:
 
-`provideEvst()` starts with an empty root reducer map. Features registered
-through `.provide()` or NgRx's `provideState()` supply the state keys. DevTools
-uses the default name `EVST Store`; `devtools: false` disables it. Custom
-options are forwarded without merging, and production mode skips registration.
-
-Direct event publishing uses one active Store per loaded EVST module. Module
-federation can share the root Store and EVST singleton while remotes register
-features. Concurrent SSR applications or independent Stores require NgRx
-providers and an injected Store for publishing and reading views. Destroying the
-owning injector releases the publishing registration; a different active Store
-is rejected.
-
-The example keeps events, state, and tasks in separate modules without a
-circular import. If state and task modules depend on each other, view access
-must be deferred until the task runs; shared definitions in a separate module
-can avoid the cycle.
-
-## Testing
-
-State transitions can be tested without an Angular injector or a Store:
+- Event groups use `fromXxx` source-oriented names.
+- An Event has one publishing boundary.
+- One executable boundary publishes one Event.
+- A State handles an Event once.
+- Events, Views, and Task subscriptions are checked for unused definitions.
+- Component code prefers a View Signal or `AsyncPipe` over manual View
+  subscriptions.
 
 ```ts
-import { expect, it } from "vitest";
-import { booksState } from "./books.state";
-import { BooksApiEvents, BooksPageEvents } from "./books.events";
+import evst from "@evst/eslint";
+import tseslint from "typescript-eslint";
 
-it("selects a book after it is loaded", () => {
-  const book = { id: "42", title: "The Hobbit" };
-  const loaded = booksState.reducer(
-    undefined,
-    BooksApiEvents.booksLoaded({ books: [book] }),
-  );
-  const selected = booksState.reducer(
-    loaded,
-    BooksPageEvents.bookSelected({ id: book.id }),
-  );
-
-  expect(selected.selectedId).toBe(book.id);
-  expect(
-    booksState.views.selectedBook.projector(
-      selected.books,
-      selected.selectedId,
-    ),
-  ).toEqual(book);
+export default tseslint.config({
+  files: ["src/**/*.ts"],
+  plugins: { evst },
+  ...evst.configs.evst,
 });
 ```
 
-`reducer` is a standard NgRx reducer and can be used in unit tests without an
-Angular injector or a Store. A task collection is tested by supplying a
-controlled event stream to `tasks.toList()` and asserting its emitted outcome
-events with mocked dependencies. Complex or reusable tasks can be read from
-`tasks.testing` for focused tests.
+Warnings can be suppressed for intentional exceptions. The EVST preset requires
+a reason after `--` for Task-source and manual View-subscription suppressions.
 
-Component tests that publish events can register
-`provideEvst({ devtools: false })` before `provideMockStore(...)` in TestBed
-providers. TestBed initialization captures the mock Store, and injector teardown
-releases the registration.
+## Working with NgRx
 
-## Installing and developing
+EVST does not replace NgRx. Events are NgRx actions, State is an NgRx feature
+reducer, Views are memoized NgRx selectors, and Tasks are functional NgRx
+effects. Standard NgRx APIs, including entity adapters, router state,
+meta-reducers, and DevTools, remain available where they fit the feature.
 
-The package requires compatible Angular and NgRx 22 dependencies, including
-`@ngrx/store`, `@ngrx/effects`, and `@ngrx/store-devtools`. DevTools remains a
-required peer dependency when disabled because the provider module imports it.
+`provideEvst()` initializes an empty root reducer map and enables Redux DevTools
+in Angular development mode. It accepts NgRx root Store configuration and
+optional DevTools options:
+
+```ts
+provideEvst({
+  runtimeChecks: { strictActionSerializability: true },
+  devtools: { name: "Books" },
+});
+```
+
+## Testing and developing
+
+A State reducer can be tested without an Angular injector or a Store:
+
+```ts
+import { expect, it } from "vitest";
+
+it("selects a book", () => {
+  const book = { id: "42", title: "The Hobbit" };
+  const loaded = booksState.reducer(
+    undefined,
+    fromBooksApi.loaded({ books: [book] }),
+  );
+  const selected = booksState.reducer(
+    loaded,
+    fromBooksPage.bookSelected({ id: book.id }),
+  );
+
+  expect(selected.selectedId).toBe(book.id);
+});
+```
 
 From the repository root:
 
@@ -431,5 +312,5 @@ npm test --workspace @evst/store
 npm pack --workspace @evst/store
 ```
 
-The test command builds the package, checks test types, and runs the unit tests.
-The pack command produces an installable archive.
+The package requires compatible Angular and NgRx 22 dependencies, including
+`@ngrx/store`, `@ngrx/effects`, and `@ngrx/store-devtools`.
