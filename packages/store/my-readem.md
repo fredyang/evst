@@ -41,7 +41,7 @@ This `evst` make event-first as the core value.
 
 ## Coding model and workflow
 
-The coding model revolve 4 object, `Event`, `State`, `View` and `Task`
+As the name of the library suggest, the the coding model revolve 4 object, `Event`, `View`, `State` and `Task`
 The following show the relationship and their method.
 
 ![](../../images/ngrx-evntify-coding-model.png)
@@ -50,10 +50,11 @@ The following show the relationship and their method.
 
 #### Modeling event
 
+Event is what drive the library, without event the application is dead. When event is published,
+the application run.
+
 Event describe what happened to the publisher, publisher publish an event without who
 is subscribe to the event, and how it is being handle.
-
-It use the syntax
 
 ```ts
 export const fromSource = events('Source', {
@@ -68,6 +69,8 @@ export const fromBooksPage = events("Books Page", {
   bookSelected: props<{ id: string }>(),
 });
 ```
+
+we have some eslint tool on
 
 #### define state
 
@@ -148,12 +151,3 @@ export const appConfig: ApplicationConfig = {
 ```
 
 ## use eslint to enforce event-driven programming
-
-PLAYER FED NAD DJO MUR TOT
-Wawrinka 3 3 6 9 21
-Del Potro 7 6 4 3 20
-Berdych 6 4 3 6 19
-Thiem 5 6 5 2 18
-Tsonga 6 4 6 2 18
-Ljubičić 3 2 2 3 10
-Nishikori 3 2 2 2 9

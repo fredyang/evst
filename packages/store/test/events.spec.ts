@@ -118,6 +118,12 @@ describe("events compatibility", () => {
     );
   });
 
+  it.each(["", "   "])("rejects an empty source %j at runtime", (source) => {
+    expect(() => events(source as any, { login: emptyProps() })).toThrow(
+      "Invalid event source",
+    );
+  });
+
   it("preserves NgRx payload restrictions and rejects invalid declarations", () => {
     // These calls are checked by tsc but intentionally never executed.
     function checkInvalidDeclarations(
@@ -126,6 +132,8 @@ describe("events compatibility", () => {
     ) {
       // @ts-expect-error Sources must be string literals.
       events(source, { login: emptyProps() });
+      // @ts-expect-error Sources must not be empty.
+      events("", { login: emptyProps() });
       // @ts-expect-error Event keys must be string literals.
       events("Test", eventDefinitions);
       events("Test", {

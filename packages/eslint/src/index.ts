@@ -1,4 +1,3 @@
-import eventHygiene from "./rules/event-hygiene";
 import eventPublisherOwnership from "./rules/event-publisher-ownership";
 import eventGroupSourcePrefix from "./rules/event-group-source-prefix";
 import noSequentialEventPublishes from "./rules/no-sequential-event-publishes";
@@ -14,7 +13,6 @@ const plugin = {
   meta: { name: "@evst/eslint", version: "0.1.0" },
   /** Available rules, keyed by their names within the plugin namespace. */
   rules: {
-    "event-hygiene": eventHygiene,
     "event-publisher-ownership": eventPublisherOwnership,
     "event-group-source-prefix": eventGroupSourcePrefix,
     "no-sequential-event-publishes": noSequentialEventPublishes,
@@ -27,14 +25,12 @@ const plugin = {
   configs: {
     ngrx: {
       rules: {
-        "evst/event-hygiene": "error",
         "evst/event-publisher-ownership": "warn",
         "evst/no-sequential-event-publishes": "warn",
       },
     },
     evst: {
       rules: {
-        "evst/event-hygiene": "error",
         "evst/event-group-source-prefix": "warn",
         "evst/event-publisher-ownership": "warn",
         "evst/no-sequential-event-publishes": "warn",

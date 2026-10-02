@@ -46,6 +46,11 @@ type StringLiteralCheck<
   Name extends string,
 > = string extends Text ? `${Name} must be a string literal type` : unknown;
 
+type NonEmptyStringLiteralCheck<
+  Text extends string,
+  Name extends string,
+> = Text extends "" ? `${Name} must not be empty` : unknown;
+
 type Alphanumeric<Text extends string> =
   Text extends `${LowerLetter | UpperLetter | Digit}${infer Rest}`
     ? Alphanumeric<Rest>
@@ -144,8 +149,9 @@ type EventGroup<
  * @param source - String literal identifying the event source.
  * @param events - Event definitions keyed by camelCase string literals.
  * @returns Event creators with the original keys and `[Source] Event Label` types.
- * @throws If an event key does not start with a lowercase ASCII letter or
- * contains characters other than ASCII letters and digits.
+ * @throws If the source is empty, or if an event key does not start with a
+ * lowercase ASCII letter or contains characters other than ASCII letters and
+ * digits.
  *
  * @example
  * ```ts
@@ -178,9 +184,14 @@ export function events<
   const Source extends string,
   Events extends Record<string, EventConfig>,
 >(
-  source: Source & StringLiteralCheck<Source, "source">,
+  source: Source &
+    StringLiteralCheck<Source, "source"> &
+    NonEmptyStringLiteralCheck<Source, "source">,
   events: EventGroupConfig<Events>,
 ): EventGroup<Source, Events> {
+  if (!source.trim()) {
+    throw new Error("Invalid event source: expected a nonempty string.");
+  }
   const entries = Object.entries(events);
 
   return Object.fromEntries(
