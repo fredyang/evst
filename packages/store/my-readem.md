@@ -105,7 +105,16 @@ const taskCollection = tasks((on) => ({
 
 ### Povider code
 
-On
+@ai: expand this part
+
+When we discuss how to create events, we should have some naming convention.
+
+When use publish event, we also have some eslint restriction
+such, we cannot publish two event in sequence, we cannot
+publish one event in more than one place. This rules are
+essntial to implment event driven state management. Just
+a nice naming of event, does not make it event driven, following
+these rules, really make it event-driven.
 
 ```ts
 export class BooksPageComponent implements OnInit {
@@ -126,20 +135,12 @@ export class BooksPageComponent implements OnInit {
 
 ### registering state
 
-```ts
-// bundle state with tasks and register together
-taskCllection.provide();
-
-provider: [state.provide()];
-
-// or register state and taskCollection separately
-provider: [state.provide(), taskCollection.provide()];
-```
+1. one time setup
 
 ```ts
 export const appConfig: ApplicationConfig = {
   providers: [
-    // required
+    // this is one time setup
     provideEvst({
       runtimeChecks: {
         strictStateSerializability: true,
@@ -149,12 +150,23 @@ export const appConfig: ApplicationConfig = {
       },
       devtools: { name: "NgRx Book Store App" },
     }),
-
-    // provide state
-    authState.provide(),
-    coreState.provide(),
   ],
 };
 ```
 
-## use eslint to enforce event-driven programming
+2. provide state and task one by one
+
+```ts
+// or register state and taskCollection separately
+provider: [state.provide(), taskCollection.provide()];
+```
+
+3. provide state and tasks with bundle
+
+```ts
+// root.bundle.ts
+export const rootBundle = bundle(authState, authTasks, coreState, coreTasks);
+
+// appconfig.ts
+provider: [rootBundler.provide()];
+```
