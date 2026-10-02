@@ -2,6 +2,8 @@
 
 table of content
 
+@ai: please build up the table on content here
+
 1. why `'ngrx-entifiy`
 2. ..
 
@@ -9,12 +11,13 @@ embed full source code url
 
 ## Why `evst`
 
-I want to talk to about the intention of the this library
+@ai: I want to talk to about the intention of the this library, please
+expand my idea.
 
-1. Fundermentially, NgRx has an event driven achitecture inside. It separate tranditonal
-   object.method with action and handler. However, lots of adopter do not understand
-   the power of this separation, continue to to use command driven mindset, and lots
-   of ngrx project fail eventually because of this.
+1. Fundermentially, NgRx has an event driven achitecture inside. It separate
+   traditonal object.method with action and handler. However, lots of adopter do
+   not understand the power of this separation, continue to to use command driven
+   mindset, and lots of ngrx project fail eventually because of this.
 
 NgRx team clearly understand this,
 
@@ -30,16 +33,17 @@ get it wrong at the first step.
 
 This `evst` make event-first as the core value.
 
-2. NgRx is techincal sound framework, it has loose API to to put things together, people call
-   it boilterplate. Such as you need to create actions, reducer, selector, effects, register
-   reducer, and effect as provider, ect. Although this has been greatly improved with
-   function like createActionGroup, createFeature, but they feels like still not cohesive
-   , and I feelt like it is ducktape.
+2. NgRx is techincal sound framework, it has loose API to to put things
+   together, people call it boilterplate. Such as you need to create actions,
+   reducer, selector, effects, register reducer, and effect as provider, ect.
+   Although this has been greatly improved with function like createActionGroup,
+   createFeature, but they feels like still not cohesive , and I feelt like it is
+   ducktape.
 
-   `evst` want to present them together in a more unified way, using fluet API. and
-   hide some of the concept like store, selector, dispath.
+`evst` want to present them together in a more unified way, using fluet API. and
+hide some of the concept like store, selector, dispath.
 
-## Coding model and workflow
+## Coding workflow
 
 As the name of the library suggest, the the coding model revolve 4 object, `Event`, `View`, `State` and `Task`
 The following show the relationship and their method.
@@ -49,9 +53,6 @@ The following show the relationship and their method.
 ### Provider Code
 
 #### Modeling event
-
-Event is what drive the library, without event the application is dead. When event is published,
-the application run.
 
 Event describe what happened to the publisher, publisher publish an event without who
 is subscribe to the event, and how it is being handle.
@@ -70,26 +71,30 @@ export const fromBooksPage = events("Books Page", {
 });
 ```
 
-we have some eslint tool on
+event variable has naming convention `fromSource`, this is ensure that
+developer is aware that event belongs to the event source, not event handler.
+Which is oposite of command. Show example of bad naming.
 
-#### define state
+#### Modeling state
 
-state holdes a stongly typed javascript json object.
+1. create state witih initliazed value of strongly type interface
+2. expose view to be consumed by componnet
+3. handle event with event handler
 
-It has three responsibility
-
-1. expose view from consumer to read
-2. subscribe events, which create a new state from the current state and event data
+All these can be defined in one fluid api, @ai: please show an example below
 
 ```ts
 const xxxState = state(stateName, initialState);
 .withViews(xxx)
+.on(event, fn)
 ```
 
 #### define task collection
 
 Task collection subscribe events with task funtion
 We use similar syntax with state `on(xx, fn)`
+
+@ai: give me practical example
 
 ```ts
 const taskCollection = tasks((on) => ({
@@ -98,14 +103,16 @@ const taskCollection = tasks((on) => ({
 }));
 ```
 
-### consuming state
+### Povider code
+
+On
 
 ```ts
 export class BooksPageComponent implements OnInit {
-  readonly books = booksState.views.books.signal();
-  readonly loading = booksState.views.loading.signal();
-  readonly error = booksState.views.error.signal();
-  readonly selectedBook = booksState.views.selectedBook.signal();
+  readonly books = booksViews.books.signal();
+  readonly loading = booksViews.loading.signal();
+  readonly error = booksViews.error.signal();
+  readonly selectedBook = booksviews.selectedBook.signal();
 
   ngOnInit() {
     fromBooksPage.entered.publish();

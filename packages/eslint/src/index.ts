@@ -1,9 +1,12 @@
 import eventPublisherOwnership from "./rules/event-publisher-ownership";
 import eventGroupSourcePrefix from "./rules/event-group-source-prefix";
+import noDuplicateEventHandlers from "./rules/no-duplicate-event-handlers";
 import noSequentialEventPublishes from "./rules/no-sequential-event-publishes";
 import noUnpublishedEvents from "./rules/no-unpublished-events";
 import noUnsubscribedEvents from "./rules/no-unsubscribed-events";
 import noUnusedViews from "./rules/no-unused-views";
+import noViewSubscription from "./rules/no-view-subscription";
+import noViewSubscriptionSuppressionReason from "./rules/no-view-subscription-suppression-reason";
 import requireTaskEvent from "./rules/require-task-event";
 import requireTaskEventSuppressionReason from "./rules/require-task-event-suppression-reason";
 
@@ -15,10 +18,14 @@ const plugin = {
   rules: {
     "event-publisher-ownership": eventPublisherOwnership,
     "event-group-source-prefix": eventGroupSourcePrefix,
+    "no-duplicate-event-handlers": noDuplicateEventHandlers,
     "no-sequential-event-publishes": noSequentialEventPublishes,
     "no-unpublished-events": noUnpublishedEvents,
     "no-unsubscribed-events": noUnsubscribedEvents,
     "no-unused-views": noUnusedViews,
+    "no-view-subscription": noViewSubscription,
+    "no-view-subscription-suppression-reason":
+      noViewSubscriptionSuppressionReason,
     "require-task-event": requireTaskEvent,
     "require-task-event-suppression-reason": requireTaskEventSuppressionReason,
   },
@@ -26,6 +33,7 @@ const plugin = {
     ngrx: {
       rules: {
         "evst/event-publisher-ownership": "warn",
+        "evst/no-duplicate-event-handlers": "warn",
         "evst/no-sequential-event-publishes": "warn",
       },
     },
@@ -37,6 +45,8 @@ const plugin = {
         "evst/no-unpublished-events": "warn",
         "evst/no-unsubscribed-events": "warn",
         "evst/no-unused-views": "warn",
+        "evst/no-view-subscription": "warn",
+        "evst/no-view-subscription-suppression-reason": "error",
         "evst/require-task-event": "warn",
         "evst/require-task-event-suppression-reason": "error",
       },
