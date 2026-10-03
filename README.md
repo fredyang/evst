@@ -29,7 +29,7 @@ and providers. EVST aligns them around Event, View, State, and Task, using a
 fluent API to reduce the boilerplate needed for a feature without replacing
 NgRx.
 
-## Understanding the model
+## Understanding the coding model
 
 The four EVST objects form the provider API. Components are consumer code and
 interact only with Views and events.
