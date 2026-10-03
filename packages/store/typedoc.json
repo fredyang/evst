@@ -1,0 +1,16 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "@evst/store API",
+  "entryPoints": ["src/index.ts"],
+  "tsconfig": "tsconfig.json",
+  "out": "docs/api",
+  "readme": "none",
+  "includeVersion": true,
+  "cleanOutputDir": true,
+  "disableSources": true,
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "validation": {
+    "notExported": false
+  }
+}

@@ -7,6 +7,7 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm test --workspaces",
+    "docs:api": "npm run docs:api --workspace @evst/store",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
@@ -62,6 +63,7 @@
     "prettier": "^3.9.8",
     "rxjs": "7.8.0",
     "tslib": "^2.7.0",
+    "typedoc": "^0.28.20",
     "typescript": "6.0.3",
     "typescript-eslint": "^8.60.1",
     "vite": "7.3.6",

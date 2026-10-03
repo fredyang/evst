@@ -1,16 +1,14 @@
-# EVST
+<h1 align="center">EVST - Event, View, State, Task</h1>
 
-> Event-first state management, built on NgRx.
-
-EVST is a small API for building Angular features around four concepts:
-**Event**, **View**, **State**, and **Task**. NgRx Store, selectors, effects,
-and DevTools remain the runtime foundation.
+<p align="center">
+  <strong>The minimalist, event-driven facade for NgRx Store.</strong>
+</p>
 
 - [Why EVST?](#why-evst)
 - [Understanding the model](#understanding-the-model)
 - [Provider code](#provider-code)
-  - [Defining Events](#defining-events)
-  - [Defining State](#defining-state)
+  - [Modeling events](#modeling-events)
+  - [Modeling State and Views](#defining-state)
   - [Defining Tasks](#defining-tasks)
 - [Consumer code](#consumer-code)
 - [Registering state](#registering-state)
@@ -20,24 +18,21 @@ and DevTools remain the runtime foundation.
 
 ## Why EVST?
 
-NgRx is event-driven at its core. Actions describe things that happened;
-reducers and effects decide how the application responds. EVST makes that model
-the starting point for application code.
+NgRx is event-driven at its core: Actions describe what happened, and reducers
+and effects decide how the application responds. Its APIs also permit
+command-shaped Actions that coordinate a specific response. EVST makes an
+event-first style explicit when using NgRx.
 
-An Event describes something that happened at its source. A component publishes
-an Event without coordinating the State or Task that responds to it. This
-separates the occurrence from the response and avoids command-shaped component
-APIs.
-
-EVST also groups common NgRx feature pieces into cohesive definitions. State
-defines transitions and Views together. Tasks handle Events and return outcome
-Events. Components read Views and publish Events without injecting a Store,
-wiring selectors, or dispatching actions directly.
+NgRx is a high-quality implementation of the Redux pattern, but its low-level
+APIs expose many implementation details: Actions, reducers, selectors, effects,
+and providers. EVST aligns them around Event, View, State, and Task, using a
+fluent API to reduce the boilerplate needed for a feature without replacing
+NgRx.
 
 ## Understanding the model
 
 The four EVST objects form the provider API. Components are consumer code and
-interact only with Views and Events.
+interact only with Views and events.
 
 ![EVST coding model](../../images/ngrx-evntify-coding-model.png)
 
@@ -45,19 +40,22 @@ interact only with Views and Events.
 | --------- | ------------------------------------------------------------------------------------- |
 | **Event** | Describes something that happened and is published by its source.                     |
 | **View**  | Exposes read-only state to consumer code.                                             |
-| **State** | Handles Events through pure state transitions and provides Views.                     |
-| **Task**  | Handles Events, performs asynchronous or imperative work, and returns outcome Events. |
+| **State** | Handles events through pure state transitions and provides Views.                     |
+| **Task**  | Handles events, performs asynchronous or imperative work, and returns outcome events. |
+
+The diagram separates EVST code into provider and consumer roles. Provider code
+defines how State transitions in response to events, which Views expose state,
+and how Tasks handle events and return outcome events. Consumer code reads Views
+and publishes events.
 
 ## Provider code
 
-Provider code defines the Event, State, View, and Task contracts consumed by
-the rest of the application.
+### Modeling events
 
-### Defining Events
-
-Events are grouped by their authoritative source. The `fromXxx` naming
-convention makes the publisher visible at every use site and discourages
-command-oriented names.
+An event group is defined by its authoritative source. Its variable uses the
+`fromSource` naming convention, such as `fromBooksPage` and `fromBooksApi`.
+The name identifies where an event happened, not which State or Task handles
+it, and discourages command-oriented names.
 
 ```ts
 import { emptyProps, props } from "@ngrx/store";
@@ -79,15 +77,19 @@ export const fromBooksApi = events("Books API", {
 });
 ```
 
-`events()` creates typed NgRx action creators. Calling a creator returns an
-action; calling `.publish()` dispatches it after `provideEvst()` registers the
-application Store.
+An event key is a camelCase identifier, such as `bookSelected`. EVST derives the
+readable NgRx type `[Books Page] Book Selected` while preserving the same
+identifier at its definition and every use. Each event therefore remains
+discoverable through standard IDE navigation and Find References. Each event creator
+produces a standard NgRx Action, so events work with existing NgRx reducers,
+effects, and DevTools.
 
-### Defining State
+### Modeling State and Views
 
-`state()` defines feature state. `.on()` adds pure Event handlers, while
-`.withViews()` defines derived Views. Every field in the initial state also
-receives a View automatically.
+`state()` infers the feature-state shape from its initial-state object and
+automatically exposes a typed View for each top-level field. Optionally,
+`.withViews()` composes additional derived Views from those default Views, while
+`.on()` mirrors NgRx reducer `on()` semantics by adding pure event handlers.
 
 ```ts
 import { state, view } from "@evst/store";
@@ -124,14 +126,13 @@ export const booksState = state("books", initialState)
 export const booksViews = booksState.views;
 ```
 
-`view()` uses NgRx selectors and preserves their memoization. State handlers
-must return immutable state. One State definition should handle each Event once.
-
 ### Defining Tasks
 
-Tasks respond to Events and return outcome Events. Multiple independent Tasks
-may handle the same Event; this fan-out is useful for requests, analytics, and
-storage.
+Tasks respond to events and return outcome events. Several independent Tasks
+may respond to the same event - for example, one can start an API request while
+another records analytics. Like State `.on()`, Task `on()` pairs an event with
+its handler. It creates a functional NgRx Effect with `createEffect()` and
+filters events for that handler.
 
 ```ts
 import { HttpClient } from "@angular/common/http";
@@ -158,14 +159,19 @@ export const booksTasks = tasks((on) => ({
 }));
 ```
 
-NgRx dispatches Events emitted by `tasks()` automatically. A Task may also use
-an arbitrary Observable source, such as a socket or browser API. This is an
-intentional exception because the Task is not driven by an Event.
-
 ## Consumer code
 
-Consumer code reads a View and publishes an Event. It does not need to know
-which State or Task reacts to the Event.
+Consumer code reads Views and publishes events rather than coordinating through
+`store.select(...)` and `store.dispatch(...)`. It does not need to know which
+State or Task reacts to an event, keeping consumer code focused on what is
+displayed and what happened.
+
+Publishing events alone does not make code event-driven. An event should have
+one publishing boundary, and an executable boundary should publish only one
+event. **Publishing the same event in several places, or publishing several
+events in sequence, turns events into commands that coordinate work.** The
+`event-publisher-ownership` and `no-sequential-event-publishes` ESLint rules
+report these patterns.
 
 ```ts
 import { Component } from "@angular/core";
@@ -240,13 +246,13 @@ export const appConfig: ApplicationConfig = {
 
 ## Using the ESLint rules
 
-`@evst/eslint` encodes the Event-first conventions:
+`@evst/eslint` encodes the event-first conventions:
 
-- Event groups use `fromXxx` source-oriented names.
-- An Event has one publishing boundary.
-- One executable boundary publishes one Event.
-- A State handles an Event once.
-- Events, Views, and Task subscriptions are checked for unused definitions.
+- The preset requires event groups to use `fromXxx` source-oriented names.
+- An event has one publishing boundary.
+- One executable boundary publishes one event.
+- A State handles an event once.
+- Unused events, Views, and Task subscriptions are reported.
 - Component code prefers a View Signal or `AsyncPipe` over manual View
   subscriptions.
 
@@ -266,7 +272,7 @@ a reason after `--` for Task-source and manual View-subscription suppressions.
 
 ## Working with NgRx
 
-EVST does not replace NgRx. Events are NgRx actions, State is an NgRx feature
+EVST does not replace NgRx. Its events are NgRx actions, State is an NgRx feature
 reducer, Views are memoized NgRx selectors, and Tasks are functional NgRx
 effects. Standard NgRx APIs, including entity adapters, router state,
 meta-reducers, and DevTools, remain available where they fit the feature.
@@ -284,7 +290,8 @@ provideEvst({
 
 ## Testing and developing
 
-A State reducer can be tested without an Angular injector or a Store:
+Each State exposes its generated reducer as `.reducer`, so state transitions can
+be tested without an Angular injector or a Store:
 
 ```ts
 import { expect, it } from "vitest";
@@ -304,6 +311,37 @@ it("selects a book", () => {
 });
 ```
 
+Task collections expose their generated functional Effects as `.effects`. They
+can be invoked directly in a test injector with their dependencies replaced:
+
+```ts
+import { HttpClient } from "@angular/common/http";
+import { TestBed } from "@angular/core/testing";
+import { provideStore, Store } from "@ngrx/store";
+import { expect, it } from "vitest";
+import { firstValueFrom, of, take, type Observable } from "rxjs";
+
+it("loads books", async () => {
+  const book = { id: "42", title: "The Hobbit" };
+  TestBed.configureTestingModule({
+    providers: [
+      provideStore(),
+      booksTasks.provide(),
+      { provide: HttpClient, useValue: { get: () => of([book]) } },
+    ],
+  });
+
+  const result = TestBed.runInInjectionContext(() => {
+    const load = booksTasks.effects.load as () => Observable<unknown>;
+    return firstValueFrom(load().pipe(take(1)));
+  });
+
+  TestBed.inject(Store).dispatch(fromBooksPage.entered());
+
+  await expect(result).resolves.toEqual(fromBooksApi.loaded({ books: [book] }));
+});
+```
+
 From the repository root:
 
 ```sh
@@ -314,3 +352,11 @@ npm pack --workspace @evst/store
 
 The package requires compatible Angular and NgRx 22 dependencies, including
 `@ngrx/store`, `@ngrx/effects`, and `@ngrx/store-devtools`.
+
+Generate the API reference from JSDoc and TypeScript signatures:
+
+```sh
+npm run docs:api
+```
+
+The generated site is written to `packages/store/docs/api/index.html`.
