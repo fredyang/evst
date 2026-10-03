@@ -1,7 +1,7 @@
 # Working with EVST
 
 EVST is an event-first facade for NgRx Store. Its four concepts are Event,
-View, State, and Task. Detailed guidance is in [the Store README](packages/store/README.md);
+View, State, and Task. Detailed guidance is in [the root README](README.md);
 generate the full JSDoc API reference with `npm run docs:api`.
 
 ## Using the API
