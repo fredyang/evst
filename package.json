@@ -24,11 +24,11 @@
     "serve:svc-books": "ng serve svc-books --port 4203",
     "serve:evst-books": "ng serve evst-books --port 4201",
     "serve:examples": "concurrently \"npm run serve:ngrx-books\" \"npm run serve:evst-books\" \"npm run serve:ngrx-books-standalone\" \"npm run serve:svc-books\"",
-    "lint:evst-books": "npm run build --workspace @evst/eslint && cd examples/projects/evst-books && eslint \"src/**/*.ts\"",
-    "lint:ngrx-books-standalone": "npm run build --workspace @evst/eslint && cd examples/projects/ngrx-books-standalone && eslint \"src/**/*.ts\"",
+    "lint:evst-books": "npm run build --workspace @evst/eslint-plugin && cd examples/projects/evst-books && eslint \"src/**/*.ts\"",
+    "lint:ngrx-books-standalone": "npm run build --workspace @evst/eslint-plugin && cd examples/projects/ngrx-books-standalone && eslint \"src/**/*.ts\"",
     "lint:svc-books": "cd examples/projects/svc-books && eslint \"src/**/*.ts\"",
-    "lint:publisher-ownership": "npm run build --workspace @evst/eslint && cd examples/projects/evst-books && eslint \"src/**/*.ts\" --rule \"evst/no-unused-views: off\"",
-    "watch:publisher-ownership": "npm run build --workspace @evst/eslint && node .vscode/watch-publisher-ownership.cjs"
+    "lint:publisher-ownership": "npm run build --workspace @evst/eslint-plugin && cd examples/projects/evst-books && eslint \"src/**/*.ts\" --rule \"evst/no-unused-views: off\"",
+    "watch:publisher-ownership": "npm run build --workspace @evst/eslint-plugin && node .vscode/watch-publisher-ownership.cjs"
   },
   "lint-staged": {
     "*.{cjs,js,json,md,mjs,ts}": "prettier --write"

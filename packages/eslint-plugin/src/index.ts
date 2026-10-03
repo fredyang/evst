@@ -13,7 +13,7 @@ import requireTaskEventSuppressionReason from "./rules/require-task-event-suppre
 /** ESLint plugin providing rules for event-oriented NgRx applications. */
 const plugin = {
   /** Package identity reported to ESLint. */
-  meta: { name: "@evst/eslint", version: "0.1.0" },
+  meta: { name: "@evst/eslint-plugin", version: "0.1.0" },
   /** Available rules, keyed by their names within the plugin namespace. */
   rules: {
     "event-publisher-ownership": eventPublisherOwnership,

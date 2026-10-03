@@ -246,7 +246,7 @@ export const appConfig: ApplicationConfig = {
 
 ## Using the ESLint rules
 
-`@evst/eslint` encodes the event-first conventions:
+`@evst/eslint-plugin` encodes the event-first conventions:
 
 - The preset requires event groups to use `fromXxx` source-oriented names.
 - An event has one publishing boundary.
@@ -257,7 +257,7 @@ export const appConfig: ApplicationConfig = {
   subscriptions.
 
 ```ts
-import evst from "@evst/eslint";
+import evst from "@evst/eslint-plugin";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config({

@@ -1,5 +1,5 @@
 {
-  "name": "@evst/eslint",
+  "name": "@evst/eslint-plugin",
   "version": "0.1.0",
   "description": "ESLint rules for EVST event-first state management.",
   "license": "MIT",

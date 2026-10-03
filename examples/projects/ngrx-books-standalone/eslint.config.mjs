@@ -1,4 +1,4 @@
-import evst from "@evst/eslint";
+import evst from "@evst/eslint-plugin";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(

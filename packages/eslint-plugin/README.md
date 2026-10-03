@@ -8,8 +8,8 @@ From the workspace root:
 
 ```sh
 npm install
-npm test --workspace @evst/eslint
-npm pack --workspace @evst/eslint
+npm test --workspace @evst/eslint-plugin
+npm pack --workspace @evst/eslint-plugin
 ```
 
 The generated `evst-eslint-0.1.0.tgz` can be installed in a consuming project with `npm install --save-dev /path/to/evst-eslint-0.1.0.tgz`.
@@ -20,7 +20,7 @@ Flat configuration for an EVST application (`eslint.config.mjs`):
 
 ```js
 import tseslint from "typescript-eslint";
-import evst from "@evst/eslint";
+import evst from "@evst/eslint-plugin";
 
 export default [
   {
@@ -39,7 +39,7 @@ including source-oriented event-group naming, remain in the `evst` preset.
 
 ```js
 import tseslint from "typescript-eslint";
-import evst from "@evst/eslint";
+import evst from "@evst/eslint-plugin";
 
 export default [
   {
