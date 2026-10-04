@@ -4,6 +4,18 @@
   "description": "Event-first state management, built on NgRx.",
   "type": "module",
   "license": "MIT",
+  "homepage": "https://github.com/fredyang/evst#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fredyang/evst.git"
+  },
+  "keywords": [
+    "RxJS",
+    "Angular",
+    "Redux",
+    "NgRx",
+    "EVST"
+  ],
   "sideEffects": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -16,6 +28,7 @@
   },
   "files": [
     "dist",
+    "README.md",
     "LICENSE"
   ],
   "scripts": {

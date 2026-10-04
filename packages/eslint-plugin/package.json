@@ -3,6 +3,18 @@
   "version": "0.1.0",
   "description": "ESLint rules for EVST event-first state management.",
   "license": "MIT",
+  "homepage": "https://github.com/fredyang/evst#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fredyang/evst.git"
+  },
+  "keywords": [
+    "RxJS",
+    "Angular",
+    "Redux",
+    "NgRx",
+    "EVST"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
