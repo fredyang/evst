@@ -56,7 +56,3 @@ The consuming project needs ESLint 9 and `typescript-eslint`. Rule behavior and 
 ## Developing
 
 `npm run build` compiles TypeScript and emits declarations. `npm test` builds the plugin and runs the migrated rule cases with ESLint's RuleTester.
-
-## Attribution
-
-The rule and test cases were adapted from NgRx's MIT-licensed `good-action-hygiene` rule, including the custom event-naming changes in commit `191ee2f5`. The original copyright notice is retained in [LICENSE](LICENSE).
