@@ -36,6 +36,13 @@ npm run serve:svc-books
 
 The applications use separate ports: 4200, 4201, 4202, and 4203 respectively.
 
+All examples share a browser-restricted Google Books API key for local serving.
+If Google Books requests stop working because that key has expired or been
+rotated, create a replacement in the
+[Google Cloud Console](https://console.cloud.google.com/apis/credentials).
+Enable the Books API, restrict the key to the local example origins, and update
+[`GOOGLE_BOOKS_API_KEY`](examples/projects/shared/google-books-api-key.ts).
+
 ## Exploring module-based NgRx
 
 [`ngrx-books`](examples/projects/ngrx-books) is the original NgRx-style
@@ -99,7 +106,7 @@ feature service and invoke direct methods such as `search(query)`.
 The [Find Book page](examples/projects/svc-books/src/app/books/containers/find-book-page.component.ts)
 shows the resulting component API: it reads service Signals and calls
 `booksService.search(query)`. This provides a useful comparison with EVST's
-event-first boundary.
+event-driven boundary.
 
 ## Choosing an example
 
@@ -108,7 +115,7 @@ The appropriate starting point depends on the architecture under study:
 - **Module-based NgRx** shows the established NgRx architecture.
 - **Standalone NgRx** shows the same Store model with current Angular provider
   composition.
-- **EVST** shows event-first feature boundaries while retaining NgRx, Effects,
+- **EVST** shows event-driven feature boundaries while retaining NgRx, Effects,
   DevTools, and entity adapters.
 - **Service-owned state** provides a comparison with a direct command API built
   from Angular Signals and RxJS.

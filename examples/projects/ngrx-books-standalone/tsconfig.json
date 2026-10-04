@@ -2,7 +2,10 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./src",
-    "paths": { "@example-app/*": ["app/*"] },
+    "paths": {
+      "@example-app/*": ["app/*"],
+      "@books-example/config": ["../../shared/google-books-api-key.ts"]
+    },
     "types": ["vitest/globals", "node"]
   },
   "files": [],

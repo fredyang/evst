@@ -23,27 +23,24 @@ import {
 } from "./books.events";
 
 export const booksTasks = tasks((on) => ({
-  search: on(fromFindBookPage.searchQueryChanged, (pipe) => {
-    const googleBooks = inject(GoogleBooksService);
-
-    return pipe(
-      debounceTime(300),
-
-      switchMap(({ query }) => {
-        if (query === "") return EMPTY;
-
-        return googleBooks.searchBooks(query).pipe(
-          takeUntil(pipe(skip(1))),
-
-          map((books) => fromBooksApi.searchSuccess({ books })),
-
-          catchError((error) =>
-            of(fromBooksApi.searchFailure({ errorMsg: error.message })),
-          ),
-        );
-      }),
-    );
-  }),
+  search: on(
+    fromFindBookPage.searchQueryChanged,
+    (pipe, googleBooks = inject(GoogleBooksService)) => {
+      return pipe(
+        debounceTime(300),
+        switchMap(({ query }) => {
+          if (query === "") return EMPTY;
+          return googleBooks.searchBooks(query).pipe(
+            takeUntil(pipe(skip(1))),
+            map((books) => fromBooksApi.searchSuccess({ books })),
+            catchError((error) =>
+              of(fromBooksApi.searchFailure({ errorMsg: error.message })),
+            ),
+          );
+        }),
+      );
+    },
+  ),
 
   // eslint-disable-next-line evst/require-task-event -- Validates the required storage capability when the Books feature initializes.
   checkStorageSupport: on(
@@ -56,9 +53,7 @@ export const booksTasks = tasks((on) => ({
     (pipe, storage = inject(BookStorageService)) =>
       pipe(
         switchMap(() => storage.getCollection()),
-
         map((books) => fromCollectionApi.loadBooksSuccess({ books })),
-
         catchError((error) =>
           of(fromCollectionApi.loadBooksFailure({ error })),
         ),
@@ -72,7 +67,6 @@ export const booksTasks = tasks((on) => ({
         mergeMap(({ book }) =>
           storage.addToCollection([book]).pipe(
             map(() => fromCollectionApi.addBookSuccess({ book })),
-
             catchError(() => of(fromCollectionApi.addBookFailure({ book }))),
           ),
         ),
