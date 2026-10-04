@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      HUSKY: "0"
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - run: npm run docs:api
+      - run: npx tsc --noEmit -p examples/projects/ngrx-books/tsconfig.app.json
+      - run: npx tsc --noEmit -p examples/projects/ngrx-books-standalone/tsconfig.app.json
+      - run: npx tsc --noEmit -p examples/projects/evst-books/tsconfig.app.json
+      - run: npx tsc --noEmit -p examples/projects/svc-books/tsconfig.app.json
+      - run: npm run test:ngrx-books
+      - run: npm run test:ngrx-books-standalone
+      - run: npm run test:evst-books
+      - run: npm run lint:evst-books
+      - run: npm run lint:ngrx-books-standalone
+      - run: npm run lint:svc-books
+      - run: npm pack --workspaces --dry-run

@@ -4,6 +4,21 @@
   <strong>A minimalist, event-driven facade for NgRx Store.</strong>
 </div>
 
+<p align="center">
+  <a href="https://github.com/fredyang/evst/actions/workflows/ci.yml">
+    <img src="https://github.com/fredyang/evst/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" />
+  </a>
+  <a href="https://www.npmjs.com/package/@evst/store">
+    <img src="https://img.shields.io/npm/v/%40evst%2Fstore" alt="npm: @evst/store" />
+  </a>
+  <a href="https://www.npmjs.com/package/@evst/eslint-plugin">
+    <img src="https://img.shields.io/npm/v/%40evst%2Feslint-plugin" alt="npm: @evst/eslint-plugin" />
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" />
+  </a>
+</p>
+
 - [What is EVST and why?](#what-is-evst-and-why)
 - [Understanding the coding model](#understanding-the-coding-model)
 - [Provider code](#provider-code)
