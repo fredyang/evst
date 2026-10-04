@@ -6,7 +6,7 @@ import {
   ViewBookPageComponent,
 } from "@example-app/books/containers";
 import { bookExistsGuard } from "@example-app/books/guards";
-import { booksBundle } from "./store/books.bundle";
+import { booksBundle } from "./evst/books.bundle";
 
 export const booksRoutes: Routes = [
   {

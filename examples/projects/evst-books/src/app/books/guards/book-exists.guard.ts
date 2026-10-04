@@ -4,8 +4,8 @@ import { Observable, of } from "rxjs";
 import { catchError, filter, map, switchMap, take, tap } from "rxjs/operators";
 
 import { GoogleBooksService } from "@example-app/core/services";
-import { fromBookExistsGuard } from "@example-app/books/store/books.events";
-import { booksViews } from "@example-app/books/store/books.state";
+import { fromBookExistsGuard } from "@example-app/books/evst/books.events";
+import { booksViews } from "@example-app/books/evst/books.state";
 
 /**
  * Guards are hooks into the route resolution process, providing an opportunity

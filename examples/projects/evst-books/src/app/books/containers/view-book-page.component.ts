@@ -3,7 +3,7 @@ import { ActivatedRoute } from "@angular/router";
 import { Subscription } from "rxjs";
 import { map } from "rxjs/operators";
 
-import { fromViewBookPage } from "@example-app/books/store/books.events";
+import { fromViewBookPage } from "@example-app/books/evst/books.events";
 import { SelectedBookPageComponent } from "./selected-book-page.component";
 
 /**

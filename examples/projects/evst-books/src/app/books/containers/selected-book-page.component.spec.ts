@@ -2,14 +2,14 @@ import { signal } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 
-import { fromSelectedBookPage } from "@example-app/books/store/books.events";
+import { fromSelectedBookPage } from "@example-app/books/evst/books.events";
 import {
   BookAuthorsComponent,
   BookDetailComponent,
 } from "@example-app/books/components";
 import { SelectedBookPageComponent } from "@example-app/books/containers";
 import { Book, generateMockBook } from "@example-app/books/models";
-import { booksViews } from "@example-app/books/store/books.state";
+import { booksViews } from "@example-app/books/evst/books.state";
 import { AddCommasPipe } from "@example-app/shared/pipes/add-commas.pipe";
 
 describe("Selected Book Page", () => {

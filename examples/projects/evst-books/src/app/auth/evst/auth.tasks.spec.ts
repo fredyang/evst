@@ -4,7 +4,7 @@ import { Router } from "@angular/router";
 import { Actions } from "@ngrx/effects";
 import type { Action } from "@ngrx/store";
 import { AuthService } from "../services/auth.service";
-import { fromUser } from "../../core/store/core.events";
+import { fromUser } from "../../core/evst/core.events";
 import { of, Subject, throwError, type Observable } from "rxjs";
 import { vi } from "vitest";
 import {

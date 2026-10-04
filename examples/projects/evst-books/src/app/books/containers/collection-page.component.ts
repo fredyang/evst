@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 
-import { fromCollectionPage } from "@example-app/books/store/books.events";
-import { booksViews } from "@example-app/books/store/books.state";
+import { fromCollectionPage } from "@example-app/books/evst/books.events";
+import { booksViews } from "@example-app/books/evst/books.state";
 import { MatCard, MatCardTitle } from "@angular/material/card";
 import { BookPreviewListComponent } from "../components/book-preview-list.component";
 

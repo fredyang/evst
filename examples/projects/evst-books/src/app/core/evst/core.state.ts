@@ -1,5 +1,5 @@
 import { state } from "@evst/store";
-import { fromAuth } from "../../auth/store/auth.events";
+import { fromAuth } from "../../auth/evst/auth.events";
 import { fromLayout } from "./core.events";
 
 export const coreState = state("core", { showSidenav: false })

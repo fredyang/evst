@@ -6,7 +6,7 @@ import { of } from "rxjs";
 import { catchError, exhaustMap, map, tap } from "rxjs/operators";
 import { LogoutConfirmationDialogComponent } from "../components/logout-confirmation-dialog.component";
 import { AuthService } from "../services/auth.service";
-import { fromUser } from "../../core/store/core.events";
+import { fromUser } from "../../core/evst/core.events";
 import {
   fromAuth,
   fromAuthApi,

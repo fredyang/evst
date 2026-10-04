@@ -82,13 +82,13 @@ EVST's Event, View, State, and Task model. Its
 
 Provider code is grouped by intent:
 
-- [Events](examples/projects/evst-books/src/app/books/store/books.events.ts)
+- [Events](examples/projects/evst-books/src/app/books/evst/books.events.ts)
   name what happened and where it happened.
-- [State](examples/projects/evst-books/src/app/books/store/books.state.ts)
+- [State](examples/projects/evst-books/src/app/books/evst/books.state.ts)
   defines state transitions and derived Views.
-- [Tasks](examples/projects/evst-books/src/app/books/store/books.tasks.ts)
+- [Tasks](examples/projects/evst-books/src/app/books/evst/books.tasks.ts)
   perform API and storage work and return outcome events.
-- The [bundle](examples/projects/evst-books/src/app/books/store/books.bundle.ts)
+- The [bundle](examples/projects/evst-books/src/app/books/evst/books.bundle.ts)
   registers the State and Tasks together.
 
 Consumer code does not inject `Store`. The

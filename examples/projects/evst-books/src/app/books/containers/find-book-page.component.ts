@@ -1,7 +1,7 @@
 import { Component } from "@angular/core";
 
-import { fromFindBookPage } from "@example-app/books/store/books.events";
-import { booksViews } from "@example-app/books/store/books.state";
+import { fromFindBookPage } from "@example-app/books/evst/books.events";
+import { booksViews } from "@example-app/books/evst/books.state";
 import { BookSearchComponent } from "../components/book-search.component";
 import { BookPreviewListComponent } from "../components/book-preview-list.component";
 

@@ -10,7 +10,7 @@ import {
   fromSelectedBookPage,
   fromViewBookPage,
 } from "./books.events";
-import { fromAuth } from "@example-app/auth/store/auth.events";
+import { fromAuth } from "@example-app/auth/evst/auth.events";
 interface EntityBooksState extends EntityState<Book> {
   selectedBookId: string | null;
 }

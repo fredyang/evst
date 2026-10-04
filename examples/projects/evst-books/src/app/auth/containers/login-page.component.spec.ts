@@ -3,8 +3,8 @@ import { TestBed, ComponentFixture } from "@angular/core/testing";
 import { ReactiveFormsModule } from "@angular/forms";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { LoginPageComponent } from "@example-app/auth/containers";
-import { authViews } from "@example-app/auth/store/auth.state";
-import { fromLoginPage } from "@example-app/auth/store/auth.events";
+import { authViews } from "@example-app/auth/evst/auth.state";
+import { fromLoginPage } from "@example-app/auth/evst/auth.events";
 
 describe("Login Page", () => {
   let fixture: ComponentFixture<LoginPageComponent>;

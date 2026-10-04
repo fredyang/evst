@@ -1,8 +1,8 @@
 import { Component } from "@angular/core";
 
 import { Book } from "@example-app/books/models";
-import { fromSelectedBookPage } from "@example-app/books/store/books.events";
-import { booksViews } from "@example-app/books/store/books.state";
+import { fromSelectedBookPage } from "@example-app/books/evst/books.events";
+import { booksViews } from "@example-app/books/evst/books.state";
 import { BookDetailComponent } from "../components/book-detail.component";
 
 @Component({

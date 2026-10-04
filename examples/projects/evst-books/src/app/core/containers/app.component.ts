@@ -1,9 +1,9 @@
 import { Component } from "@angular/core";
 
-import { fromAuth } from "@example-app/auth/store/auth.events";
-import { authViews } from "@example-app/auth/store/auth.state";
-import { fromLayout } from "@example-app/core/store/core.events";
-import { coreViews } from "@example-app/core/store/core.state";
+import { fromAuth } from "@example-app/auth/evst/auth.events";
+import { authViews } from "@example-app/auth/evst/auth.state";
+import { fromLayout } from "@example-app/core/evst/core.events";
+import { coreViews } from "@example-app/core/evst/core.state";
 import { LayoutComponent } from "../components/layout.component";
 import { SidenavComponent } from "../components/sidenav.component";
 import { NgIf } from "@angular/common";

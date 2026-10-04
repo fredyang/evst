@@ -1,4 +1,4 @@
-import { fromAuth } from "../../auth/store/auth.events";
+import { fromAuth } from "../../auth/evst/auth.events";
 import { fromLayout } from "./core.events";
 import { coreState } from "./core.state";
 

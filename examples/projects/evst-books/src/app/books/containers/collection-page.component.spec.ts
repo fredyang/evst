@@ -3,14 +3,14 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import { fromCollectionPage } from "@example-app/books/store/books.events";
+import { fromCollectionPage } from "@example-app/books/evst/books.events";
 import {
   BookAuthorsComponent,
   BookPreviewComponent,
   BookPreviewListComponent,
 } from "@example-app/books/components";
 import { CollectionPageComponent } from "@example-app/books/containers";
-import { booksViews } from "@example-app/books/store/books.state";
+import { booksViews } from "@example-app/books/evst/books.state";
 import { AddCommasPipe } from "@example-app/shared/pipes/add-commas.pipe";
 import { EllipsisPipe } from "@example-app/shared/pipes/ellipsis.pipe";
 
