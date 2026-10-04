@@ -1,33 +1,40 @@
-<h1 align="center">EVST - Event, View, State, Task</h1>
+<div align="center">
+  <h1>EVST</h1>
+  <strong>Event, View, State, Task</strong><br />
+  <strong>A minimalist, event-driven facade for NgRx Store.</strong>
+</div>
 
-<p align="center">
-  <strong>The minimalist, event-driven facade for NgRx Store.</strong>
-</p>
-
-- [Why EVST?](#why-evst)
-- [Understanding the model](#understanding-the-model)
+- [What is EVST and why?](#what-is-evst-and-why)
+- [Understanding the coding model](#understanding-the-coding-model)
 - [Provider code](#provider-code)
   - [Modeling events](#modeling-events)
   - [Modeling State and Views](#modeling-state-and-views)
   - [Defining Tasks](#defining-tasks)
 - [Consumer code](#consumer-code)
 - [Registering state](#registering-state)
-- [Using the ESLint rules](#using-the-eslint-rules)
+- [Enforcing event-driven code](#enforcing-event-driven-code)
+- [Exploring the Books examples](#exploring-the-books-examples)
 - [Working with NgRx](#working-with-ngrx)
 - [Testing and developing](#testing-and-developing)
+- [Developing the workspace](#developing-the-workspace)
+- [Packaging](#packaging)
 
-## Why EVST?
+## What is EVST and why?
 
-NgRx is event-driven at its core: Actions describe what happened, and reducers
-and effects decide how the application responds. Its APIs also permit
-command-shaped Actions that coordinate a specific response. EVST makes an
-event-first style explicit when using NgRx.
+EVST is a minimalist, event-driven facade for NgRx Store. It organizes feature
+code around four concepts: Event, View, State, and Task. It retains NgRx Store,
+Effects, DevTools, and ecosystem compatibility.
 
-NgRx is a high-quality implementation of the Redux pattern, but its low-level
-APIs expose many implementation details: Actions, reducers, selectors, effects,
-and providers. EVST aligns them around Event, View, State, and Task, using a
-fluent API to reduce the boilerplate needed for a feature without replacing
-NgRx.
+NgRx is event-driven at its core, but its APIs also allow command-shaped
+Actions that coordinate a particular response. EVST makes an event-driven style
+explicit: events describe what happened, while State and Task decide how the
+application responds.
+
+NgRx provides Actions, reducers, selectors, and effects as separate APIs,
+typically scattered across several files. That can make a feature harder to
+navigate and its behavior harder to track. EVST encapsulates those APIs in four
+concepts - Event, View, State, and Task - and organizes feature code more
+cohesively with less boilerplate, without replacing NgRx.
 
 ## Understanding the coding model
 
@@ -128,11 +135,9 @@ export const booksViews = booksState.views;
 
 ### Defining Tasks
 
-Tasks respond to events and return outcome events. Several independent Tasks
-may respond to the same event - for example, one can start an API request while
-another records analytics. Like State `.on()`, Task `on()` pairs an event with
-its handler. It creates a functional NgRx Effect with `createEffect()` and
-filters events for that handler.
+Tasks respond to events and return outcome events. Like State `.on()`, Task
+`on()` pairs an event with its handler. It creates a functional NgRx Effect
+with `createEffect()` and filters events for that handler.
 
 ```ts
 import { HttpClient } from "@angular/common/http";
@@ -142,9 +147,7 @@ import { catchError, exhaustMap, map, of } from "rxjs";
 import { fromBooksApi, fromBooksPage } from "./books.events";
 
 export const booksTasks = tasks((on) => ({
-  load: on(fromBooksPage.entered, (pipe) => {
-    const http = inject(HttpClient);
-
+  load: on(fromBooksPage.entered, (pipe, http = inject(HttpClient)) => {
     return pipe(
       exhaustMap(() =>
         http.get<Book[]>("/api/books").pipe(
@@ -161,17 +164,9 @@ export const booksTasks = tasks((on) => ({
 
 ## Consumer code
 
-Consumer code reads Views and publishes events rather than coordinating through
-`store.select(...)` and `store.dispatch(...)`. It does not need to know which
-State or Task reacts to an event, keeping consumer code focused on what is
+Consumer code is about consuming Views and publishing events. It does not need
+to know which State or Task reacts to an event, keeping it focused on what is
 displayed and what happened.
-
-Publishing events alone does not make code event-driven. An event should have
-one publishing boundary, and an executable boundary should publish only one
-event. **Publishing the same event in several places, or publishing several
-events in sequence, turns events into commands that coordinate work.** The
-`event-publisher-ownership` and `no-sequential-event-publishes` ESLint rules
-report these patterns.
 
 ```ts
 import { Component, OnInit } from "@angular/core";
@@ -202,6 +197,30 @@ export class BooksPageComponent implements OnInit {
   }
 }
 ```
+
+The component consumes the `books` and `loading` Views as Signals. It publishes
+`fromBooksPage.entered` when the Books Page is entered and
+`fromBooksPage.bookSelected` when a user selects a book. Those events belong to
+the Books Page event source and are published by that source.
+
+Views are consumed directly as Signals and events are published directly with
+`.publish()`. The component does not need `store.select(...)` or
+`store.dispatch(...)`.
+
+Whether code is event-driven is determined by what it publishes and where it is
+published. By contrast, a command-shaped Action describes work for a handler,
+such as `loadBooks`, and can be dispatched by any caller that wants that work
+performed.
+
+An event has one publishing boundary: it is not published from several places.
+An executable boundary also publishes only one event: events are not published
+in sequence to coordinate work. Command-shaped Actions do not have these
+constraints - a command may be dispatched by several callers or several
+commands may be dispatched in sequence.
+
+**Event-driven programming is a usage discipline, not a philosophical label.**
+The `event-publisher-ownership` and `no-sequential-event-publishes` ESLint
+rules enforce these constraints.
 
 `.signal()` is the default for component rendering. Views also expose
 `.observable()` for RxJS composition or template use with Angular's `AsyncPipe`:
@@ -244,11 +263,13 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-## Using the ESLint rules
+## Enforcing event-driven code
 
-`@evst/eslint-plugin` encodes the event-first conventions:
+An API alone cannot ensure that events are used in an event-driven way.
+`@evst/eslint-plugin` makes EVST's event-driven conventions enforceable and is
+an important part of maintaining a high-quality EVST codebase:
 
-- The preset requires event groups to use `fromXxx` source-oriented names.
+- The preset requires event groups to use `fromSource` source-oriented names.
 - An event has one publishing boundary.
 - One executable boundary publishes one event.
 - A State handles an event once.
@@ -270,12 +291,31 @@ export default tseslint.config({
 Warnings can be suppressed for intentional exceptions. The EVST preset requires
 a reason after `--` for Task-source and manual View-subscription suppressions.
 
+## Exploring the Books examples
+
+The [Books examples](example.md) provide a full, side-by-side demonstration of
+EVST. Each application has identical UI and behavior, so the differences in
+code are attributable to its Angular and state-management architecture.
+
+[`ngrx-books`](examples/projects/ngrx-books) is the original NgRx example.
+[`ngrx-books-standalone`](examples/projects/ngrx-books-standalone) retains the
+same Store model with standalone components. [`evst-books`](examples/projects/evst-books)
+uses EVST while retaining NgRx Store and Effects, making its reduced boilerplate
+and consumer-facing View and event API directly comparable. A service-only
+version provides an additional comparison.
+
 ## Working with NgRx
 
-EVST does not replace NgRx. Its events are NgRx actions, State is an NgRx feature
-reducer, Views are memoized NgRx selectors, and Tasks are functional NgRx
-effects. Standard NgRx APIs, including entity adapters, router state,
-meta-reducers, and DevTools, remain available where they fit the feature.
+EVST is a facade over NgRx, not a replacement. Under the hood, it uses native
+NgRx APIs to build its objects: event creators produce NgRx Actions, a View is
+a callable memoized NgRx selector, State exposes a feature reducer, and a Task
+collection exposes functional NgRx Effects.
+
+EVST feature code is normally clearer when it uses Views and events rather than
+mixing in direct Store APIs. The underlying NgRx objects remain compatible and
+available when direct integration is needed. Entity adapters, router state,
+meta-reducers, DevTools, and other standard NgRx APIs can still be used where
+they fit the feature.
 
 `provideEvst()` initializes an empty root reducer map and enables Redux DevTools
 in Angular development mode. It accepts NgRx root Store configuration and
@@ -383,6 +423,6 @@ npm test --workspace @evst/eslint-plugin
 npm run pack:all
 ```
 
-This creates installable archives for both packages. The packages retain their
-MIT [license](LICENSE). Attribution for the adapted NgRx rule appears in the
-[@evst/eslint-plugin README](packages/eslint-plugin/README.md).
+This creates installable archives for both packages. EVST is MIT-licensed; see
+the [license](LICENSE). The [third-party notices](NOTICE) acknowledge the NgRx
+Books examples.
