@@ -56,7 +56,7 @@ cohesively with less boilerplate, without replacing NgRx.
 The four EVST objects form the provider API. Components are consumer code and
 interact only with Views and events.
 
-![EVST coding model](images/ngrx-evntify-coding-model.png)
+![EVST coding model](images/evst.png)
 
 | Object    | Role                                                                                  |
 | --------- | ------------------------------------------------------------------------------------- |
