@@ -66,8 +66,7 @@ export const authState = state("auth", {
       status: initialStatusState,
     })),
   }))
-
-  .withViews(({ status, loginPage }) => ({
+  .extraViews(({ status, loginPage }) => ({
     user: view(status, (value) => value.user),
 
     loggedIn: view(status, (value) => Boolean(value.user)),

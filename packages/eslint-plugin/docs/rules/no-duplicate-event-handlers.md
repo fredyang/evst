@@ -5,15 +5,22 @@ same event make the resulting state transition harder to understand.
 
 ```ts
 // Reported
-const booksState = state("books", initialState)
-  .on(BooksEvents.loaded, (state) => ({ ...state, loading: false }))
-  .on(BooksEvents.loaded, (state) => ({ ...state, loaded: true }));
+const booksState = state("books", initialState).handle((on) => ({
+  finishLoading: on(BooksEvents.loaded, (state) => ({
+    ...state,
+    loading: false,
+  })),
+  markLoaded: on(BooksEvents.loaded, (state) => ({ ...state, loaded: true })),
+}));
 
 // Accepted
-const booksState = state("books", initialState).on(
-  BooksEvents.loaded,
-  (state) => ({ ...state, loading: false, loaded: true }),
-);
+const booksState = state("books", initialState).handle((on) => ({
+  finishLoading: on(BooksEvents.loaded, (state) => ({
+    ...state,
+    loading: false,
+    loaded: true,
+  })),
+}));
 ```
 
 The rule checks fluent chains that begin with `state(...)`. It compares event

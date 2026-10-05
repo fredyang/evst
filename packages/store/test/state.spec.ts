@@ -44,12 +44,12 @@ it("creates reducers from named handlers", () => {
 it("composes successive extra views once and retains their types and caches", () => {
   const build = vi.fn();
   const base = state("counter", { count: 0 });
-  const first = base.withViews(({ count }) => {
+  const first = base.extraViews(({ count }) => {
     build();
     return { doubled: view(count, (n) => n * 2) };
   });
   const next = first
-    .withViews(({ doubled }) => ({
+    .extraViews(({ doubled }) => ({
       text: view(doubled, (n) => String(n)),
     }))
     .on(add, (s, { amount }) => ({ count: s.count + amount }));
@@ -67,10 +67,10 @@ it("composes successive extra views once and retains their types and caches", ()
   expectTypeOf(next.views.text.observable).returns.toEqualTypeOf<
     import("rxjs").Observable<string>
   >();
-  expect(() => first.withViews(({ count }) => ({ count }))).toThrow(
+  expect(() => first.extraViews(({ count }) => ({ count }))).toThrow(
     "conflicts",
   );
-  expect(() => first.withViews(({ doubled }) => ({ doubled }))).toThrow(
+  expect(() => first.extraViews(({ doubled }) => ({ doubled }))).toThrow(
     "conflicts",
   );
   expect(() => state("bad", { root: 0 })).toThrow("reserved");

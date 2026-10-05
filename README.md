@@ -110,8 +110,8 @@ effects, and DevTools.
 
 `state()` infers the feature-state shape from its initial-state object and
 automatically exposes a typed View for each top-level field. Optionally,
-`.withViews()` composes additional derived Views from those default Views, while
-`.on()` mirrors NgRx reducer `on()` semantics by adding pure event handlers.
+`.extraViews()` composes derived Views from those default Views. `.handle()`
+adds named, pure event handlers; names document each state transition.
 
 ```ts
 import { state, view } from "@evst/store";
@@ -124,25 +124,27 @@ const initialState = {
 };
 
 export const booksState = state("books", initialState)
-  .withViews(({ books, selectedId }) => ({
+  .extraViews(({ books, selectedId }) => ({
     selectedBook: view(
       books,
       selectedId,
       (books, id) => books.find((book) => book.id === id) ?? null,
     ),
   }))
-  .on(fromBooksPage.entered, (current) => ({
-    ...current,
-    loading: true,
-  }))
-  .on(fromBooksApi.loaded, (current, { books }) => ({
-    ...current,
-    books,
-    loading: false,
-  }))
-  .on(fromBooksPage.bookSelected, (current, { id }) => ({
-    ...current,
-    selectedId: id,
+  .handle((on) => ({
+    beginLoading: on(fromBooksPage.entered, (current) => ({
+      ...current,
+      loading: true,
+    })),
+    storeBooks: on(fromBooksApi.loaded, (current, { books }) => ({
+      ...current,
+      books,
+      loading: false,
+    })),
+    selectBook: on(fromBooksPage.bookSelected, (current, { id }) => ({
+      ...current,
+      selectedId: id,
+    })),
   }));
 
 export const booksViews = booksState.views;
@@ -150,18 +152,18 @@ export const booksViews = booksState.views;
 
 ### Defining Tasks
 
-Tasks respond to events and return outcome events. Like State `.on()`, Task
+Tasks respond to events and return outcome events. Like State `.handle()`, Task
 `on()` pairs an event with its handler. It creates a functional NgRx Effect
 with `createEffect()` and filters events for that handler.
 
 ```ts
 import { HttpClient } from "@angular/common/http";
 import { inject } from "@angular/core";
-import { tasks } from "@evst/store";
+import { task } from "@evst/store";
 import { catchError, exhaustMap, map, of } from "rxjs";
 import { fromBooksApi, fromBooksPage } from "./books.events";
 
-export const booksTasks = tasks((on) => ({
+export const booksTasks = task.handle((on) => ({
   load: on(fromBooksPage.entered, (pipe, http = inject(HttpClient)) => {
     return pipe(
       exhaustMap(() =>

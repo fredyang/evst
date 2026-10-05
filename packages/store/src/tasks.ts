@@ -32,10 +32,10 @@ type TaskDefinition<Source extends EffectSource = () => Observable<unknown>> =
  * @example
  * ```ts
  * const booksTasks = task.handle((on) => ({
- *   load: on(BooksPageEvents.entered, (pipe) =>
+ *   load: on(fromBooksPage.entered, (pipe) =>
  *     pipe(
  *       exhaustMap(() => booksApi.getAll()),
- *       map((books) => BooksApiEvents.loaded({ books })),
+ *       map((books) => fromBooksApi.loaded({ books })),
  *     ),
  *   ),
  * }));
@@ -143,6 +143,9 @@ class TasksCollection<
 /**
  * Defines a named task collection. Each returned property is registered as a
  * task and exposed under `.effects` with the same name.
+ * Definition keys are descriptive labels for tasks; they do not name subscribed
+ * events. The event creators passed to `on` determine which events each task
+ * receives.
  *
  * @param build - Creates named tasks with the supplied `on` builder.
  * @returns A task collection for `provide()` registration.
@@ -151,7 +154,7 @@ class TasksCollection<
  * @example
  * ```ts
  * const booksTasks = task.handle((on) => ({
- *   load: on(BooksPageEvents.entered, (pipe) => pipe(exhaustMap(loadBooks))),
+ *   load: on(fromBooksPage.entered, (pipe) => pipe(exhaustMap(loadBooks))),
  * }));
  * ```
  */
@@ -170,7 +173,10 @@ function handle<Definitions extends Record<string, TaskDefinition>>(
   return new TasksCollection(definitions);
 }
 
-/** Creates named task handlers. */
+/**
+ * Creates named task handlers. Definition keys label each task and are exposed
+ * under `.effects`; they do not determine which events the task receives.
+ */
 export const task = { handle };
 
 /**

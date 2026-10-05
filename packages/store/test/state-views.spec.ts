@@ -29,7 +29,7 @@ it("accepts typed handlers and preserves view memoization", () => {
       ...state,
       count: amount,
     }))
-    .withViews(({ count, loading }) => ({
+    .extraViews(({ count, loading }) => ({
       doubled: view(count, (count) => {
         expectTypeOf(count).toEqualTypeOf<number>();
         calls++;
@@ -114,7 +114,7 @@ it("reuses derived arrays until a declared dependency changes", () => {
     search: { ids: ["one"] },
     collection: [] as string[],
   };
-  const feature = createState("books", initial).withViews(
+  const feature = createState("books", initial).extraViews(
     ({ books, search }) => ({
       results: view(books, search, (books, search) => {
         calls++;
@@ -147,7 +147,7 @@ it("reuses derived arrays until a declared dependency changes", () => {
 });
 
 it("composes views and preserves the projector type", () => {
-  const feature = createState("counter", initialState).withViews(
+  const feature = createState("counter", initialState).extraViews(
     ({ count, loading }) => {
       const doubled = view(count, (count) => count * 2);
       return {
@@ -184,16 +184,16 @@ function definition() {
 it("infers state, payloads, views, and the reducer", () => {
   const feature = definition();
   expectTypeOf<keyof typeof feature>().toEqualTypeOf<
-    "views" | "reducer" | "provide" | "on" | "handle" | "withViews"
+    "views" | "reducer" | "provide" | "on" | "handle" | "extraViews"
   >();
   expectTypeOf(feature.reducer).returns.toEqualTypeOf<typeof initialState>();
   expect(Object.keys(feature).sort()).toEqual([
+    "extraViews",
     "handle",
     "on",
     "provide",
     "reducer",
     "views",
-    "withViews",
   ]);
   expectTypeOf(feature.views.count).returns.toEqualTypeOf<number>();
   expectTypeOf(feature.views.loading).returns.toEqualTypeOf<boolean>();
@@ -211,7 +211,7 @@ it("derives views from multiple state values with inferred types", () => {
   const feature = createState("books", {
     query: "",
     books: [] as { title: string }[],
-  }).withViews(({ query, books }) => ({
+  }).extraViews(({ query, books }) => ({
     filteredBooks: view(query, books, (query, books) => {
       expectTypeOf(query).toEqualTypeOf<string>();
       expectTypeOf(books).toEqualTypeOf<{ title: string }[]>();
@@ -236,7 +236,7 @@ it("rejects collisions with generated views", () => {
     'reserved view name "root"',
   );
   expect(() =>
-    createState("collision", initialState).withViews(({ count }) => ({
+    createState("collision", initialState).extraViews(({ count }) => ({
       count,
     })),
   ).toThrow("conflicts with an existing view");

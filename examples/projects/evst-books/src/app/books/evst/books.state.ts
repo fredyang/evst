@@ -33,8 +33,7 @@ const initialState: BooksState = {
 };
 
 export const booksState = state("books", initialState)
-  // define extra views
-  .withViews(({ books, search, collection }) => ({
+  .extraViews(({ books, search, collection }) => ({
     selectedBookId: view(books, (x) => x.selectedBookId),
 
     bookEntities: view(books, (x) => x.entities),
@@ -72,7 +71,7 @@ export const booksState = state("books", initialState)
     ),
   }))
   .handle((on) => ({
-    resetOnLogout: on(fromAuth.logout, () => initialState),
+    resetState: on(fromAuth.logout, () => initialState),
 
     applySearchResults: on(
       fromBooksApi.searchSuccess,
@@ -162,4 +161,5 @@ export const booksState = state("books", initialState)
       }),
     ),
   }));
+
 export const booksViews = booksState.views;

@@ -1,6 +1,6 @@
 # Working with EVST
 
-EVST is an event-first facade for NgRx Store. Its four concepts are Event,
+EVST is an event-driven facade for NgRx Store. Its four concepts are Event,
 View, State, and Task. Detailed guidance is in [the root README](README.md);
 generate the full JSDoc API reference with `npm run docs:api`.
 
@@ -10,9 +10,9 @@ generate the full JSDoc API reference with `npm run docs:api`.
   `fromSource` convention, such as `fromBooksPage`; event keys are camelCase,
   such as `bookSelected`.
 - Model feature state with `state(name, initialState)`. Initial-state fields
-  automatically provide Views. Use `.withViews()` for derived Views and `.on()`
-  for pure state transitions.
-- Define side effects with `tasks((on) => ({ ... }))`. Task `on()` handlers
+  automatically provide Views. Use `.extraViews()` for derived Views and
+  `.handle((on) => ({ ... }))` for pure state transitions.
+- Define side effects with `task.handle((on) => ({ ... }))`. Task `on()` handlers
   receive event-filtered observable pipelines and return outcome events.
 - Consumer code reads `state.views` through `.signal()` by default. Use
   `.observable()` for RxJS composition or Angular `AsyncPipe` templates.
@@ -22,7 +22,7 @@ generate the full JSDoc API reference with `npm run docs:api`.
 - Register the root once with `provideEvst()`, then register State and Task
   definitions through `.provide()` or `bundle(...).provide()`.
 
-## Preserving the event-first model
+## Preserving the event-driven model
 
 - An event has one publishing boundary.
 - An executable boundary publishes one event. Do not publish several events in

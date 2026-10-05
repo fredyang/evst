@@ -49,7 +49,7 @@ it("requires EVST Store registration before reading views", () => {
 
 it("reads generated and derived views with inferred signal types and equality options", () => {
   const { mock, selected } = createViewContext();
-  const feature = createState("counter", { count: 0 }).withViews(
+  const feature = createState("counter", { count: 0 }).extraViews(
     ({ count }) => ({ doubled: view(count, (count) => count * 2) }),
   );
   const countView = feature.views.count;
@@ -74,7 +74,7 @@ it("reads generated and derived views with inferred signal types and equality op
 
 it("creates observable views without an injection context", () => {
   const { mock } = createViewContext();
-  const feature = createState("counter", { count: 0 }).withViews(
+  const feature = createState("counter", { count: 0 }).extraViews(
     ({ count }) => ({ doubled: view(count, (count) => count * 2) }),
   );
   const countView = feature.views.count;
@@ -89,7 +89,7 @@ it("creates observable views without an injection context", () => {
 });
 
 it("attaches typed injection methods to root, field, and derived views", () => {
-  const feature = createState("counter", { count: 0 }).withViews(
+  const feature = createState("counter", { count: 0 }).extraViews(
     ({ count }) => ({
       doubled: view(count, (value) => value * 2),
     }),

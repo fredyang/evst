@@ -1,10 +1,10 @@
 # Reporting unused state views
 
-The rule reports a `withViews()` property when no statically named reference to
+The rule reports an `extraViews()` property when no statically named reference to
 the exported `*.views` object exists in the TypeScript program.
 
 ```ts
-export const authState = state("auth", initialState).withViews(() => ({
+export const authState = state("auth", initialState).extraViews(() => ({
   user: view((state) => state.user), // Reported
   loggedIn: view((state) => Boolean(state.user)),
 }));

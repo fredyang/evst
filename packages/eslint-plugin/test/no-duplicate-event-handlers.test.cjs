@@ -18,6 +18,7 @@ new RuleTester({ languageOptions: { parser } }).run(
       `const booksState = state("books", {}).on(BooksEvents.loaded, BooksEvents.refreshed, state => state);`,
       `const task = on(BooksEvents.loaded, () => {});`,
       `const next = booksState.on(BooksEvents.loaded, state => state);`,
+      `const booksState = state("books", {}).handle(on => ({ first: on(BooksEvents.loaded, state => state), second: on(BooksEvents.refreshed, state => state) }));`,
     ],
     invalid: [
       {
@@ -25,11 +26,15 @@ new RuleTester({ languageOptions: { parser } }).run(
         errors: [{ messageId, data: { event: "BooksEvents.loaded" } }],
       },
       {
-        code: `const booksState = state("books", {}).on(BooksEvents.loaded, state => state).withViews(() => ({})).on(BooksEvents.loaded, state => state);`,
+        code: `const booksState = state("books", {}).on(BooksEvents.loaded, state => state).extraViews(() => ({})).on(BooksEvents.loaded, state => state);`,
         errors: [{ messageId, data: { event: "BooksEvents.loaded" } }],
       },
       {
         code: `const booksState = state("books", {}).on(BooksEvents.loaded, BooksEvents.loaded, state => state);`,
+        errors: [{ messageId, data: { event: "BooksEvents.loaded" } }],
+      },
+      {
+        code: `const booksState = state("books", {}).handle(on => ({ first: on(BooksEvents.loaded, state => state), second: on(BooksEvents.loaded, state => state) }));`,
         errors: [{ messageId, data: { event: "BooksEvents.loaded" } }],
       },
     ],

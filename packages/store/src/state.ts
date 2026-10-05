@@ -66,8 +66,9 @@ export interface FeatureStateDefinition<
     ...args: [...Creators, ReducerTypes<State, Creators>["reducer"]]
   ): FeatureStateDefinition<State, ExtraViews>;
   /**
-   * Adds named state handlers. Names document each transition for readers and
-   * do not affect reducer behavior.
+   * Adds named state handlers. Definition keys are descriptive labels for each
+   * transition; they do not name events or affect reducer behavior. The event
+   * creators passed to `on` determine which events each handler receives.
    *
    * @param build - Creates named handlers with the supplied event `on` builder.
    * @returns A new definition containing the added handlers.
@@ -83,7 +84,7 @@ export interface FeatureStateDefinition<
    * @param build - Creates named derived views from the current views.
    * @returns A new definition containing the added views.
    */
-  withViews<Added extends Record<string, MemoizedSelector<object, any>>>(
+  extraViews<Added extends Record<string, MemoizedSelector<object, any>>>(
     build: (views: StateViews<State> & InjectableViews<ExtraViews>) => Added,
   ): FeatureStateDefinition<State, ExtraViews & Added>;
 }
@@ -91,7 +92,7 @@ export interface FeatureStateDefinition<
 /**
  * Defines feature state with typed handlers and memoized views.
  *
- * `.on()`, `.handle()`, and `.withViews()` return new definitions without
+ * `.handle()` and `.extraViews()` return new definitions without
  * changing earlier steps. Every step exposes `views`, `reducer`, and `provide()`;
  * no final `.build()` call is required. Registration uses the final definition.
  * Handlers must return state immutably.
@@ -128,7 +129,7 @@ export interface FeatureStateDefinition<
  *   collection: { loaded: false, loading: false, ids: [] },
  * };
  *
- * const booksState = state('books', initialState).withViews(
+ * const booksState = state('books', initialState).extraViews(
  *   ({ books, search, collection }) => ({
  *     selectedBook: view(books, books =>
  *       books.selectedBookId ? books.entities[books.selectedBookId] : undefined,
@@ -159,16 +160,16 @@ export interface FeatureStateDefinition<
  * import { props } from '@ngrx/store';
  * import { events, state, view } from '@evst/store';
  *
- * const CounterEvents = events('Counter', {
+ * const fromCounter = events('Counter', {
  *   added: props<{ amount: number }>(),
  * });
  *
  * export const counter = state('counter', { count: 0 }).handle(on => ({
- *   addAmount: on(CounterEvents.added, (current, { amount }) => ({
+ *   addAmount: on(fromCounter.added, (current, { amount }) => ({
  *     count: current.count + amount,
  *   })),
  * }))
- *   .withViews(({ count }) => ({
+ *   .extraViews(({ count }) => ({
  *     doubled: view(count, count => count * 2),
  *   }));
  *
@@ -177,21 +178,23 @@ export interface FeatureStateDefinition<
  * // readonly doubled$ = counter.views.doubled.observable();
  *
  * // Pure transition, without publishing or running tasks:
- * counter.reducer(undefined, CounterEvents.added({ amount: 3 }));
+ * counter.reducer(undefined, fromCounter.added({ amount: 3 }));
  * // { count: 3 }
  * ```
  *
  * @example Registering state and tasks
  * ```ts
  * import { state, provideEvst } from '@evst/store';
- * import { BooksEvents } from './books.events';
+ * import { fromBooksApi } from './books.events';
  * import { booksTasks } from './books.tasks';
  * import { initialBooksState } from './books.initial-state';
  *
- * const books = state('books', initialBooksState).on(
- *   BooksEvents.loaded,
- *   (current, { books }) => ({ ...current, books }),
- * );
+ * const books = state('books', initialBooksState).handle(on => ({
+ *   storeLoadedBooks: on(fromBooksApi.loaded, (current, { books }) => ({
+ *     ...current,
+ *     books,
+ *   })),
+ * }));
  *
  * const appConfig = {
  *   providers: [provideEvst(), books.provide(), booksTasks.provide()],
@@ -248,7 +251,7 @@ function chainState<
         [...handlers, ...Object.values(build(on as StateOn<State>))],
         views,
       ),
-    withViews: (build) => {
+    extraViews: (build) => {
       const added = build(views);
       for (const key of Object.keys(added)) {
         if (Object.hasOwn(views, key)) {

@@ -39,12 +39,54 @@ export default createRule<Options, MessageIds>({
       if (!collectHandlers(expression.callee.object, handledEvents))
         return false;
 
+      if (expression.callee.property.name === "handle") {
+        const [build] = expression.arguments;
+        if (build?.type === "ArrowFunctionExpression") {
+          collectNamedHandlers(build.body, handledEvents);
+        }
+        return true;
+      }
       if (expression.callee.property.name !== "on") return true;
 
-      for (const event of expression.arguments.slice(0, -1)) {
-        if (event.type === "SpreadElement") {
-          continue;
+      addEvents(expression.arguments.slice(0, -1), handledEvents);
+
+      return true;
+    }
+
+    function collectNamedHandlers(
+      body: TSESTree.Expression | TSESTree.BlockStatement,
+      handledEvents: Map<string, TSESTree.Expression>,
+    ): void {
+      const object =
+        body.type === "ObjectExpression"
+          ? body
+          : body.type === "BlockStatement"
+            ? body.body.find(
+                (statement): statement is TSESTree.ReturnStatement =>
+                  statement.type === "ReturnStatement" &&
+                  statement.argument?.type === "ObjectExpression",
+              )?.argument
+            : undefined;
+      if (!object || object.type !== "ObjectExpression") return;
+
+      for (const property of object.properties) {
+        if (
+          property.type === "Property" &&
+          property.value.type === "CallExpression" &&
+          property.value.callee.type === "Identifier" &&
+          property.value.callee.name === "on"
+        ) {
+          addEvents(property.value.arguments.slice(0, -1), handledEvents);
         }
+      }
+    }
+
+    function addEvents(
+      events: readonly TSESTree.CallExpressionArgument[],
+      handledEvents: Map<string, TSESTree.Expression>,
+    ): void {
+      for (const event of events) {
+        if (event.type === "SpreadElement") continue;
         const eventName = context.sourceCode.getText(event);
         if (handledEvents.has(eventName)) {
           context.report({
@@ -56,8 +98,6 @@ export default createRule<Options, MessageIds>({
         }
         handledEvents.set(eventName, event);
       }
-
-      return true;
     }
   },
 });

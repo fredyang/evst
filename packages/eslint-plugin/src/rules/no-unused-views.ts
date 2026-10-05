@@ -9,7 +9,7 @@ type MessageIds = typeof messageId;
 type Options = readonly [];
 
 /**
- * Reports statically unused properties declared through `state().withViews()`.
+ * Reports statically unused properties declared through `state().extraViews()`.
  *
  * The check uses the TypeScript program, rather than import text, so renamed
  * imports and barrel re-exports still resolve to the original `*.views` export.
@@ -89,7 +89,7 @@ function findViewDeclarations(
 
     const state = variables.get(variable.initializer.expression.text);
     const callback =
-      state?.initializer && findWithViewsCallback(state.initializer);
+      state?.initializer && findExtraViewsCallback(state.initializer);
     const object = callback && returnedObject(callback);
     const viewsSymbol = checker.getSymbolAtLocation(variable.name);
     if (!object || !viewsSymbol) continue;
@@ -105,16 +105,16 @@ function findViewDeclarations(
   return declarations;
 }
 
-function findWithViewsCallback(node: ts.Node): ts.ArrowFunction | undefined {
+function findExtraViewsCallback(node: ts.Node): ts.ArrowFunction | undefined {
   if (
     ts.isCallExpression(node) &&
     ts.isPropertyAccessExpression(node.expression) &&
-    node.expression.name.text === "withViews" &&
+    node.expression.name.text === "extraViews" &&
     ts.isArrowFunction(node.arguments[0])
   ) {
     return node.arguments[0];
   }
-  return ts.forEachChild(node, findWithViewsCallback);
+  return ts.forEachChild(node, findExtraViewsCallback);
 }
 
 function returnedObject(
