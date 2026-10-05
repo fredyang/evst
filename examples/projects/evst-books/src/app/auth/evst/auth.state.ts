@@ -29,40 +29,42 @@ export const authState = state("auth", {
   status: initialStatusState,
   loginPage: initialLoginPageState,
 })
-  .on(fromLoginPage.login, (current) => ({
-    ...current,
-    loginPage: {
-      ...current.loginPage,
-      error: null,
-      pending: true,
-    },
-  }))
+  .handle((on) => ({
+    beginLogin: on(fromLoginPage.login, (current) => ({
+      ...current,
+      loginPage: {
+        ...current.loginPage,
+        error: null,
+        pending: true,
+      },
+    })),
 
-  .on(fromAuthApi.loginSuccess, (current, { user }) => ({
-    ...current,
-    status: {
-      ...current.status,
-      user,
-    },
-    loginPage: {
-      ...current.loginPage,
-      error: null,
-      pending: false,
-    },
-  }))
+    applyLogin: on(fromAuthApi.loginSuccess, (current, { user }) => ({
+      ...current,
+      status: {
+        ...current.status,
+        user,
+      },
+      loginPage: {
+        ...current.loginPage,
+        error: null,
+        pending: false,
+      },
+    })),
 
-  .on(fromAuthApi.loginFailure, (current, { error }) => ({
-    ...current,
-    loginPage: {
-      ...current.loginPage,
-      error,
-      pending: false,
-    },
-  }))
+    recordLoginFailure: on(fromAuthApi.loginFailure, (current, { error }) => ({
+      ...current,
+      loginPage: {
+        ...current.loginPage,
+        error,
+        pending: false,
+      },
+    })),
 
-  .on(fromAuth.logout, (current) => ({
-    ...current,
-    status: initialStatusState,
+    clearSession: on(fromAuth.logout, (current) => ({
+      ...current,
+      status: initialStatusState,
+    })),
   }))
 
   .withViews(({ status, loginPage }) => ({

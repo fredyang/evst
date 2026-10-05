@@ -1,7 +1,7 @@
 import { inject } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
-import { tasks } from "@evst/store";
+import { task } from "@evst/store";
 import { of } from "rxjs";
 import { catchError, exhaustMap, map, tap } from "rxjs/operators";
 import { LogoutConfirmationDialogComponent } from "../components/logout-confirmation-dialog.component";
@@ -14,7 +14,7 @@ import {
   fromLoginPage,
 } from "./auth.events";
 
-export const authTasks = tasks((on) => ({
+export const authTasks = task.handle((on) => ({
   login: on(fromLoginPage.login, (pipe, service = inject(AuthService)) =>
     pipe(
       exhaustMap(({ credentials }) =>

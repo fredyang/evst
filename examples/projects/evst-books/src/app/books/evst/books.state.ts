@@ -71,86 +71,95 @@ export const booksState = state("books", initialState)
       (b, c) => !!b.selectedBookId && c.ids.includes(b.selectedBookId),
     ),
   }))
-  // event handlers to map a current state + event data to a new state
-  // Each `.on()` call defines how the state should change in response to specific events.
-  //
-  // Reset state on logout
-  .on(fromAuth.logout, () => initialState)
-  // Handle successful book search results
-  .on(fromBooksApi.searchSuccess, (current, { books }) => ({
-    ...current,
-    books: adapter.addMany(books, current.books),
-    search: {
-      ids: books.map((x) => x.id),
-      loading: false,
-      error: "",
-      query: current.search.query,
-    },
-  }))
-  // Handle successful collection load
-  .on(fromCollectionApi.loadBooksSuccess, (current, { books }) => ({
-    ...current,
-    books: adapter.addMany(books, current.books),
-    collection: { loaded: true, loading: false, ids: books.map((x) => x.id) },
-  }))
+  .handle((on) => ({
+    resetOnLogout: on(fromAuth.logout, () => initialState),
 
-  // Handle loading a single book through the guard
-  .on(fromBookExistsGuard.loadBook, (current, { book }) => {
-    const books = adapter.addOne(book, current.books);
-    return books === current.books ? current : { ...current, books };
-  })
+    applySearchResults: on(
+      fromBooksApi.searchSuccess,
+      (current, { books }) => ({
+        ...current,
+        books: adapter.addMany(books, current.books),
+        search: {
+          ids: books.map((x) => x.id),
+          loading: false,
+          error: "",
+          query: current.search.query,
+        },
+      }),
+    ),
 
-  .on(fromViewBookPage.selectBook, (current, { id }) => ({
-    ...current,
-    books: {
-      ...current.books,
-      selectedBookId: id,
-    },
-  }))
+    applyCollection: on(
+      fromCollectionApi.loadBooksSuccess,
+      (current, { books }) => ({
+        ...current,
+        books: adapter.addMany(books, current.books),
+        collection: {
+          loaded: true,
+          loading: false,
+          ids: books.map((x) => x.id),
+        },
+      }),
+    ),
 
-  .on(fromFindBookPage.searchQueryChanged, (current, { query }) => ({
-    ...current,
-    search:
-      query === ""
-        ? { ids: [], loading: false, error: "", query }
-        : { ...current.search, loading: true, error: "", query },
-  }))
-
-  .on(fromBooksApi.searchFailure, (current, { errorMsg }) => ({
-    ...current,
-    search: { ...current.search, loading: false, error: errorMsg },
-  }))
-
-  .on(fromCollectionPage.enter, (current) => ({
-    ...current,
-    collection: { ...current.collection, loading: true },
-  }))
-
-  .on(
-    fromSelectedBookPage.addBook,
-    fromCollectionApi.removeBookFailure,
-    (current, { book }) =>
-      current.collection.ids.includes(book.id)
-        ? current
-        : {
-            ...current,
-            collection: {
-              ...current.collection,
-              ids: [...current.collection.ids, book.id],
-            },
-          },
-  )
-
-  .on(
-    fromSelectedBookPage.removeBook,
-    fromCollectionApi.addBookFailure,
-    (current, { book }) => ({
-      ...current,
-      collection: {
-        ...current.collection,
-        ids: current.collection.ids.filter((id) => id !== book.id),
-      },
+    storeGuardBook: on(fromBookExistsGuard.loadBook, (current, { book }) => {
+      const books = adapter.addOne(book, current.books);
+      return books === current.books ? current : { ...current, books };
     }),
-  );
 
+    selectBook: on(fromViewBookPage.selectBook, (current, { id }) => ({
+      ...current,
+      books: { ...current.books, selectedBookId: id },
+    })),
+
+    beginSearch: on(
+      fromFindBookPage.searchQueryChanged,
+      (current, { query }) => ({
+        ...current,
+        search:
+          query === ""
+            ? { ids: [], loading: false, error: "", query }
+            : { ...current.search, loading: true, error: "", query },
+      }),
+    ),
+
+    recordSearchFailure: on(
+      fromBooksApi.searchFailure,
+      (current, { errorMsg }) => ({
+        ...current,
+        search: { ...current.search, loading: false, error: errorMsg },
+      }),
+    ),
+
+    beginCollectionLoad: on(fromCollectionPage.enter, (current) => ({
+      ...current,
+      collection: { ...current.collection, loading: true },
+    })),
+
+    addCollectionBook: on(
+      fromSelectedBookPage.addBook,
+      fromCollectionApi.removeBookFailure,
+      (current, { book }) =>
+        current.collection.ids.includes(book.id)
+          ? current
+          : {
+              ...current,
+              collection: {
+                ...current.collection,
+                ids: [...current.collection.ids, book.id],
+              },
+            },
+    ),
+
+    removeCollectionBook: on(
+      fromSelectedBookPage.removeBook,
+      fromCollectionApi.addBookFailure,
+      (current, { book }) => ({
+        ...current,
+        collection: {
+          ...current.collection,
+          ids: current.collection.ids.filter((id) => id !== book.id),
+        },
+      }),
+    ),
+  }));
 export const booksViews = booksState.views;

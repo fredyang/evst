@@ -17,7 +17,7 @@ async function lint(relativeFile) {
 
 describe("event usage", () => {
   it("recognizes events emitted by tasks as publications", async () => {
-    const messages = await lint("src/app/books/store/books.events.ts");
+    const messages = await lint("src/app/books/evst/books.events.ts");
     assert.deepEqual(
       messages.filter(
         (message) => message.ruleId === "evst/no-unpublished-events",
@@ -27,7 +27,7 @@ describe("event usage", () => {
   });
 
   it("reports events without a state or task subscription", async () => {
-    const messages = await lint("src/app/books/store/books.events.ts");
+    const messages = await lint("src/app/books/evst/books.events.ts");
     assert.deepEqual(
       messages
         .filter((message) => message.ruleId === "evst/no-unsubscribed-events")

@@ -21,9 +21,9 @@ type TaskDefinition<Source extends EffectSource = () => Observable<unknown>> =
   Task & Source;
 
 /**
- * Creates a task definition for a `tasks` collection.
+ * Creates a task definition for a `task.handle()` collection.
  *
- * The builder is supplied as `on` to the callback passed to `tasks`. A task
+ * The builder is supplied as `on` to the callback passed to `task.handle`.
  * can be defined from an observable source, or scoped to one through five
  * events.
  * Event-scoped tasks receive a `pipe` function whose source emits only the
@@ -31,7 +31,7 @@ type TaskDefinition<Source extends EffectSource = () => Observable<unknown>> =
  *
  * @example
  * ```ts
- * const booksTasks = tasks((on) => ({
+ * const booksTasks = task.handle((on) => ({
  *   load: on(BooksPageEvents.entered, (pipe) =>
  *     pipe(
  *       exhaustMap(() => booksApi.getAll()),
@@ -47,7 +47,7 @@ export interface TaskBuilder {
    *
    * @param source - Function that returns the task source observable.
    * @param options - NgRx effect configuration.
-   * @returns A task definition for a `tasks()` collection.
+   * @returns A task definition for a `task.handle()` collection.
    */
   <Source extends () => Observable<unknown>>(
     source: Source,
@@ -150,12 +150,12 @@ class TasksCollection<
  *
  * @example
  * ```ts
- * const booksTasks = tasks((on) => ({
+ * const booksTasks = task.handle((on) => ({
  *   load: on(BooksPageEvents.entered, (pipe) => pipe(exhaustMap(loadBooks))),
  * }));
  * ```
  */
-export function tasks<Definitions extends Record<string, TaskDefinition>>(
+function handle<Definitions extends Record<string, TaskDefinition>>(
   build: (on: TaskBuilder) => Definitions,
 ): Tasks<Definitions> {
   const definitions = build(createTask);
@@ -169,6 +169,14 @@ export function tasks<Definitions extends Record<string, TaskDefinition>>(
   }
   return new TasksCollection(definitions);
 }
+
+/** Creates named task handlers. */
+export const task = { handle };
+
+/**
+ * @deprecated Use `task.handle()` to align task and state handler definitions.
+ */
+export const tasks = handle;
 
 const createTask: TaskBuilder = ((...args: any[]): TaskDefinition => {
   const [first] = args;

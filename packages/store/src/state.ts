@@ -35,6 +35,7 @@ type StateViews<State> = {
 type StateOn<State> = <Creators extends readonly ActionCreator[]>(
   ...args: [...Creators, ReducerTypes<State, Creators>["reducer"]]
 ) => ReducerTypes<State, Creators>;
+type StateHandler<State extends object> = ReducerTypes<State, any>;
 
 /** An immutable state definition with composable handlers and views. */
 export interface FeatureStateDefinition<
@@ -65,6 +66,16 @@ export interface FeatureStateDefinition<
     ...args: [...Creators, ReducerTypes<State, Creators>["reducer"]]
   ): FeatureStateDefinition<State, ExtraViews>;
   /**
+   * Adds named state handlers. Names document each transition for readers and
+   * do not affect reducer behavior.
+   *
+   * @param build - Creates named handlers with the supplied event `on` builder.
+   * @returns A new definition containing the added handlers.
+   */
+  handle<Definitions extends Record<string, StateHandler<State>>>(
+    build: (on: StateOn<State>) => Definitions,
+  ): FeatureStateDefinition<State, ExtraViews>;
+  /**
    * Optionally adds named, derived views alongside the default field and `root`
    * views. The callback runs once; use the exported `view()` builder for each
    * derived view. Existing names, including `root`, cannot be overwritten.
@@ -80,7 +91,7 @@ export interface FeatureStateDefinition<
 /**
  * Defines feature state with typed handlers and memoized views.
  *
- * `.on()` and `.withViews()` return new definitions without
+ * `.on()`, `.handle()`, and `.withViews()` return new definitions without
  * changing earlier steps. Every step exposes `views`, `reducer`, and `provide()`;
  * no final `.build()` call is required. Registration uses the final definition.
  * Handlers must return state immutably.
@@ -152,10 +163,11 @@ export interface FeatureStateDefinition<
  *   added: props<{ amount: number }>(),
  * });
  *
- * export const counter = state('counter', { count: 0 })
- *   .on(CounterEvents.added, (current, { amount }) => ({
+ * export const counter = state('counter', { count: 0 }).handle(on => ({
+ *   addAmount: on(CounterEvents.added, (current, { amount }) => ({
  *     count: current.count + amount,
- *   }))
+ *   })),
+ * }))
  *   .withViews(({ count }) => ({
  *     doubled: view(count, count => count * 2),
  *   }));
@@ -227,6 +239,13 @@ function chainState<
         name,
         initialState,
         [...handlers, (on as StateOn<State>)(...args)],
+        views,
+      ),
+    handle: (build) =>
+      chainState(
+        name,
+        initialState,
+        [...handlers, ...Object.values(build(on as StateOn<State>))],
         views,
       ),
     withViews: (build) => {

@@ -1,5 +1,5 @@
 import { inject } from "@angular/core";
-import { tasks } from "@evst/store";
+import { task } from "@evst/store";
 import { defer, EMPTY, of } from "rxjs";
 import {
   catchError,
@@ -22,7 +22,7 @@ import {
   fromSelectedBookPage,
 } from "./books.events";
 
-export const booksTasks = tasks((on) => ({
+export const booksTasks = task.handle((on) => ({
   search: on(
     fromFindBookPage.searchQueryChanged,
     (pipe, googleBooks = inject(GoogleBooksService)) => {

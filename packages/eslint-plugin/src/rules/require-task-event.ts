@@ -32,7 +32,7 @@ export default createRule<Options, MessageIds>({
 
     return {
       CallExpression(node) {
-        if (!isTasksCall(node)) return;
+        if (!isTaskHandleCall(node)) return;
 
         const [builder] = node.arguments;
         if (
@@ -43,7 +43,7 @@ export default createRule<Options, MessageIds>({
         }
       },
       "CallExpression:exit"(node) {
-        if (!isTasksCall(node)) return;
+        if (!isTaskHandleCall(node)) return;
 
         const [builder] = node.arguments;
         if (
@@ -65,8 +65,16 @@ export default createRule<Options, MessageIds>({
   },
 });
 
-function isTasksCall(node: TSESTree.CallExpression): boolean {
-  return node.callee.type === "Identifier" && node.callee.name === "tasks";
+function isTaskHandleCall(node: TSESTree.CallExpression): boolean {
+  return (
+    (node.callee.type === "Identifier" && node.callee.name === "tasks") ||
+    (node.callee.type === "MemberExpression" &&
+      !node.callee.computed &&
+      node.callee.object.type === "Identifier" &&
+      node.callee.object.name === "task" &&
+      node.callee.property.type === "Identifier" &&
+      node.callee.property.name === "handle")
+  );
 }
 
 function isTaskBuilderCall(

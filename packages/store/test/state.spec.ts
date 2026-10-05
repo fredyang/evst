@@ -27,6 +27,20 @@ it("infers handlers and preserves independent branches", () => {
   expect(minus.reducer(undefined, add({ amount: 3 })).count).toBe(-3);
   expect(plus.views.count).toBe(base.views.count);
 });
+it("creates reducers from named handlers", () => {
+  const counter = state("namedCounter", { count: 0 }).handle((on) => ({
+    addAmount: on(add, (current, { amount }) => ({
+      count: current.count + amount,
+    })),
+    subtractAmount: on(other, (current, { amount }) => ({
+      count: current.count - amount,
+    })),
+  }));
+  expect(counter.reducer(undefined, add({ amount: 3 }))).toEqual({ count: 3 });
+  expect(counter.reducer({ count: 3 }, other({ amount: 1 }))).toEqual({
+    count: 2,
+  });
+});
 it("composes successive extra views once and retains their types and caches", () => {
   const build = vi.fn();
   const base = state("counter", { count: 0 });

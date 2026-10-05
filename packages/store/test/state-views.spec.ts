@@ -184,10 +184,11 @@ function definition() {
 it("infers state, payloads, views, and the reducer", () => {
   const feature = definition();
   expectTypeOf<keyof typeof feature>().toEqualTypeOf<
-    "views" | "reducer" | "provide" | "on" | "withViews"
+    "views" | "reducer" | "provide" | "on" | "handle" | "withViews"
   >();
   expectTypeOf(feature.reducer).returns.toEqualTypeOf<typeof initialState>();
   expect(Object.keys(feature).sort()).toEqual([
+    "handle",
     "on",
     "provide",
     "reducer",

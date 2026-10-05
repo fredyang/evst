@@ -93,7 +93,7 @@ export function isSubscription(node: ts.PropertyAccessExpression): boolean {
   return (
     ts.isIdentifier(parent.expression) &&
     parent.expression.text === "on" &&
-    isWithinTask(parent)
+    (isWithinTask(parent) || isWithinStateHandle(parent))
   );
 }
 
@@ -109,8 +109,27 @@ function isWithinTask(node: ts.Node): boolean {
   while (current) {
     if (
       ts.isCallExpression(current) &&
-      ts.isIdentifier(current.expression) &&
-      current.expression.text === "tasks"
+      ((ts.isIdentifier(current.expression) &&
+        current.expression.text === "tasks") ||
+        (ts.isPropertyAccessExpression(current.expression) &&
+          ts.isIdentifier(current.expression.expression) &&
+          current.expression.expression.text === "task" &&
+          current.expression.name.text === "handle"))
+    ) {
+      return true;
+    }
+    current = current.parent;
+  }
+  return false;
+}
+
+function isWithinStateHandle(node: ts.Node): boolean {
+  let current: ts.Node | undefined = node.parent;
+  while (current) {
+    if (
+      ts.isCallExpression(current) &&
+      ts.isPropertyAccessExpression(current.expression) &&
+      current.expression.name.text === "handle"
     ) {
       return true;
     }

@@ -6,7 +6,7 @@ import {
 import { createAction, provideStore, Store } from "@ngrx/store";
 import { map, of, type Observable } from "rxjs";
 import { expect, expectTypeOf, it } from "vitest";
-import { tasks } from "../src/index.js";
+import { task, tasks } from "../src/index.js";
 
 const clicked = createAction("[Test] Clicked");
 const doubleClicked = createAction(
@@ -27,13 +27,19 @@ const quintupleClicked = createAction(
 );
 
 it("exposes named generated effects", () => {
-  const registry = tasks((on) => ({
+  const registry = task.handle((on) => ({
     source: on((event = clicked()) => of(event)),
     complete: on(clicked, (pipe) => pipe(map(() => 1))),
   }));
 
   expect(registry.effects.source).toBeDefined();
   expect(registry.effects.complete).toBeDefined();
+});
+
+it("keeps tasks as a compatibility alias", () => {
+  expect(
+    tasks((on) => ({ complete: on(clicked, (pipe) => pipe()) })).effects,
+  ).toHaveProperty("complete");
 });
 
 it("forwards options to generated effects", () => {
