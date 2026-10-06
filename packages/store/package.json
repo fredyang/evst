@@ -1,6 +1,6 @@
 {
   "name": "@evst/store",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Event-first state management, built on NgRx.",
   "type": "module",
   "license": "MIT",
