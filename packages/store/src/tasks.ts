@@ -24,8 +24,7 @@ type TaskDefinition<Source extends EffectSource = () => Observable<unknown>> =
  * Creates a task definition for a `task.handle()` collection.
  *
  * The builder is supplied as `on` to the callback passed to `task.handle`.
- * can be defined from an observable source, or scoped to one through five
- * events.
+ * can be defined from an observable source, or scoped to one or more events.
  * Event-scoped tasks receive a `pipe` function whose source emits only the
  * selected event types.
  *
@@ -53,64 +52,19 @@ export interface TaskBuilder {
     source: Source,
     options?: EffectConfig,
   ): TaskDefinition<Source>;
-  /** Creates a task that runs for a single event type. */
-  <Creator extends ActionCreator>(
-    event: Creator,
-    source: (pipe: EventPipe<[Creator]>) => Observable<unknown>,
-    options?: EffectConfig,
+  /** Creates a task that runs for one or more event types. */
+  <Creators extends readonly ActionCreator[]>(
+    ...args: [
+      ...Creators,
+      source: (pipe: EventPipe<Creators>) => Observable<unknown>,
+    ]
   ): TaskDefinition;
-  /** Creates a task that runs for either of two event types. */
-  <First extends ActionCreator, Second extends ActionCreator>(
-    first: First,
-    second: Second,
-    source: (pipe: EventPipe<[First, Second]>) => Observable<unknown>,
-    options?: EffectConfig,
-  ): TaskDefinition;
-  /** Creates a task that runs for any of three event types. */
-  <
-    First extends ActionCreator,
-    Second extends ActionCreator,
-    Third extends ActionCreator,
-  >(
-    first: First,
-    second: Second,
-    third: Third,
-    source: (pipe: EventPipe<[First, Second, Third]>) => Observable<unknown>,
-    options?: EffectConfig,
-  ): TaskDefinition;
-  /** Creates a task that runs for any of four event types. */
-  <
-    First extends ActionCreator,
-    Second extends ActionCreator,
-    Third extends ActionCreator,
-    Fourth extends ActionCreator,
-  >(
-    first: First,
-    second: Second,
-    third: Third,
-    fourth: Fourth,
-    source: (
-      pipe: EventPipe<[First, Second, Third, Fourth]>,
-    ) => Observable<unknown>,
-    options?: EffectConfig,
-  ): TaskDefinition;
-  /** Creates a task that runs for any of five event types. */
-  <
-    First extends ActionCreator,
-    Second extends ActionCreator,
-    Third extends ActionCreator,
-    Fourth extends ActionCreator,
-    Fifth extends ActionCreator,
-  >(
-    first: First,
-    second: Second,
-    third: Third,
-    fourth: Fourth,
-    fifth: Fifth,
-    source: (
-      pipe: EventPipe<[First, Second, Third, Fourth, Fifth]>,
-    ) => Observable<unknown>,
-    options?: EffectConfig,
+  <Creators extends readonly ActionCreator[]>(
+    ...args: [
+      ...Creators,
+      source: (pipe: EventPipe<Creators>) => Observable<unknown>,
+      options: EffectConfig,
+    ]
   ): TaskDefinition;
 }
 

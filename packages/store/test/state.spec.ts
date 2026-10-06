@@ -29,9 +29,11 @@ it("infers handlers and preserves independent branches", () => {
 });
 it("creates reducers from named handlers", () => {
   const counter = state("namedCounter", { count: 0 }).handle((on) => ({
-    addAmount: on(add, (current, { amount }) => ({
-      count: current.count + amount,
-    })),
+    addAmount: on(add, (current, { amount }) => {
+      expectTypeOf(current).toEqualTypeOf<{ count: number }>();
+      expectTypeOf(amount).toEqualTypeOf<number>();
+      return { count: current.count + amount };
+    }),
     subtractAmount: on(other, (current, { amount }) => ({
       count: current.count - amount,
     })),

@@ -25,6 +25,10 @@ const quintupleClicked = createAction(
   "[Test] Quintuple Clicked",
   (timestamp: number) => ({ timestamp }),
 );
+const sextupleClicked = createAction(
+  "[Test] Sextuple Clicked",
+  (source: string) => ({ source }),
+);
 
 it("exposes named generated effects", () => {
   const registry = task.handle((on) => ({
@@ -87,7 +91,7 @@ it("runs event tasks and dispatches their results", () => {
   }
 });
 
-it("infers the event union for tasks with five event sources", () => {
+it("infers the event union for tasks with more than five event sources", () => {
   tasks((on) => ({
     complete: on(
       clicked,
@@ -95,6 +99,7 @@ it("infers the event union for tasks with five event sources", () => {
       tripleClicked,
       quadrupleClicked,
       quintupleClicked,
+      sextupleClicked,
       (pipe) =>
         pipe(
           map((event) => {
@@ -104,6 +109,7 @@ it("infers the event union for tasks with five event sources", () => {
               | ReturnType<typeof tripleClicked>
               | ReturnType<typeof quadrupleClicked>
               | ReturnType<typeof quintupleClicked>
+              | ReturnType<typeof sextupleClicked>
             >();
             return event;
           }),
