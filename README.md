@@ -45,11 +45,14 @@ Actions that coordinate a particular response. EVST makes an event-driven style
 explicit: events describe what happened, while State and Task decide how the
 application responds.
 
-NgRx provides Actions, reducers, selectors, and effects as separate APIs,
-typically scattered across several files. That can make a feature harder to
-navigate and its behavior harder to track. EVST encapsulates those APIs in four
-concepts - Event, View, State, and Task - and organizes feature code more
-cohesively with less boilerplate, without replacing NgRx.
+NgRx provides powerful primitives - `createReducer`, `createSelector`,
+`createEffect`, `store.select`, and `store.dispatch` - but each is introduced
+through a separate API. Their relationships are assembled across reducers,
+effects, selectors, and components, which can make a feature harder to
+navigate and its behavior harder to track. EVST uses Event, View, State, and
+Task objects to connect those primitives around a feature, giving the flow from
+event to state, view, and side effect a more natural shape without replacing
+NgRx.
 
 ## Understanding the coding model
 
@@ -62,13 +65,13 @@ interact only with Views and events.
 | --------- | ------------------------------------------------------------------------------------- |
 | **Event** | Describes something that happened and is published by its source.                     |
 | **View**  | Exposes read-only state to consumer code.                                             |
-| **State** | Handles events through pure state transitions and provides Views.                     |
+| **State** | Handles events through pure state transitions and exposes Views.                      |
 | **Task**  | Handles events, performs asynchronous or imperative work, and returns outcome events. |
 
 The diagram separates EVST code into provider and consumer roles. Provider code
-defines how State transitions in response to events, which Views expose state,
-and how Tasks handle events and return outcome events. Consumer code reads Views
-and publishes events.
+defines how State transitions in response to events and exposes Views, and how
+Tasks handle events and return outcome events. Consumer code reads Views and
+publishes events.
 
 ## Provider code
 
@@ -77,7 +80,8 @@ and publishes events.
 An event group is defined by its authoritative source. Its variable uses the
 `fromSource` naming convention, such as `fromBooksPage` and `fromBooksApi`.
 The name identifies where an event happened, not which State or Task handles
-it, and discourages command-oriented names.
+it. The `event-group-source-prefix` rule in `@evst/eslint-plugin` enforces this
+convention and discourages command-oriented names.
 
 ```ts
 import { emptyProps, props } from "@ngrx/store";
@@ -124,6 +128,8 @@ const initialState = {
 };
 
 export const booksState = state("books", initialState)
+  // Generated Views: books, selectedId, and loading.
+  // Additional Views can compose these generated Views.
   .extraViews(({ books, selectedId }) => ({
     selectedBook: view(
       books,
@@ -131,6 +137,7 @@ export const booksState = state("books", initialState)
       (books, id) => books.find((book) => book.id === id) ?? null,
     ),
   }))
+  // Named event handlers define pure state transitions.
   .handle((on) => ({
     beginLoading: on(fromBooksPage.entered, (current) => ({
       ...current,
@@ -147,14 +154,19 @@ export const booksState = state("books", initialState)
     })),
   }));
 
+// Views: books, selectedId, loading, and selectedBook.
 export const booksViews = booksState.views;
 ```
 
 ### Defining Tasks
 
-Tasks respond to events and return outcome events. Like State `.handle()`, Task
-`on()` pairs an event with its handler. It creates a functional NgRx Effect
-with `createEffect()` and filters events for that handler.
+State and Task share the `handle((on) => ({ ... }))` definition shape. In both,
+`on()` associates one or more events with a named handler. State handlers return
+the next immutable state; Task handlers receive an event-filtered pipeline and
+return outcome events. Each Task handler creates a functional NgRx Effect with
+`createEffect()`. Handler object keys document intent; the events passed to
+`on()` determine what each handler receives. Task keys are also exposed under
+`.effects`.
 
 ```ts
 import { HttpClient } from "@angular/common/http";
@@ -229,15 +241,14 @@ published. By contrast, a command-shaped Action describes work for a handler,
 such as `loadBooks`, and can be dispatched by any caller that wants that work
 performed.
 
-An event has one publishing boundary: it is not published from several places.
-An executable boundary also publishes only one event: events are not published
-in sequence to coordinate work. Command-shaped Actions do not have these
-constraints - a command may be dispatched by several callers or several
-commands may be dispatched in sequence.
+An event has one publishing boundary: it cannot be published from several places.
+A callback or handler that publishes events publishes only one event. Events
+are not published in sequence to coordinate work. Command-shaped Actions do
+not have these constraints - a command may be dispatched by several callers or
+several commands may be dispatched in sequence.
 
-**Event-driven programming is a usage discipline, not a philosophical label.**
 The `event-publisher-ownership` and `no-sequential-event-publishes` ESLint
-rules enforce these constraints.
+rules enforce these publishing boundaries.
 
 `.signal()` is the default for component rendering. Views also expose
 `.observable()` for RxJS composition or template use with Angular's `AsyncPipe`:
