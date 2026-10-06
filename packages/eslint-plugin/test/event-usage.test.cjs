@@ -33,9 +33,20 @@ describe("event usage", () => {
         .filter((message) => message.ruleId === "evst/no-unsubscribed-events")
         .map((message) => message.message),
       [
+        "Event `loadBook` has no subscriber and can be removed.",
+        "Event `searchSuccess` has no subscriber and can be removed.",
+        "Event `searchFailure` has no subscriber and can be removed.",
         "Event `addBookSuccess` has no subscriber and can be removed.",
+        "Event `addBookFailure` has no subscriber and can be removed.",
         "Event `removeBookSuccess` has no subscriber and can be removed.",
+        "Event `removeBookFailure` has no subscriber and can be removed.",
+        "Event `loadBooksSuccess` has no subscriber and can be removed.",
         "Event `loadBooksFailure` has no subscriber and can be removed.",
+        "Event `enter` has no subscriber and can be removed.",
+        "Event `searchQueryChanged` has no subscriber and can be removed.",
+        "Event `addBook` has no subscriber and can be removed.",
+        "Event `removeBook` has no subscriber and can be removed.",
+        "Event `selectBook` has no subscriber and can be removed.",
       ],
     );
   });
