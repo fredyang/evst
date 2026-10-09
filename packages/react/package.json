@@ -1,0 +1,55 @@
+{
+  "name": "@evst/react",
+  "version": "0.1.0",
+  "description": "Event-first state management for React, built on Redux Toolkit.",
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://github.com/fredyang/evst#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fredyang/evst.git"
+  },
+  "keywords": [
+    "React",
+    "Redux",
+    "Redux Toolkit",
+    "EVST"
+  ],
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "test": "npm run build && tsc -p tsconfig.test.json && vitest run",
+    "prepack": "npm run build"
+  },
+  "peerDependencies": {
+    "@reduxjs/toolkit": "^2.0.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-redux": "^8.0.0 || ^9.0.0"
+  },
+  "devDependencies": {
+    "@reduxjs/toolkit": "^2.0.0",
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "react-redux": "^9.0.0",
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
