@@ -1,6 +1,6 @@
 {
   "name": "@evst/ngrx",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Event-first state management, built on NgRx.",
   "type": "module",
   "license": "MIT",
