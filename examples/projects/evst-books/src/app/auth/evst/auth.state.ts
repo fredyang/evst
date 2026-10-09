@@ -1,4 +1,4 @@
-import { state, view } from "@evst/store";
+import { state, view } from "@evst/ngrx";
 import type { User } from "../models/user";
 import { fromAuth, fromAuthApi, fromLoginPage } from "./auth.events";
 

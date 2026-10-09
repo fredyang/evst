@@ -156,7 +156,7 @@ type EventGroup<
  * @example
  * ```ts
  * import { emptyProps, props } from '@ngrx/store';
- * import { events } from '@evst/store';
+ * import { events } from '@evst/ngrx';
  *
  * const booksPageEvents = events('Books Page', {
  *   entered: emptyProps(),

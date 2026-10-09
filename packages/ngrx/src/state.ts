@@ -106,7 +106,7 @@ export interface FeatureStateDefinition<
  * @example Generated and composed feature views
  * ```ts
  * import type { EntityState } from '@ngrx/entity';
- * import { state, view } from '@evst/store';
+ * import { state, view } from '@evst/ngrx';
  *
  * interface Book {
  *   id: string;
@@ -158,7 +158,7 @@ export interface FeatureStateDefinition<
  * @example Defining handlers and derived views
  * ```ts
  * import { props } from '@ngrx/store';
- * import { events, state, view } from '@evst/store';
+ * import { events, state, view } from '@evst/ngrx';
  *
  * const fromCounter = events('Counter', {
  *   added: props<{ amount: number }>(),
@@ -184,7 +184,7 @@ export interface FeatureStateDefinition<
  *
  * @example Registering state and tasks
  * ```ts
- * import { state, provideEvst } from '@evst/store';
+ * import { state, provideEvst } from '@evst/ngrx';
  * import { fromBooksApi } from './books.events';
  * import { booksTasks } from './books.tasks';
  * import { initialBooksState } from './books.initial-state';

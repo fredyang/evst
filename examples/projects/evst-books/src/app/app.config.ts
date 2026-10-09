@@ -9,7 +9,7 @@ import {
   TitleStrategy,
   withHashLocation,
 } from "@angular/router";
-import { provideEvst } from "@evst/store";
+import { provideEvst } from "@evst/ngrx";
 import { rootBundle } from "./app.bundle";
 import { routes } from "./app.routes";
 import { AppTitleStrategy } from "./core/app-title.strategy";

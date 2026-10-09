@@ -30,14 +30,14 @@ run("npm", [
   "version",
   version,
   "--workspace",
-  "@evst/store",
+  "@evst/ngrx",
   "--workspace",
   "@evst/eslint-plugin",
   "--no-git-tag-version",
   "--ignore-scripts",
 ]);
 
-const store = JSON.parse(readFileSync("packages/store/package.json", "utf8"));
+const store = JSON.parse(readFileSync("packages/ngrx/package.json", "utf8"));
 const eslintPlugin = JSON.parse(
   readFileSync("packages/eslint-plugin/package.json", "utf8"),
 );
@@ -48,7 +48,7 @@ if (store.version !== version || eslintPlugin.version !== version) {
 run("git", [
   "add",
   "package-lock.json",
-  "packages/store/package.json",
+  "packages/ngrx/package.json",
   "packages/eslint-plugin/package.json",
 ]);
 run("git", ["commit", "-m", `chore(release): ${tag}`]);

@@ -1,5 +1,5 @@
 import { createEntityAdapter, type EntityState } from "@ngrx/entity";
-import { state, view } from "@evst/store";
+import { state, view } from "@evst/ngrx";
 import type { Book } from "../models/book";
 import {
   fromBookExistsGuard,

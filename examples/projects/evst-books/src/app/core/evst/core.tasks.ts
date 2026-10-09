@@ -1,6 +1,6 @@
 import { DOCUMENT } from "@angular/common";
 import { inject } from "@angular/core";
-import { task } from "@evst/store";
+import { task } from "@evst/ngrx";
 import { fromEvent, map, merge, switchMap, timer } from "rxjs";
 import { fromUser } from "./core.events";
 

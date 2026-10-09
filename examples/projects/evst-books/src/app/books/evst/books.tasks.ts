@@ -1,5 +1,5 @@
 import { inject } from "@angular/core";
-import { task } from "@evst/store";
+import { task } from "@evst/ngrx";
 import { defer, EMPTY, of } from "rxjs";
 import {
   catchError,

@@ -1,7 +1,7 @@
 import { inject } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
-import { task } from "@evst/store";
+import { task } from "@evst/ngrx";
 import { of } from "rxjs";
 import { catchError, exhaustMap, map, tap } from "rxjs/operators";
 import { LogoutConfirmationDialogComponent } from "../components/logout-confirmation-dialog.component";

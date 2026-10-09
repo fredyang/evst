@@ -1,5 +1,5 @@
 import { emptyProps, props } from "@ngrx/store";
-import { events } from "@evst/store";
+import { events } from "@evst/ngrx";
 import type { Credentials, User } from "../models/user";
 
 export const fromAuth = events("Auth", {

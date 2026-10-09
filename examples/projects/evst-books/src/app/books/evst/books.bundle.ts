@@ -1,4 +1,4 @@
-import { bundle } from "@evst/store";
+import { bundle } from "@evst/ngrx";
 import { booksState } from "./books.state";
 import { booksTasks } from "./books.tasks";
 

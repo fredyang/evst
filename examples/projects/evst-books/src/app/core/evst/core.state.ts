@@ -1,4 +1,4 @@
-import { state } from "@evst/store";
+import { state } from "@evst/ngrx";
 import { fromAuth } from "../../auth/evst/auth.events";
 import { fromLayout } from "./core.events";
 

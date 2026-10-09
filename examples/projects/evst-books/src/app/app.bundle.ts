@@ -1,4 +1,4 @@
-import { bundle } from "@evst/store";
+import { bundle } from "@evst/ngrx";
 import { authState } from "./auth/evst/auth.state";
 import { authTasks } from "./auth/evst/auth.tasks";
 import { coreState } from "./core/evst/core.state";

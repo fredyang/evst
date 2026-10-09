@@ -1,5 +1,5 @@
 {
-  "name": "@evst/store",
+  "name": "@evst/ngrx",
   "version": "0.3.0",
   "description": "Event-first state management, built on NgRx.",
   "type": "module",

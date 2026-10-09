@@ -4,7 +4,7 @@
     "baseUrl": "./src",
     "paths": {
       "@example-app/*": ["app/*"],
-      "@evst/store": ["../../../../packages/store/src/index.ts"],
+      "@evst/ngrx": ["../../../../packages/ngrx/src/index.ts"],
       "@books-example/config": ["../../shared/google-books-api-key.ts"]
     },
     "types": ["vitest/globals", "node"]

@@ -8,8 +8,8 @@
   <a href="https://github.com/fredyang/evst/actions/workflows/ci.yml">
     <img src="https://github.com/fredyang/evst/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" />
   </a>
-  <a href="https://www.npmjs.com/package/@evst/store">
-    <img src="https://img.shields.io/npm/v/%40evst%2Fstore" alt="npm: @evst/store" />
+  <a href="https://www.npmjs.com/package/@evst/ngrx">
+    <img src="https://img.shields.io/npm/v/%40evst%2Fstore" alt="npm: @evst/ngrx" />
   </a>
   <a href="https://www.npmjs.com/package/@evst/eslint-plugin">
     <img src="https://img.shields.io/npm/v/%40evst%2Feslint-plugin" alt="npm: @evst/eslint-plugin" />
@@ -85,7 +85,7 @@ convention and discourages command-oriented names.
 
 ```ts
 import { emptyProps, props } from "@ngrx/store";
-import { events } from "@evst/store";
+import { events } from "@evst/ngrx";
 
 interface Book {
   id: string;
@@ -118,7 +118,7 @@ automatically exposes a typed View for each top-level field. Optionally,
 adds named, pure event handlers; names document each state transition.
 
 ```ts
-import { state, view } from "@evst/store";
+import { state, view } from "@evst/ngrx";
 import { fromBooksApi, fromBooksPage } from "./books.events";
 
 const initialState = {
@@ -171,7 +171,7 @@ return outcome events. Each Task handler creates a functional NgRx Effect with
 ```ts
 import { HttpClient } from "@angular/common/http";
 import { inject } from "@angular/core";
-import { task } from "@evst/store";
+import { task } from "@evst/ngrx";
 import { catchError, exhaustMap, map, of } from "rxjs";
 import { fromBooksApi, fromBooksPage } from "./books.events";
 
@@ -274,7 +274,7 @@ State and Tasks can be registered separately or as one `bundle()`.
 
 ```ts
 import { type ApplicationConfig } from "@angular/core";
-import { provideEvst } from "@evst/store";
+import { provideEvst } from "@evst/ngrx";
 
 export const appConfig: ApplicationConfig = {
   providers: [provideEvst(), booksState.provide(), booksTasks.provide()],
@@ -282,7 +282,7 @@ export const appConfig: ApplicationConfig = {
 ```
 
 ```ts
-import { bundle } from "@evst/store";
+import { bundle } from "@evst/ngrx";
 
 export const booksBundle = bundle(booksState, booksTasks);
 
@@ -414,8 +414,8 @@ From the repository root:
 
 ```sh
 npm install
-npm test --workspace @evst/store
-npm pack --workspace @evst/store
+npm test --workspace @evst/ngrx
+npm pack --workspace @evst/ngrx
 ```
 
 The package requires compatible Angular and NgRx 22 dependencies, including
@@ -427,7 +427,7 @@ Generate the API reference from JSDoc and TypeScript signatures:
 npm run docs:api
 ```
 
-The generated site is written to `packages/store/docs/api/index.html`.
+The generated site is written to `packages/ngrx/docs/api/index.html`.
 
 ## Developing the workspace
 
