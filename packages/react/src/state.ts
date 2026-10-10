@@ -20,22 +20,27 @@ type StateOn<State> = <Creator extends EventCreator>(
   reducer: EventCaseReducer<State, Creator>,
 ) => { event: Creator; reducer: EventCaseReducer<State, Creator> };
 type Handler<State> = ReturnType<StateOn<State>>;
+type BaseViews<Name extends string, State extends object> = {
+  [Key in keyof State]: View<Record<Name, State>, State[Key]>;
+} & {
+  root: View<Record<Name, State>, State>;
+};
+type ExtraViewRecord<Root> = Record<string, View<Root, any>>;
 
 export interface FeatureStateDefinition<
   Name extends string,
   State extends object,
+  ExtraViews extends ExtraViewRecord<Record<Name, State>> = {},
 > {
   readonly name: Name;
   readonly reducer: Reducer<State>;
-  readonly views: {
-    [Key in keyof State]: View<Record<Name, State>, State[Key]>;
-  } & {
-    root: View<Record<Name, State>, State>;
-  } & Record<string, View<Record<Name, State>, any>>;
-  handle(build: (on: StateOn<State>) => Record<string, Handler<State>>): this;
-  extraViews<Added extends Record<string, View<Record<Name, State>, unknown>>>(
-    build: (views: FeatureStateDefinition<Name, State>["views"]) => Added,
-  ): this;
+  readonly views: BaseViews<Name, State> & ExtraViews;
+  handle(
+    build: (on: StateOn<State>) => Record<string, Handler<State>>,
+  ): FeatureStateDefinition<Name, State, ExtraViews>;
+  extraViews<Added extends ExtraViewRecord<Record<Name, State>>>(
+    build: (views: BaseViews<Name, State> & ExtraViews) => Added,
+  ): FeatureStateDefinition<Name, State, ExtraViews & Added>;
 }
 
 /** Defines a Redux Toolkit feature reducer and generated field views. */
@@ -56,20 +61,20 @@ export function state<const Name extends string, State extends object>(
       ]),
     ),
     { root },
-  ) as FeatureStateDefinition<Name, State>["views"];
+  ) as BaseViews<Name, State>;
   return chain(name, initialState, [], views);
 }
 
 function chain<
   Name extends string,
   State extends object,
-  Views extends Record<string, View<Record<Name, State>, unknown>>,
+  ExtraViews extends ExtraViewRecord<Record<Name, State>>,
 >(
   name: Name,
   initialState: State,
   handlers: readonly Handler<State>[],
-  views: Views,
-): any {
+  views: BaseViews<Name, State> & ExtraViews,
+): FeatureStateDefinition<Name, State, ExtraViews> {
   return {
     name,
     reducer: createReducer(initialState, (builder) => {
@@ -88,10 +93,8 @@ function chain<
         views,
       );
     },
-    extraViews: (
-      build: (
-        views: Views,
-      ) => Record<string, View<Record<Name, State>, unknown>>,
+    extraViews: <Added extends ExtraViewRecord<Record<Name, State>>>(
+      build: (views: BaseViews<Name, State> & ExtraViews) => Added,
     ) => {
       const added = build(views);
       for (const key of Object.keys(added))
@@ -99,7 +102,12 @@ function chain<
           throw new Error(
             `Extra view \"${key}\" conflicts with an existing view.`,
           );
-      return chain(name, initialState, handlers, { ...views, ...added });
+      return chain<Name, State, ExtraViews & Added>(
+        name,
+        initialState,
+        handlers,
+        { ...views, ...added } as BaseViews<Name, State> & ExtraViews & Added,
+      );
     },
   };
 }

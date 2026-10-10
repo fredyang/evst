@@ -30,6 +30,7 @@ describe("@evst/react", () => {
 
   it("creates Redux Toolkit actions and applies event handlers", () => {
     const store = createEvstStore({ features: [counter] });
+    expectTypeOf(counter.views.doubled.value()).toEqualTypeOf<number>();
     fromCounter.added.publish(2);
     expect(fromCounter.added(3)).toEqual({
       type: "[Counter] Added",

@@ -65,7 +65,6 @@ it("guards Books, loads its feature after login, and supports navigation and sig
   );
   await act(async () => browse!.click());
   expect(host.textContent).toContain("Browse Books");
-  const bookState = store.getState().books;
   await clickButton("Toggle navigation");
   const signOut = Array.from(document.querySelectorAll('[role="button"]')).find(
     (element) => element.textContent?.includes("Sign Out"),
@@ -82,14 +81,19 @@ it("guards Books, loads its feature after login, and supports navigation and sig
   await clickButton("Sign Out");
   expect(host.textContent).toContain("Login");
   expect(store.getState().auth.user).toBeNull();
-  expect(store.getState().books).toBe(bookState);
+  expect(store.getState().books.collection.loaded).toBe(false);
   await act(async () => {
     host
       .querySelector("form")!
       .dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
   });
+  await act(async () => {
+    await vi.waitFor(() =>
+      expect(store.getState().books.collection.loaded).toBe(true),
+    );
+  });
   expect(host.textContent).toContain("My Collection");
-  expect(store.getState().books).toBe(bookState);
+  expect(store.getState().books.books.ids).toEqual([]);
   await act(async () => fromUser.idleTimeoutElapsed.publish());
   expect(host.textContent).toContain("Login");
   expect(store.getState().auth.user).toBeNull();

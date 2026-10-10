@@ -4,6 +4,7 @@ import {
   booksState,
   booksViews,
   createBooksTasks,
+  initialState,
   fromCollectionPage,
   fromFindBookPage,
   fromSelectedBookPage,
@@ -12,6 +13,7 @@ import {
 } from "../src/books";
 import { createBookStorage } from "../src/services/book-storage";
 import { createGoogleBooksApi } from "../src/services/google-books";
+import { fromAuth } from "../src/auth/evst/auth.events";
 const book: Book = {
   id: "one",
   title: "Book",
@@ -137,6 +139,34 @@ it("reports malformed saved data without leaving collection loading", () => {
     loading: false,
   });
   expect(booksViews.collection(store.getState()).error).not.toBe("");
+});
+
+it("resets lazy Books state on logout and reloads the persisted collection", () => {
+  let saved: string | null = null;
+  const storage = createBookStorage(() => ({
+    getItem: () => saved,
+    setItem: (_key, value) => {
+      saved = value;
+    },
+  }));
+  storage.add(book);
+  const { store } = setup(api(), storage);
+
+  fromCollectionPage.entered.publish();
+  expect(booksViews.collectionBooks(store.getState())).toEqual([book]);
+
+  fromFindBookPage.searchQueryChanged.publish({ query: "react" });
+  expect(booksViews.search(store.getState()).query).toBe("react");
+
+  fromAuth.logout.publish();
+  expect(booksViews.search(store.getState())).toEqual(initialState.search);
+  expect(booksViews.collection(store.getState())).toEqual(
+    initialState.collection,
+  );
+  expect(booksViews.books(store.getState()).ids).toEqual([]);
+
+  fromCollectionPage.entered.publish();
+  expect(booksViews.collectionBooks(store.getState())).toEqual([book]);
 });
 
 it("uses the Google Books endpoint, normalizes results, and rejects HTTP failures", async () => {
