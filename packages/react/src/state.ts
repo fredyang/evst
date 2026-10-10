@@ -8,10 +8,13 @@ import {
 import { view, type View } from "./view.js";
 
 type EventCreator = ActionCreatorWithPayload<any> | ActionCreatorWithoutPayload;
-type EventCaseReducer<State, Creator extends EventCreator> = CaseReducer<
-  State,
-  ReturnType<Creator>
->;
+type EventCaseReducer<State, Creator extends EventCreator> =
+  CaseReducer<State, ReturnType<Creator>> extends (
+    state: infer DraftState,
+    action: any,
+  ) => infer Result
+    ? (state: DraftState, payload: ReturnType<Creator>["payload"]) => Result
+    : never;
 type StateOn<State> = <Creator extends EventCreator>(
   event: Creator,
   reducer: EventCaseReducer<State, Creator>,
@@ -71,7 +74,9 @@ function chain<
     name,
     reducer: createReducer(initialState, (builder) => {
       for (const { event, reducer } of handlers)
-        builder.addCase(event as any, reducer as any);
+        builder.addCase(event as any, (draft, action: any) =>
+          reducer(draft, action.payload),
+        );
     }),
     views,
     handle: (build: (on: StateOn<State>) => Record<string, Handler<State>>) => {

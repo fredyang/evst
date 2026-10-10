@@ -1,3 +1,3 @@
-export * from "./events";
-export * from "./state";
-export * from "./tasks";
+export * from "./books.events";
+export * from "./books.state";
+export * from "./books.tasks";

@@ -20,8 +20,8 @@ const book: Book = {
   cover: "",
 };
 const api = () => ({
-  search: vi.fn(async (_query: string, _signal: AbortSignal) => [book]),
-  retrieve: vi.fn(async (_id: string, _signal: AbortSignal) => book),
+  search: vi.fn(async (_query: string, _signal?: AbortSignal) => [book]),
+  retrieve: vi.fn(async (_id: string, _signal?: AbortSignal) => book),
 });
 function setup(
   service = api(),
@@ -41,15 +41,13 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-it("debounces search and clears loading when the query is cleared", async () => {
+it("searches immediately on an event and clears loading when the query is cleared", async () => {
   vi.useFakeTimers();
   const { store, service } = setup();
-  fromFindBookPage.searchQueryChanged.publish({ query: "old" });
-  await vi.advanceTimersByTimeAsync(100);
   fromFindBookPage.searchQueryChanged.publish({ query: "new" });
-  await vi.advanceTimersByTimeAsync(300);
   expect(service.search).toHaveBeenCalledTimes(1);
   expect(service.search.mock.calls[0]?.[0]).toBe("new");
+  await vi.advanceTimersByTimeAsync(0);
   expect(booksViews.results(store.getState())).toEqual([book]);
   fromFindBookPage.searchQueryChanged.publish({ query: "" });
   expect(booksViews.search(store.getState())).toMatchObject({
@@ -63,7 +61,7 @@ it("ends search loading and exposes request failures", async () => {
   const { store, service } = setup();
   service.search.mockRejectedValueOnce(new Error("Quota exceeded"));
   fromFindBookPage.searchQueryChanged.publish({ query: "react" });
-  await vi.advanceTimersByTimeAsync(300);
+  await vi.advanceTimersByTimeAsync(0);
   expect(booksViews.search(store.getState())).toMatchObject({
     loading: false,
     error: "Quota exceeded",
@@ -71,7 +69,7 @@ it("ends search loading and exposes request failures", async () => {
   });
 });
 
-it("aborts an in-flight search and ignores a late result", async () => {
+it("ignores a late search result after the query is cleared", async () => {
   vi.useFakeTimers();
   let finish!: (value: Book[]) => void;
   const service = api();
@@ -83,10 +81,8 @@ it("aborts an in-flight search and ignores a late result", async () => {
   );
   const { store } = setup(service);
   fromFindBookPage.searchQueryChanged.publish({ query: "old" });
-  await vi.advanceTimersByTimeAsync(300);
-  const signal = service.search.mock.calls[0]?.[1] as AbortSignal;
+  await vi.advanceTimersByTimeAsync(0);
   fromFindBookPage.searchQueryChanged.publish({ query: "" });
-  expect(signal.aborted).toBe(true);
   finish([book]);
   await vi.advanceTimersByTimeAsync(0);
   expect(booksViews.results(store.getState())).toEqual([]);

@@ -1,56 +1,59 @@
-import type { Action, ListenerMiddlewareInstance } from "@reduxjs/toolkit";
+import type { ListenerMiddlewareInstance } from "@reduxjs/toolkit";
 
-type EventCreator = ((...args: any[]) => Action) & { type: string };
-export type TaskEffect<ActionType extends Action = Action> = Parameters<
-  ListenerMiddlewareInstance["startListening"]
->[0] extends { effect: (action: infer Received, ...args: any[]) => any }
-  ? (
-      action: Extract<Received, ActionType>,
-      api: Parameters<ListenerMiddlewareInstance["startListening"]>[0] extends {
-        effect: (action: any, api: infer Api) => any;
-      }
-        ? Api
-        : never,
-    ) => unknown
-  : never;
+type EventCreator = ((...args: any[]) => { type: string; payload: any }) & {
+  type: string;
+};
+type Outcome = { type: string } | void;
+
+export type TaskEffect<Payload = void> = (
+  payload: Payload,
+) => Outcome | Promise<Outcome>;
 
 type Task = { register(listener: ListenerMiddlewareInstance): () => void };
 export interface Tasks {
   register(listener: ListenerMiddlewareInstance): () => void;
 }
+type On = <Creator extends EventCreator>(
+  event: Creator,
+  effect: TaskEffect<ReturnType<Creator>["payload"]>,
+) => Task;
 
-/** Creates listener-middleware tasks that react to one or more events. */
+/** Defines named tasks receiving event data and returning an optional outcome event. */
 export const task = {
-  handle(
-    build: (
-      on: <Creator extends EventCreator>(
-        event: Creator,
-        effect: (action: ReturnType<Creator>, api: any) => unknown,
-      ) => Task,
-    ) => Record<string, Task>,
-  ): Tasks {
-    const on = <Creator extends EventCreator>(
-      event: Creator,
-      effect: (action: ReturnType<Creator>, api: any) => unknown,
-    ): Task => ({
-      register: (listener) =>
-        listener.startListening({
-          actionCreator: event as any,
-          effect: effect as any,
-        }),
-    });
+  handle(build: (on: On) => Record<string, Task>): Tasks {
+    const on: On = (event, effect) => {
+      return {
+        register: (listener) => {
+          const stop = listener.startListening({
+            predicate: (action): action is ReturnType<typeof event> =>
+              action.type === event.type,
+            effect: async (action, api) => {
+              try {
+                const result = effect(action.payload);
+                // Preserve synchronous outcomes for optimistic updates.
+                const outcome =
+                  result && "then" in result ? await result : result;
+                if (!api.signal.aborted && outcome) api.dispatch(outcome);
+              } catch (error) {
+                if (!api.signal.aborted) throw error;
+              }
+            },
+          });
+          return () => stop({ cancelActive: true });
+        },
+      };
+    };
     const definitions = build(on);
     return {
-      register: (listener) =>
-        Object.values(definitions)
-          .map((definition) => definition.register(listener))
-          .reduce((stop, next) => () => {
-            stop();
-            next();
-          }),
+      register: (listener) => {
+        const stops = Object.values(definitions).map((definition) =>
+          definition.register(listener),
+        );
+        return () => stops.forEach((stop) => stop());
+      },
     };
   },
 };
 
-/** @deprecated Use `task.handle()`. */
+/** @deprecated Use task.handle(). */
 export const tasks = task.handle;

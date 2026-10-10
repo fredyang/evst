@@ -6,7 +6,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { booksViews } from "../evst/state";
+import { booksViews } from "../evst/books.state";
 import { BookGrid } from "./book-grid";
 
 export function CollectionPage() {
@@ -16,10 +16,9 @@ export function CollectionPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="overline" color="primary">
-          Saved books
+        <Typography variant="h5" align="center">
+          My Collection
         </Typography>
-        <Typography variant="h3">My collection</Typography>
       </Box>
 
       <Divider />

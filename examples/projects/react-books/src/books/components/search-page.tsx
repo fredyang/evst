@@ -1,4 +1,5 @@
 import Search from "@mui/icons-material/Search";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Box,
@@ -7,22 +8,42 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { fromFindBookPage } from "../evst/events";
-import { booksViews } from "../evst/state";
+import { fromFindBookPage } from "../evst/books.events";
+import { booksViews } from "../evst/books.state";
 import { BookGrid } from "./book-grid";
+import { debounce } from "../../utils/debounce";
 
 export function SearchPage() {
   const search = booksViews.search.use();
   const results = booksViews.results.use();
+  const [query, setQuery] = useState(search.query);
+  const publishQuery = useMemo(
+    () =>
+      debounce((query: string) => {
+        fromFindBookPage.searchQueryChanged.publish({ query });
+      }, 300),
+    [],
+  );
+
+  useEffect(() => () => publishQuery.cancel(), [publishQuery]);
+
+  function changeQuery(query: string) {
+    setQuery(query);
+
+    if (!query.trim()) {
+      publishQuery.cancel();
+      fromFindBookPage.searchQueryChanged.publish({ query });
+      return;
+    }
+
+    publishQuery(query);
+  }
 
   return (
     <Stack spacing={4}>
       <Box>
-        <Typography variant="overline" color="primary">
-          React + EVST
-        </Typography>
-        <Typography variant="h3" gutterBottom>
-          Find a great book.
+        <Typography variant="h5" align="center" gutterBottom>
+          Browse Books
         </Typography>
         <Typography color="text.secondary">
           Search Google Books by title or author and save your favorites.
@@ -32,12 +53,8 @@ export function SearchPage() {
       <TextField
         fullWidth
         label="Search by title or author"
-        value={search.query}
-        onChange={(event) =>
-          fromFindBookPage.searchQueryChanged.publish({
-            query: event.target.value,
-          })
-        }
+        value={query}
+        onChange={(event) => changeQuery(event.target.value)}
         slotProps={{
           input: {
             endAdornment: search.loading ? (

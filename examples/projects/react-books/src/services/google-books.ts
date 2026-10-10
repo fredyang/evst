@@ -23,7 +23,7 @@ function normalize(value: unknown): Book {
 export function createGoogleBooksApi(fetcher: typeof fetch = fetch, key = "") {
   async function request(
     path: string,
-    signal: AbortSignal,
+    signal?: AbortSignal,
     query?: string,
   ): Promise<unknown> {
     const url = new URL("https://www.googleapis.com/books/v1/volumes" + path);
@@ -41,11 +41,11 @@ export function createGoogleBooksApi(fetcher: typeof fetch = fetch, key = "") {
     return response.json();
   }
   return {
-    async search(query: string, signal: AbortSignal): Promise<Book[]> {
+    async search(query: string, signal?: AbortSignal): Promise<Book[]> {
       const data = (await request("", signal, query)) as { items?: unknown[] };
       return (data.items ?? []).map(normalize);
     },
-    async retrieve(id: string, signal: AbortSignal): Promise<Book> {
+    async retrieve(id: string, signal?: AbortSignal): Promise<Book> {
       return normalize(await request("/" + encodeURIComponent(id), signal));
     },
   };

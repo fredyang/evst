@@ -1,12 +1,15 @@
 import { createSelector, type Selector } from "@reduxjs/toolkit";
 import { useSelector } from "react-redux";
+import { readView } from "./store.js";
 
 export type View<RootState, Result> = Selector<RootState, Result> & {
   /** Reads this view using React Redux's current Provider. */
   use(): Result;
+  /** Reads the current active-store value without subscribing. Requires createEvstStore(). */
+  value(): Result;
 };
 
-/** Creates a memoized view with a React hook reader. */
+/** Creates a View with a reactive React hook and an imperative snapshot reader. */
 export function view<RootState, Result>(
   selector: Selector<RootState, Result>,
 ): View<RootState, Result>;
@@ -22,5 +25,8 @@ export function view<RootState, A, B, Result>(
 export function view(...args: any[]): View<any, any> {
   const selector =
     args.length === 1 ? args[0] : (createSelector as any)(...args);
-  return Object.assign(selector, { use: () => useSelector(selector) });
+  return Object.assign(selector, {
+    use: () => useSelector(selector),
+    value: () => readView(selector),
+  });
 }

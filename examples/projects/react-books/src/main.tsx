@@ -9,11 +9,11 @@ import { store } from "./store";
 const theme = createTheme({
   palette: {
     mode: "light",
-    primary: { main: "#315c4b" },
+    primary: { main: "#673ab7" },
     secondary: { main: "#b56a43" },
-    background: { default: "#f7f5ef" },
+    background: { default: "#f7f7f7" },
   },
-  shape: { borderRadius: 12 },
+  shape: { borderRadius: 4 },
 });
 
 createRoot(document.getElementById("root")!).render(

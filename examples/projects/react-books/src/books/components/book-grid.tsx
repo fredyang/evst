@@ -19,21 +19,54 @@ export function BookGrid({ books }: BookGridProps) {
     <Box
       sx={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
-        gap: 3,
+        gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" },
+        gap: 4,
       }}
     >
       {books.map((book) => (
         <Card key={book.id} sx={{ display: "flex", flexDirection: "column" }}>
-          {book.cover && (
-            <CardMedia component="img" height="230" image={book.cover} alt="" />
-          )}
-
           <CardContent sx={{ flexGrow: 1 }}>
-            <Typography variant="h6">{book.title}</Typography>
-            <Typography color="text.secondary">
-              {book.authors.join(", ")}
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                justifyContent: "space-between",
+                mb: 3,
+              }}
+            >
+              <Typography
+                variant="h6"
+                sx={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {book.title}
+              </Typography>
+              {book.cover && (
+                <CardMedia
+                  component="img"
+                  image={book.cover}
+                  alt=""
+                  sx={{ width: 65, height: 90, objectFit: "contain" }}
+                />
+              )}
+            </Box>
+            <Typography
+              sx={{
+                mb: 3,
+                display: "-webkit-box",
+                WebkitLineClamp: 5,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
+              {book.description}
             </Typography>
+            <Typography variant="caption">Written By:</Typography>
+            <Typography>{book.authors.join(", ")}</Typography>
           </CardContent>
 
           <CardActions>

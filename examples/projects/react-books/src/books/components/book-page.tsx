@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import Add from "@mui/icons-material/Add";
 import ArrowBack from "@mui/icons-material/ArrowBack";
 import Delete from "@mui/icons-material/Delete";
@@ -13,8 +13,8 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { fromSelectedBookPage, fromViewBookPage } from "../evst/events";
-import { booksViews } from "../evst/state";
+import { fromSelectedBookPage, fromViewBookPage } from "../evst/books.events";
+import { booksViews } from "../evst/books.state";
 
 export function BookPage() {
   const { id } = useParams();
@@ -32,7 +32,7 @@ export function BookPage() {
   }
 
   if (detail.error) {
-    return <Alert severity="error">{detail.error}</Alert>;
+    return <Navigate to="/404" replace />;
   }
 
   if (!selected) {
