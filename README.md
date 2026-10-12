@@ -332,6 +332,11 @@ uses EVST while retaining NgRx Store and Effects, making its reduced boilerplate
 and consumer-facing View and event API directly comparable. A service-only
 version provides an additional comparison.
 
+The [React Books examples](examples/projects/react-books) provide a direct
+state-management comparison: [react-books](examples/projects/react-books) uses
+EVST, while [rtk-books](examples/projects/rtk-books) uses Redux Toolkit directly
+with the same UI and feature behavior.
+
 ## Working with NgRx
 
 EVST is a facade over NgRx, not a replacement. Under the hood, it uses native

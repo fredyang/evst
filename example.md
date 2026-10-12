@@ -1,6 +1,6 @@
 # Books examples
 
-The four Books applications have identical UI and behavior. Each can search the
+The four Angular Books applications have identical UI and behavior. Each can search the
 Google Books API, manage a local collection, authenticate a user, and navigate
 between collection, search, and detail pages. They differ only in Angular
 composition and state-management style.
@@ -23,6 +23,17 @@ services instead of NgRx.
 | [`evst-books`](examples/projects/evst-books)                       | Standalone providers and components | EVST on top of NgRx Store and Effects          | Components read View Signals and publish events.                           |
 | [`svc-books`](examples/projects/svc-books)                         | Standalone providers and components | Feature services with Angular Signals and RxJS | Components call service methods and read service Signals.                  |
 
+## Comparing React state management
+
+[`react-books`](examples/projects/react-books) and
+[`rtk-books`](examples/projects/rtk-books) use the same React UI and feature
+set. The first uses EVST; the second uses Redux Toolkit directly.
+
+| Example                                        | State management                             | Feature registration                                                     |
+| ---------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------ |
+| [`react-books`](examples/projects/react-books) | EVST on Redux Toolkit                        | Auth and core at startup; Books on lazy route load                       |
+| [`rtk-books`](examples/projects/rtk-books)     | Redux Toolkit slices and listener middleware | Auth and core at startup; Books reducer and listeners on lazy route load |
+
 ## Running an example
 
 All commands run from the repository root after `npm install`:
@@ -32,9 +43,12 @@ npm run serve:ngrx-books
 npm run serve:ngrx-books-standalone
 npm run serve:evst-books
 npm run serve:svc-books
+npm run serve:react-books
+npm run serve:rtk-books
 ```
 
-The applications use separate ports: 4200, 4201, 4202, and 4203 respectively.
+The Angular applications use ports 4200 through 4203. The React examples use
+ports 4204 and 4205.
 
 All examples share a browser-restricted Google Books API key for local serving.
 If Google Books requests stop working because that key has expired or been

@@ -1,5 +1,5 @@
 import Search from "@mui/icons-material/Search";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   Box,
@@ -11,32 +11,15 @@ import {
 import { fromFindBookPage } from "../evst/books.events";
 import { booksViews } from "../evst/books.state";
 import { BookGrid } from "./book-grid";
-import { debounce } from "../../utils/debounce";
 
 export function SearchPage() {
   const search = booksViews.search.use();
   const results = booksViews.results.use();
   const [query, setQuery] = useState(search.query);
-  const publishQuery = useMemo(
-    () =>
-      debounce((query: string) => {
-        fromFindBookPage.searchQueryChanged.publish({ query });
-      }, 300),
-    [],
-  );
-
-  useEffect(() => () => publishQuery.cancel(), [publishQuery]);
 
   function changeQuery(query: string) {
     setQuery(query);
-
-    if (!query.trim()) {
-      publishQuery.cancel();
-      fromFindBookPage.searchQueryChanged.publish({ query });
-      return;
-    }
-
-    publishQuery(query);
+    fromFindBookPage.searchQueryChanged.publish({ query });
   }
 
   return (

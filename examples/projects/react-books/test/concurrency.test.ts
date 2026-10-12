@@ -1,5 +1,5 @@
-import { expect, it } from "vitest";
-import { latest } from "../src/utils/latest";
+import { expect, it, vi } from "vitest";
+import { concat, exhaust, latest, merge } from "../src/utils/concurrency";
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -57,4 +57,49 @@ it("keeps independently wrapped operations isolated", async () => {
   expect(await second()).toBe("second");
   pending.resolve("first");
   expect(await result).toBe("first");
+});
+
+it("queues concat invocations in arrival order", async () => {
+  const calls: string[] = [];
+  const run = concat(async (value: string) => {
+    calls.push(value);
+    return value;
+  });
+
+  const first = run("first");
+  const second = run("second");
+  expect(calls).toEqual([]);
+  await expect(first).resolves.toBe("first");
+  await expect(second).resolves.toBe("second");
+  expect(calls).toEqual(["first", "second"]);
+});
+
+it("allows merge invocations to run concurrently", async () => {
+  const first = deferred<string>();
+  const second = deferred<string>();
+  const pending = [first, second];
+  const run = merge(() => pending.shift()!.promise);
+
+  const older = run();
+  const newer = run();
+  second.resolve("second");
+  first.resolve("first");
+
+  await expect(newer).resolves.toBe("second");
+  await expect(older).resolves.toBe("first");
+});
+
+it("ignores exhaust invocations while one is running", async () => {
+  const first = deferred<string>();
+  const operation = vi.fn(() => first.promise);
+  const run = exhaust(operation);
+
+  const active = run();
+  await expect(run()).resolves.toBeUndefined();
+  expect(operation).toHaveBeenCalledOnce();
+
+  first.resolve("done");
+  await expect(active).resolves.toBe("done");
+  await expect(run()).resolves.toBe("done");
+  expect(operation).toHaveBeenCalledTimes(2);
 });

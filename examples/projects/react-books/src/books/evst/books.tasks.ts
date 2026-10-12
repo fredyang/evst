@@ -1,5 +1,6 @@
 import { task } from "@evst/react";
-import { latest } from "../../utils/latest";
+import { latest } from "../../utils/concurrency";
+import { debounce } from "../../utils/debounce";
 import { GOOGLE_BOOKS_API_KEY } from "../../config/google-books-api-key";
 import { createBookStorage } from "../../services/book-storage";
 import { createGoogleBooksApi } from "../../services/google-books";
@@ -25,16 +26,18 @@ export function createBooksTasks(
   return task.handle((on) => ({
     search: on(
       fromFindBookPage.searchQueryChanged,
-      latest(async ({ query }: { query: string }) => {
-        if (!query.trim()) return;
+      latest(
+        debounce(async ({ query }: { query: string }) => {
+          if (!query.trim()) return;
 
-        try {
-          const books = await googleBooks.search(query.trim());
-          return fromBooksApi.searchSuccess({ query, books });
-        } catch (error) {
-          return fromBooksApi.searchFailure({ query, error: message(error) });
-        }
-      }),
+          try {
+            const books = await googleBooks.search(query.trim());
+            return fromBooksApi.searchSuccess({ query, books });
+          } catch (error) {
+            return fromBooksApi.searchFailure({ query, error: message(error) });
+          }
+        }, 500),
+      ),
     ),
 
     retrieveSelectedBook: on(

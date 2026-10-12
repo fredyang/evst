@@ -1,10 +1,11 @@
 import { TestBed } from "@angular/core/testing";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpParams } from "@angular/common/http";
 
 import { cold } from "../../testing/marbles";
 
 import { generateMockBook, type Book } from "@example-app/books/models";
 import { GoogleBooksService } from "./google-books.service";
+import { GOOGLE_BOOKS_API_KEY } from "@books-example/config";
 
 function createBook(id: string, title: string): Book {
   const book = generateMockBook();
@@ -44,12 +45,15 @@ describe("Service: GoogleBooks", () => {
 
     expect(service.searchBooks(queryTitle)).toBeObservable(expected);
     expect(http.get).toHaveBeenCalledWith(
-      expect.stringMatching(
-        new RegExp(
-          `^https://www\\.googleapis\\.com/books/v1/volumes\\?orderBy=newest&q=${queryTitle}&key=.+$`,
-        ),
-      ),
+      "https://www.googleapis.com/books/v1/volumes",
+      expect.objectContaining({ params: expect.any(HttpParams) }),
     );
+    const [, options] = vi.mocked(http.get).mock.calls[0] as unknown as [
+      string,
+      { params: HttpParams },
+    ];
+    expect(options.params.get("q")).toBe(queryTitle);
+    expect(options.params.get("key")).toBe(GOOGLE_BOOKS_API_KEY);
   });
 
   it("should retrieve the book from the volumeId", () => {
@@ -59,11 +63,13 @@ describe("Service: GoogleBooks", () => {
 
     expect(service.retrieveBook(data.id)).toBeObservable(expected);
     expect(http.get).toHaveBeenCalledWith(
-      expect.stringMatching(
-        new RegExp(
-          `^https://www\\.googleapis\\.com/books/v1/volumes/${data.id}\\?key=.+$`,
-        ),
-      ),
+      `https://www.googleapis.com/books/v1/volumes/${data.id}`,
+      expect.objectContaining({ params: expect.any(HttpParams) }),
     );
+    const [, options] = vi.mocked(http.get).mock.calls[0] as unknown as [
+      string,
+      { params: HttpParams },
+    ];
+    expect(options.params.get("key")).toBe(GOOGLE_BOOKS_API_KEY);
   });
 });

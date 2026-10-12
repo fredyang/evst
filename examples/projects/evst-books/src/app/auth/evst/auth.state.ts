@@ -11,11 +11,6 @@ export interface LoginPageState {
   pending: boolean;
 }
 
-export interface AuthState {
-  status: StatusState;
-  loginPage: LoginPageState;
-}
-
 export const initialStatusState: StatusState = {
   user: null,
 };

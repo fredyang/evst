@@ -27,7 +27,7 @@ export const booksTasks = task.handle((on) => ({
     fromFindBookPage.searchQueryChanged,
     (pipe, googleBooks = inject(GoogleBooksService)) => {
       return pipe(
-        debounceTime(300),
+        debounceTime(800),
         switchMap(({ query }) => {
           if (query === "") return EMPTY;
           return googleBooks.searchBooks(query).pipe(
