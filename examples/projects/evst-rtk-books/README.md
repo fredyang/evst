@@ -1,6 +1,6 @@
-# React Books
+# EVST RTK Books
 
-React Books uses Material UI and `@evst/rtk` for the book search and collection
+EVST RTK Books uses Material UI and `@evst/rtk` for the book search and collection
 flows from EVST NgRx Books.
 
 ## Signing in and navigating
@@ -37,9 +37,9 @@ in localStorage, as in EVST NgRx Books; it is not partitioned by demo username.
 From the repository root:
 
 ```sh
-npm run serve:react-books
-npm run build:react-books
-npm run test:react-books
+npm run serve:evst-rtk-books
+npm run build:evst-rtk-books
+npm run test:evst-rtk-books
 ```
 
 Search and direct book-detail routes call the Google Books API using the same

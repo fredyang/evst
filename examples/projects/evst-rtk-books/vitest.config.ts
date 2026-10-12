@@ -9,5 +9,5 @@ export default defineConfig({
       ),
     },
   },
-  test: { include: ["examples/projects/react-books/test/**/*.test.ts"] },
+  test: { include: ["examples/projects/evst-rtk-books/test/**/*.test.ts"] },
 });

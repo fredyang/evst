@@ -25,14 +25,14 @@ services instead of NgRx.
 
 ## Comparing React state management
 
-[`react-books`](examples/projects/react-books) and
+[`evst-rtk-books`](examples/projects/evst-rtk-books) and
 [`rtk-books`](examples/projects/rtk-books) use the same React UI and feature
 set. The first uses EVST; the second uses Redux Toolkit directly.
 
-| Example                                        | State management                             | Feature registration                                                     |
-| ---------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------ |
-| [`react-books`](examples/projects/react-books) | EVST on Redux Toolkit                        | Auth and core at startup; Books on lazy route load                       |
-| [`rtk-books`](examples/projects/rtk-books)     | Redux Toolkit slices and listener middleware | Auth and core at startup; Books reducer and listeners on lazy route load |
+| Example                                              | State management                             | Feature registration                                                     |
+| ---------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------ |
+| [`evst-rtk-books`](examples/projects/evst-rtk-books) | EVST on Redux Toolkit                        | Auth and core at startup; Books on lazy route load                       |
+| [`rtk-books`](examples/projects/rtk-books)           | Redux Toolkit slices and listener middleware | Auth and core at startup; Books reducer and listeners on lazy route load |
 
 ## Running an example
 
@@ -43,7 +43,7 @@ npm run serve:ngrx-books
 npm run serve:ngrx-books-standalone
 npm run serve:evst-ngrx-books
 npm run serve:svc-books
-npm run serve:react-books
+npm run serve:evst-rtk-books
 npm run serve:rtk-books
 ```
 

@@ -1,6 +1,6 @@
 # RTK Books
 
-RTK Books is a direct Redux Toolkit counterpart to React Books. Both examples
+RTK Books is a direct Redux Toolkit counterpart to EVST RTK Books. Both examples
 share the same Material UI, routes, demo login, idle logout, Google Books service,
 and collection behavior. This version uses Redux Toolkit directly and does not
 depend on `@evst/rtk`.
@@ -29,6 +29,6 @@ signs out the user.
   persistence. Selector functions derive values used by components.
 - React components use `useSelector` and `useDispatch` directly.
 
-The app-level debounce and latest-result helpers match the React Books example.
+The app-level debounce and latest-result helpers match the EVST RTK Books example.
 In-flight requests are not aborted; superseded results are ignored. Saved
 collection data is stored in localStorage and is not partitioned by demo user.
