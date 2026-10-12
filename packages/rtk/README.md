@@ -1,11 +1,11 @@
-# @evst/react
+# @evst/rtk
 
-`@evst/react` is an event-first state-management facade for React and Redux Toolkit. It organizes feature code around events, views, state, and tasks.
+`@evst/rtk` is an event-first state-management facade for React and Redux Toolkit. It organizes feature code around events, views, state, and tasks.
 
 ## Defining a feature
 
 ```ts
-import { emptyProps, events, props, state, view } from "@evst/react";
+import { emptyProps, events, props, state, view } from "@evst/rtk";
 
 const fromCounter = events("Counter", {
   incremented: props<number>(),
@@ -31,7 +31,7 @@ immutable updates and Immer-style mutations are supported.
 
 ```ts
 import { Provider } from "react-redux";
-import { createEvstStore } from "@evst/react";
+import { createEvstStore } from "@evst/rtk";
 import { counter } from "./counter";
 
 const store = createEvstStore({ features: [counter] });
@@ -83,7 +83,7 @@ Tasks receive event data directly and return an optional outcome event. EVST
 publishes returned outcomes through the store running the task. Handlers receive only event data; View `.value()` provides typed snapshot reads.
 
 ```ts
-import { task } from "@evst/react";
+import { task } from "@evst/rtk";
 
 const counterTasks = task.handle((on) => ({
   persist: on(fromCounter.incremented, async () => {

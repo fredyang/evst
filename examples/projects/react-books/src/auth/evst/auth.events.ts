@@ -1,4 +1,4 @@
-import { events, props, emptyProps } from "@evst/react";
+import { events, props, emptyProps } from "@evst/rtk";
 
 export const fromLoginPage = events("Login Page", {
   login: props<{ credentials: { username: string; password: string } }>(),

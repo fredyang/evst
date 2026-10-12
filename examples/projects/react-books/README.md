@@ -1,6 +1,6 @@
 # React Books
 
-React Books uses Material UI and `@evst/react` for the book search and collection
+React Books uses Material UI and `@evst/rtk` for the book search and collection
 flows from EVST Books.
 
 ## Signing in and navigating

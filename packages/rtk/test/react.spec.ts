@@ -12,7 +12,7 @@ import {
 
 afterEach(clearEvstStore);
 
-describe("@evst/react", () => {
+describe("@evst/rtk", () => {
   const fromCounter = events("Counter", {
     added: props<number>(),
     reset: emptyProps(),

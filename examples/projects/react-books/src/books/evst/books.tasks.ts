@@ -1,4 +1,4 @@
-import { task } from "@evst/react";
+import { task } from "@evst/rtk";
 import { latest } from "../../utils/concurrency";
 import { debounce } from "../../utils/debounce";
 import { GOOGLE_BOOKS_API_KEY } from "../../config/google-books-api-key";

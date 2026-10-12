@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { clearEvstStore, createEvstStore } from "@evst/react";
+import { clearEvstStore, createEvstStore } from "@evst/rtk";
 import {
   booksState,
   booksViews,
@@ -49,7 +49,7 @@ it("debounces search requests and clears loading when the query is cleared", asy
   fromFindBookPage.searchQueryChanged.publish({ query: "new" });
   expect(booksViews.search(store.getState()).query).toBe("new");
   expect(service.search).not.toHaveBeenCalled();
-  await vi.advanceTimersByTimeAsync(300);
+  await vi.advanceTimersByTimeAsync(500);
   expect(service.search).toHaveBeenCalledTimes(1);
   expect(service.search.mock.calls[0]?.[0]).toBe("new");
   await vi.advanceTimersByTimeAsync(0);
@@ -66,7 +66,7 @@ it("ends search loading and exposes request failures", async () => {
   const { store, service } = setup();
   service.search.mockRejectedValueOnce(new Error("Quota exceeded"));
   fromFindBookPage.searchQueryChanged.publish({ query: "react" });
-  await vi.advanceTimersByTimeAsync(300);
+  await vi.advanceTimersByTimeAsync(500);
   expect(booksViews.search(store.getState())).toMatchObject({
     loading: false,
     error: "Quota exceeded",
@@ -86,7 +86,7 @@ it("ignores a late search result after the query is cleared", async () => {
   );
   const { store } = setup(service);
   fromFindBookPage.searchQueryChanged.publish({ query: "old" });
-  await vi.advanceTimersByTimeAsync(300);
+  await vi.advanceTimersByTimeAsync(500);
   fromFindBookPage.searchQueryChanged.publish({ query: "" });
   finish([book]);
   await vi.advanceTimersByTimeAsync(0);

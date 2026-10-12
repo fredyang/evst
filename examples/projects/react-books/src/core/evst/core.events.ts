@@ -1,4 +1,4 @@
-import { events, emptyProps } from "@evst/react";
+import { events, emptyProps } from "@evst/rtk";
 
 export const fromLayout = events("Layout", {
   sidenavOpened: emptyProps(),

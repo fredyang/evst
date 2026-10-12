@@ -1,4 +1,4 @@
-import { state } from "@evst/react";
+import { state } from "@evst/rtk";
 import { fromAuth } from "../../auth/evst/auth.events";
 import { fromLayout } from "./core.events";
 

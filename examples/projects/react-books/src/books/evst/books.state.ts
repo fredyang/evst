@@ -1,5 +1,5 @@
 import { createEntityAdapter } from "@reduxjs/toolkit";
-import { state, view } from "@evst/react";
+import { state, view } from "@evst/rtk";
 import type { Book } from "../model/book";
 import { fromAuth } from "../../auth/evst/auth.events";
 import {

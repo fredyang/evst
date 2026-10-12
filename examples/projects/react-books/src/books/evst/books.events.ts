@@ -1,4 +1,4 @@
-import { emptyProps, events, props } from "@evst/react";
+import { emptyProps, events, props } from "@evst/rtk";
 import type { Book } from "../model/book";
 
 export const fromFindBookPage = events("Find Book Page", {

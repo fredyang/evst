@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
-import { clearEvstStore, createEvstStore } from "@evst/react";
+import { clearEvstStore, createEvstStore } from "@evst/rtk";
 import { authState, authViews } from "../src/auth/evst/auth.state";
 import { authTasks } from "../src/auth/evst/auth.tasks";
 import { fromAuth, fromLoginPage } from "../src/auth/evst/auth.events";

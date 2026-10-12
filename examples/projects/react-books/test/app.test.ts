@@ -4,7 +4,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
-import { clearEvstStore } from "@evst/react";
+import { clearEvstStore } from "@evst/rtk";
 import { store } from "../src/store";
 import { AppLayout } from "../src/app/layout";
 import { fromUser } from "../src/core/evst/core.events";

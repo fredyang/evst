@@ -1,4 +1,4 @@
-import { state, view } from "@evst/react";
+import { state, view } from "@evst/rtk";
 import { fromAuth, fromAuthApi, fromLoginPage } from "./auth.events";
 
 export const authState = state("auth", {

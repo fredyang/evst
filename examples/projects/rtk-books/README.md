@@ -3,7 +3,7 @@
 RTK Books is a direct Redux Toolkit counterpart to React Books. Both examples
 share the same Material UI, routes, demo login, idle logout, Google Books service,
 and collection behavior. This version uses Redux Toolkit directly and does not
-depend on `@evst/react`.
+depend on `@evst/rtk`.
 
 ## Running the example
 

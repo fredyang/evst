@@ -1,4 +1,4 @@
-import { task } from "@evst/react";
+import { task } from "@evst/rtk";
 import { fromUser } from "../../core/evst/core.events";
 import { fromAuth, fromAuthApi, fromLoginPage } from "./auth.events";
 

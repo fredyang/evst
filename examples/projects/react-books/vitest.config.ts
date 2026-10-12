@@ -3,9 +3,9 @@ import path from "node:path";
 export default defineConfig({
   resolve: {
     alias: {
-      "@evst/react": path.resolve(
+      "@evst/rtk": path.resolve(
         import.meta.dirname,
-        "../../../packages/react/src/index.ts",
+        "../../../packages/rtk/src/index.ts",
       ),
     },
   },
