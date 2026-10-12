@@ -15,4 +15,3 @@ export {
   publish,
   type EvstStoreConfig,
 } from "./store.js";
-export { EvstProvider } from "./provider.js";

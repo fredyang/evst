@@ -19,8 +19,13 @@ export type EvstStoreConfig = Omit<
   tasks?: readonly Tasks[];
 };
 
+export type Evst = EnhancedStore & {
+  /** Registers lazy states and tasks once, retaining them for the store lifetime. */
+  provide(registration: Pick<EvstStoreConfig, "states" | "tasks">): void;
+};
+
 /** Creates the store, installs tasks, and enables event publishing and View snapshots. */
-export function createEvst(config: EvstStoreConfig = {}) {
+export function createEvst(config: EvstStoreConfig = {}): Evst {
   const listener = createListenerMiddleware();
   const { states = [], tasks, ...options } = config;
   const reducer = Object.fromEntries(
@@ -43,7 +48,6 @@ export function createEvst(config: EvstStoreConfig = {}) {
   activeStore = store;
   const registered = new Map(states.map((state) => [state.name, state]));
   const installedTasks = new Set<Tasks>();
-  /** Registers lazy states and tasks once, retaining them for the store lifetime. */
   const provide = (registration: Pick<EvstStoreConfig, "states" | "tasks">) => {
     const proposed = new Map(registered);
     for (const state of registration.states ?? []) {
@@ -68,10 +72,8 @@ export function createEvst(config: EvstStoreConfig = {}) {
     }
   };
   provide({ tasks });
-  return { store, provide };
+  return Object.assign(store, { provide });
 }
-
-export type Evst = ReturnType<typeof createEvst>;
 
 /** Dispatches an event through the store initialized by `createEvst()`. */
 export function publish(

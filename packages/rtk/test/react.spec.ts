@@ -29,7 +29,7 @@ describe("@evst/rtk", () => {
     }));
 
   it("creates Redux Toolkit actions and applies event handlers", () => {
-    const { store } = createEvst({ states: [counter] });
+    const store = createEvst({ states: [counter] });
     expectTypeOf(counter.views.doubled.value()).toEqualTypeOf<number>();
     fromCounter.added.publish(2);
     expect(fromCounter.added(3)).toEqual({
@@ -51,7 +51,7 @@ describe("@evst/rtk", () => {
         return fromCounter.reset();
       }),
     }));
-    const { store } = createEvst({
+    const store = createEvst({
       states: [counter],
       tasks: [counterTasks],
     });
@@ -111,7 +111,7 @@ describe("@evst/rtk", () => {
         return fromRequest.completed({ value });
       }),
     }));
-    const { store } = createEvst({ states: [result], tasks: [requests] });
+    const store = createEvst({ states: [result], tasks: [requests] });
     fromRequest.started.publish({ query: "first" });
     fromRequest.started.publish({ query: "second" });
     pending[1].resolve(2);
@@ -136,14 +136,13 @@ describe("@evst/rtk", () => {
 
   it("provides lazy features once, retains state, and rejects name collisions", () => {
     const evst = createEvst({});
-    const { store } = evst;
     const observed: number[] = [];
     const definitions = task.handle((on) => ({
       observe: on(fromCounter.added, (value) => {
         observed.push(value);
       }),
     }));
-    expect(store.getState()).toEqual({});
+    expect(evst.getState()).toEqual({});
     evst.provide({ states: [counter], tasks: [definitions] });
     fromCounter.added.publish(2);
     evst.provide({ states: [counter], tasks: [definitions] });

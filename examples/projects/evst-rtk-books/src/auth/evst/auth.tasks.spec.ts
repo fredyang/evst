@@ -13,7 +13,7 @@ afterEach(() => {
 });
 
 it("handles invalid login, valid login, logout confirmation and dismissal", () => {
-  const { store } = createEvst({
+  const store = createEvst({
     states: [authState, coreState],
     tasks: [authTasks],
   });

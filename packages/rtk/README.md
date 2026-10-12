@@ -30,13 +30,14 @@ immutable updates and Immer-style mutations are supported.
 ## Configuring the store
 
 ```ts
-import { createEvst, EvstProvider } from "@evst/rtk";
+import { createEvst } from "@evst/rtk";
+import { Provider } from "react-redux";
 import { counter } from "./counter";
 
 const evst = createEvst({ states: [counter] });
 
 export function AppRoot() {
-  return <EvstProvider evst={evst}>{/* application */}</EvstProvider>;
+  return <Provider store={evst}>{/* application */}</Provider>;
 }
 ```
 

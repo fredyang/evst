@@ -47,7 +47,7 @@ function setup() {
   return runtime.createEvst({
     states: [books.booksState],
     tasks: [books.booksTasks],
-  }).store;
+  });
 }
 
 it("trims query text before sending it to the API", async () => {
