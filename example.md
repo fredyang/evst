@@ -9,7 +9,7 @@ composition and state-management style.
 [NgRx example application at version 22.0.1](https://github.com/ngrx/platform/tree/22.0.1/projects/example-app).
 [`ngrx-books-standalone`](examples/projects/ngrx-books-standalone) is derived
 from that application and refactored to use standalone components.
-[`evst-books`](examples/projects/evst-books) is derived from the standalone
+[`evst-ngrx-books`](examples/projects/evst-ngrx-books) is derived from the standalone
 version and refactored to use EVST. [`svc-books`](examples/projects/svc-books)
 is also derived from the standalone version and refactored to use feature
 services instead of NgRx.
@@ -20,7 +20,7 @@ services instead of NgRx.
 | ------------------------------------------------------------------ | ----------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------- |
 | [`ngrx-books`](examples/projects/ngrx-books)                       | NgModules                           | Standard NgRx Store and class-based Effects    | Components inject `Store`, select Observables, and dispatch Actions.       |
 | [`ngrx-books-standalone`](examples/projects/ngrx-books-standalone) | Standalone providers and components | Standard NgRx Store and class-based Effects    | Components still inject `Store`, select Observables, and dispatch Actions. |
-| [`evst-books`](examples/projects/evst-books)                       | Standalone providers and components | EVST on top of NgRx Store and Effects          | Components read View Signals and publish events.                           |
+| [`evst-ngrx-books`](examples/projects/evst-ngrx-books)             | Standalone providers and components | EVST on top of NgRx Store and Effects          | Components read View Signals and publish events.                           |
 | [`svc-books`](examples/projects/svc-books)                         | Standalone providers and components | Feature services with Angular Signals and RxJS | Components call service methods and read service Signals.                  |
 
 ## Comparing React state management
@@ -41,7 +41,7 @@ All commands run from the repository root after `npm install`:
 ```sh
 npm run serve:ngrx-books
 npm run serve:ngrx-books-standalone
-npm run serve:evst-books
+npm run serve:evst-ngrx-books
 npm run serve:svc-books
 npm run serve:react-books
 npm run serve:rtk-books
@@ -89,24 +89,24 @@ style.
 
 ## Exploring EVST
 
-[`evst-books`](examples/projects/evst-books) uses the same NgRx runtime through
+[`evst-ngrx-books`](examples/projects/evst-ngrx-books) uses the same NgRx runtime through
 EVST's Event, View, State, and Task model. Its
-[application config](examples/projects/evst-books/src/app/app.config.ts) calls
+[application config](examples/projects/evst-ngrx-books/src/app/app.config.ts) calls
 `provideEvst(...)` and registers a root bundle.
 
 Provider code is grouped by intent:
 
-- [Events](examples/projects/evst-books/src/app/books/evst/books.events.ts)
+- [Events](examples/projects/evst-ngrx-books/src/app/books/evst/books.events.ts)
   name what happened and where it happened.
-- [State](examples/projects/evst-books/src/app/books/evst/books.state.ts)
+- [State](examples/projects/evst-ngrx-books/src/app/books/evst/books.state.ts)
   defines state transitions and derived Views.
-- [Tasks](examples/projects/evst-books/src/app/books/evst/books.tasks.ts)
+- [Tasks](examples/projects/evst-ngrx-books/src/app/books/evst/books.tasks.ts)
   perform API and storage work and return outcome events.
-- The [bundle](examples/projects/evst-books/src/app/books/evst/books.bundle.ts)
+- The [bundle](examples/projects/evst-ngrx-books/src/app/books/evst/books.bundle.ts)
   registers the State and Tasks together.
 
 Consumer code does not inject `Store`. The
-[Find Book page](examples/projects/evst-books/src/app/books/containers/find-book-page.component.ts)
+[Find Book page](examples/projects/evst-ngrx-books/src/app/books/containers/find-book-page.component.ts)
 reads View Signals and publishes `fromFindBookPage.searchQueryChanged`.
 
 ## Exploring service-owned state

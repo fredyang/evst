@@ -1,12 +1,12 @@
 # React Books
 
 React Books uses Material UI and `@evst/rtk` for the book search and collection
-flows from EVST Books.
+flows from EVST NgRx Books.
 
 ## Signing in and navigating
 
 The demo accepts usernames `ngrx` and `test`; the password is not validated,
-matching EVST Books. Authentication is simulated and resets on reload.
+matching EVST NgRx Books. Authentication is simulated and resets on reload.
 Invalid usernames display a login error.
 
 The toolbar opens a sidebar with My Collection, Browse Books, and Sign Out.
@@ -30,7 +30,7 @@ Unknown routes show a not-found page. Route changes update the document title.
 The lazy Books loader calls `provideBooks()`, which registers Books state and tasks
 through `store.provide()` before rendering its pages. Registration is idempotent,
 and Books state persists across navigation and sign-out. Collection data remains
-in localStorage, as in EVST Books; it is not partitioned by demo username.
+in localStorage, as in EVST NgRx Books; it is not partitioned by demo username.
 
 ## Running the example
 
@@ -43,7 +43,7 @@ npm run test:react-books
 ```
 
 Search and direct book-detail routes call the Google Books API using the same
-shared, browser-restricted API key as `evst-books`. API quota and HTTP failures
+shared, browser-restricted API key as `evst-ngrx-books`. API quota and HTTP failures
 appear as errors in the interface. There is no mock-catalog fallback.
 
 ## Following state changes

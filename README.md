@@ -327,7 +327,7 @@ code are attributable to its Angular and state-management architecture.
 
 [`ngrx-books`](examples/projects/ngrx-books) is the original NgRx example.
 [`ngrx-books-standalone`](examples/projects/ngrx-books-standalone) retains the
-same Store model with standalone components. [`evst-books`](examples/projects/evst-books)
+same Store model with standalone components. [`evst-ngrx-books`](examples/projects/evst-ngrx-books)
 uses EVST while retaining NgRx Store and Effects, making its reduced boilerplate
 and consumer-facing View and event API directly comparable. A service-only
 version provides an additional comparison.

@@ -5,7 +5,7 @@ const { ESLint } = require("eslint");
 
 const project = path.resolve(
   __dirname,
-  "../../../examples/projects/evst-books",
+  "../../../examples/projects/evst-ngrx-books",
 );
 const config = path.join(project, "eslint.config.mjs");
 

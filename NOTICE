@@ -6,7 +6,7 @@ The following example applications are derived from the NgRx Books examples:
 
 - `examples/projects/ngrx-books`
 - `examples/projects/ngrx-books-standalone`
-- `examples/projects/evst-books`
+- `examples/projects/evst-ngrx-books`
 - `examples/projects/svc-books`
 
 Copyright (c) 2017-2023 Brandon Roberts, Mike Ryan, Victor Savkin, Rob Wormald

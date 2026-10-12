@@ -44,7 +44,7 @@ Run the narrowest relevant checks:
 ```sh
 npm test --workspace @evst/ngrx
 npm test --workspace @evst/eslint-plugin
-npm run lint:evst-books
+npm run lint:evst-ngrx-books
 npm run docs:api
 ```
 

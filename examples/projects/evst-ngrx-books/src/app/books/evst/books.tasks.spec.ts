@@ -54,14 +54,14 @@ describe("booksTasks", () => {
       context.events.next(
         fromFindBookPage.searchQueryChanged({ query: "ngrx" }),
       );
-      vi.advanceTimersByTime(300);
+      vi.advanceTimersByTime(800);
       context.googleBooks.searchBooks.mockReturnValueOnce(
         throwError(() => new Error("Unavailable")),
       );
       context.events.next(
         fromFindBookPage.searchQueryChanged({ query: "error" }),
       );
-      vi.advanceTimersByTime(300);
+      vi.advanceTimersByTime(800);
 
       expect(context.googleBooks.searchBooks).toHaveBeenCalledWith("ngrx");
       expect(output).toEqual([
