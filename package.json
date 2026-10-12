@@ -34,6 +34,7 @@
     "serve:rtk-books": "vite --config examples/projects/rtk-books/vite.config.ts --port 4205",
     "serve:svc-books": "ng serve svc-books --port 4203",
     "serve:examples": "concurrently \"npm run serve:ngrx-books\" \"npm run serve:evst-ngrx-books\" \"npm run serve:ngrx-books-standalone\" \"npm run serve:svc-books\"",
+    "lint:evst-rtk-books": "npm run build --workspace @evst/eslint-plugin && cd examples/projects/evst-rtk-books && eslint \"src/**/*.{ts,tsx}\"",
     "lint:evst-ngrx-books": "npm run build --workspace @evst/eslint-plugin && cd examples/projects/evst-ngrx-books && eslint \"src/**/*.ts\"",
     "lint:ngrx-books-standalone": "npm run build --workspace @evst/eslint-plugin && cd examples/projects/ngrx-books-standalone && eslint \"src/**/*.ts\"",
     "lint:svc-books": "cd examples/projects/svc-books && eslint \"src/**/*.ts\"",

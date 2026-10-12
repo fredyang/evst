@@ -10,7 +10,19 @@ import noViewSubscriptionSuppressionReason from "./rules/no-view-subscription-su
 import requireTaskEvent from "./rules/require-task-event";
 import requireTaskEventSuppressionReason from "./rules/require-task-event-suppression-reason";
 
-/** ESLint plugin providing rules for event-oriented NgRx applications. */
+const core = {
+  rules: {
+    "evst/event-group-source-prefix": "warn",
+    "evst/event-publisher-ownership": "warn",
+    "evst/no-duplicate-event-handlers": "warn",
+    "evst/no-sequential-event-publishes": "warn",
+    "evst/no-unpublished-events": "warn",
+    "evst/no-unsubscribed-events": "warn",
+    "evst/no-unused-views": "warn",
+  },
+} as const;
+
+/** ESLint plugin providing rules for EVST applications using NgRx or RTK. */
 const plugin = {
   /** Package identity reported to ESLint. */
   meta: { name: "@evst/eslint-plugin", version: "0.1.0" },
@@ -30,6 +42,17 @@ const plugin = {
     "require-task-event-suppression-reason": requireTaskEventSuppressionReason,
   },
   configs: {
+    core,
+    rtk: { rules: { ...core.rules } },
+    "evst-ngrx": {
+      rules: {
+        ...core.rules,
+        "evst/no-view-subscription": "warn",
+        "evst/no-view-subscription-suppression-reason": "error",
+        "evst/require-task-event": "warn",
+        "evst/require-task-event-suppression-reason": "error",
+      },
+    },
     ngrx: {
       rules: {
         "evst/event-publisher-ownership": "warn",

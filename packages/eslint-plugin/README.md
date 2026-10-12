@@ -1,6 +1,6 @@
 # EVST ESLint plugin
 
-ESLint rules for event-oriented NgRx applications.
+ESLint rules for EVST applications using NgRx or Redux Toolkit.
 
 The source, complete documentation, API reference, and Books examples for this
 package are in the main [EVST repository](https://github.com/fredyang/evst).
@@ -18,11 +18,26 @@ npm test --workspace @evst/eslint-plugin
 npm pack --workspace @evst/eslint-plugin
 ```
 
-The generated `evst-eslint-0.1.0.tgz` can be installed in a consuming project with `npm install --save-dev /path/to/evst-eslint-0.1.0.tgz`.
+In a consuming application:
+
+```sh
+npm install --save-dev @evst/eslint-plugin eslint typescript-eslint
+```
 
 ## Configuring ESLint
 
-Flat configuration for an EVST application (`eslint.config.mjs`):
+All presets use the same `evst/` rule namespace. The framework presets include
+the shared rules; combining them with `core` is unnecessary.
+
+| Preset      | Purpose                                                                                                                             |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `core`      | Shared event naming, publisher ownership, sequential publication, duplicate state handlers, unused events, and unused derived Views |
+| `rtk`       | Complete preset for `@evst/rtk`; currently the same rules as `core`                                                                 |
+| `evst-ngrx` | Shared rules plus Angular View-subscription and NgRx Task-source rules                                                              |
+| `evst`      | Existing NgRx-oriented EVST preset, preserved for compatibility                                                                     |
+| `ngrx`      | Existing plain-NgRx preset, preserved for compatibility                                                                             |
+
+Flat configuration for React and `@evst/rtk` (`eslint.config.mjs`):
 
 ```js
 import tseslint from "typescript-eslint";
@@ -30,18 +45,51 @@ import evst from "@evst/eslint-plugin";
 
 export default [
   {
-    files: ["**/*.ts"],
-    languageOptions: { parser: tseslint.parser },
+    files: ["src/**/*.{ts,tsx}"],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: "./tsconfig.eslint.json",
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     plugins: { evst },
-    ...evst.configs.evst,
+    ...evst.configs.rtk,
   },
 ];
 ```
 
-The `ngrx` preset supports standard NgRx actions and Store dispatches. It
-includes action-type hygiene, repeated action dispatch detection, and multiple
-dispatch detection within one executable boundary. EVST-specific rules,
-including source-oriented event-group naming, remain in the `evst` preset.
+The lint TypeScript project should include application sources and exclude
+tests so test publications do not count as application publishers:
+
+```json
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.spec.tsx"]
+}
+```
+
+For `@evst/ngrx`, the same configuration can use `evst.configs["evst-ngrx"]`.
+The RTK preset excludes Angular Observable-subscription guidance and NgRx
+eventless Task rules. RTK Tasks already require an event argument.
+
+Type-aware analysis recognizes View references in TSX, including `.use()`,
+and event creators called inside Tasks, including async returned outcomes.
+Unused-event and unused-View checks need a TypeScript project. Publisher
+ownership checks span the project when configured and otherwise inspect only
+the current file.
+
+These checks retain the existing static-analysis limits: several helpers
+recognize conventional names such as `events`, `state`, `task`, and `on`.
+Publisher ownership and sequential-publication checks inspect explicit
+`.publish()` and `.dispatch()` calls; they do not enforce ownership of
+returned Task outcomes. The unused-event check treats event creator calls
+inside Tasks as publications without proving that they are returned.
+
+The `ngrx` preset supports explicit Store dispatch checks and duplicate EVST
+state-handler checks. EVST-specific source naming and usage analysis remain
+in the EVST presets.
 
 ```js
 import tseslint from "typescript-eslint";

@@ -16,6 +16,7 @@ Redux Toolkit store, React Redux `Provider`, and Redux ecosystem compatibility.
 - [Configuring the store](#configuring-the-store)
 - [Registering lazy state](#registering-lazy-state)
 - [Working with Redux Toolkit](#working-with-redux-toolkit)
+- [Enforcing event conventions](#enforcing-event-conventions)
 - [Testing features](#testing-features)
 - [Exploring the Books example](#exploring-the-books-example)
 
@@ -249,6 +250,20 @@ EVST is an RTK extension, not a replacement. Its store is usable anywhere an
 RTK store is expected, and its events are ordinary RTK action creators. Existing
 RTK reducers, `createSlice`, `createEntityAdapter`, listener middleware,
 DevTools, and React Redux APIs remain available when they fit the application.
+
+## Enforcing event conventions
+
+`@evst/eslint-plugin` provides an `rtk` preset for shared EVST conventions,
+including source naming, publisher ownership, duplicate state handlers, and
+unused events and derived Views. It supports TypeScript and TSX. The
+[plugin guide](../eslint-plugin/README.md#configuring-eslint) documents
+configuration, type-aware analysis, and rule limitations.
+
+From the repository root, the Books example can be checked with:
+
+```sh
+npm run lint:evst-rtk-books
+```
 
 ## Testing features
 
