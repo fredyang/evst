@@ -1,5 +1,26 @@
 import { expect, it, vi } from "vitest";
-import { concat, exhaust, latest, merge } from "../src/utils/concurrency";
+import { concat, exhaust, latest, merge } from "./concurrency";
+
+it("continues queued operations after an earlier operation fails", async () => {
+  const run = concat(async (value: string) => {
+    if (value === "bad") throw new Error("Failed");
+    return value;
+  });
+  const failure = run("bad");
+  const next = run("good");
+  await expect(failure).rejects.toThrow("Failed");
+  await expect(next).resolves.toBe("good");
+});
+
+it("accepts new exhaust invocations after an operation fails", async () => {
+  const operation = vi
+    .fn()
+    .mockRejectedValueOnce(new Error("Failed"))
+    .mockResolvedValue("good");
+  const run = exhaust(operation);
+  await expect(run()).rejects.toThrow("Failed");
+  await expect(run()).resolves.toBe("good");
+});
 
 function deferred<T>() {
   let resolve!: (value: T) => void;

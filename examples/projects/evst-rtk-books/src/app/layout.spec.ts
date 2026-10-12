@@ -4,9 +4,9 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { clearEvstStore, EvstProvider } from "@evst/rtk";
-import { evst } from "../src/evst";
-import { AppLayout } from "../src/app/layout";
-import { fromUser } from "../src/core/evst/core.events";
+import { evst } from "../evst";
+import { AppLayout } from "./layout";
+import { fromUser } from "../core/evst/core.events";
 
 let root: Root;
 const store = evst.store;

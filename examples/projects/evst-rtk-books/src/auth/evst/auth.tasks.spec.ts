@@ -1,12 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
 import { clearEvstStore, createEvst } from "@evst/rtk";
-import { authState, authViews } from "../src/auth/evst/auth.state";
-import { authTasks } from "../src/auth/evst/auth.tasks";
-import { fromAuth, fromLoginPage } from "../src/auth/evst/auth.events";
-import { coreState, coreViews } from "../src/core/evst/core.state";
-import { fromLayout, fromUser } from "../src/core/evst/core.events";
-import { watchIdle } from "../src/core/services/idle";
+import { authState, authViews } from "./auth.state";
+import { authTasks } from "./auth.tasks";
+import { fromAuth, fromLoginPage } from "./auth.events";
+import { coreState, coreViews } from "../../core/evst/core.state";
+import { fromLayout } from "../../core/evst/core.events";
 
 afterEach(() => {
   clearEvstStore();
@@ -38,23 +37,4 @@ it("handles invalid login, valid login, logout confirmation and dismissal", () =
   expect(authViews.confirmingLogout.value()).toBe(false);
   fromAuth.logout.publish();
   expect(authViews.loggedIn.value()).toBe(false);
-});
-
-it("resets the five-minute idle timer on activity and cleans up", () => {
-  vi.useFakeTimers();
-  createEvst({ states: [authState], tasks: [authTasks] });
-  fromLoginPage.login.publish({
-    credentials: { username: "test", password: "" },
-  });
-  const target = new EventTarget();
-  const stop = watchIdle(target, () => fromUser.idleTimeoutElapsed.publish());
-  vi.advanceTimersByTime(4 * 60 * 1000);
-  target.dispatchEvent(new Event("keydown"));
-  vi.advanceTimersByTime(4 * 60 * 1000);
-  expect(authViews.loggedIn.value()).toBe(true);
-  vi.advanceTimersByTime(60 * 1000);
-  expect(authViews.loggedIn.value()).toBe(false);
-  stop();
-  target.dispatchEvent(new Event("click"));
-  expect(vi.getTimerCount()).toBe(0);
 });

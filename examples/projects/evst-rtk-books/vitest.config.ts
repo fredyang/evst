@@ -9,5 +9,14 @@ export default defineConfig({
       ),
     },
   },
-  test: { include: ["examples/projects/evst-rtk-books/test/**/*.test.ts"] },
+  test: {
+    include: ["examples/projects/evst-rtk-books/src/**/*.spec.ts"],
+    coverage: {
+      provider: "v8",
+      include: ["examples/projects/evst-rtk-books/src/**/*.{ts,tsx}"],
+      exclude: ["**/*.spec.ts"],
+      reporter: ["text", "html", "json-summary"],
+      reportsDirectory: "examples/projects/evst-rtk-books/coverage",
+    },
+  },
 });

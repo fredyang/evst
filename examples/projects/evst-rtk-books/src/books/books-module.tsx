@@ -3,12 +3,10 @@ import { Alert, Button, CircularProgress, Stack } from "@mui/material";
 import { Route, Routes } from "react-router-dom";
 import { evst } from "../evst";
 import { booksState, booksViews } from "./evst/books.state";
-import { createBooksTasks } from "./evst/books.tasks";
+import { booksTasks } from "./evst/books.tasks";
 import { fromCollectionPage } from "./evst/books.events";
 import { BookPage, CollectionPage, SearchPage } from "./components";
 import { NotFoundPage } from "../core/components/not-found-page";
-
-const booksTasks = createBooksTasks();
 
 evst.provide({ states: [booksState], tasks: [booksTasks] });
 
