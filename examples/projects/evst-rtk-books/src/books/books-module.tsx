@@ -10,10 +10,7 @@ import { NotFoundPage } from "../core/components/not-found-page";
 
 const booksTasks = createBooksTasks();
 
-/** Called by the lazy route loader before any Books component renders. */
-export function provideBooks() {
-  store.provide({ features: [booksState], tasks: [booksTasks] });
-}
+store.provide({ features: [booksState], tasks: [booksTasks] });
 
 export default function BooksModule() {
   const collection = booksViews.collection.use();
