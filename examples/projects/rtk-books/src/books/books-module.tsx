@@ -10,11 +10,9 @@ import { CollectionPage } from "./components/collection-page";
 import { SearchPage } from "./components/search-page";
 import { NotFoundPage } from "../core/components/not-found-page";
 
-export function provideBooks() {
-  store.injectFeature("books", booksReducer, () =>
-    registerBooksListeners(store.listenerMiddleware),
-  );
-}
+store.injectFeature("books", booksReducer, () =>
+  registerBooksListeners(store.listenerMiddleware),
+);
 
 export default function BooksModule() {
   const dispatch = useDispatch();

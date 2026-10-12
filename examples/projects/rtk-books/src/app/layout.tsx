@@ -33,11 +33,7 @@ import {
 import { watchIdle } from "../core/services/idle";
 import { NotFoundPage } from "../core/components/not-found-page";
 
-const BooksModule = lazy(async () => {
-  const module = await import("../books/books-module");
-  module.provideBooks();
-  return { default: module.default };
-});
+const BooksModule = lazy(() => import("../books/books-module"));
 
 function ProtectedBooks() {
   const loggedIn = useSelector(selectLoggedIn);
