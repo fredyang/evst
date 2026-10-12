@@ -5,7 +5,7 @@ import { readView } from "./store.js";
 export type View<RootState, Result> = Selector<RootState, Result> & {
   /** Reads this view using React Redux's current Provider. */
   use(): Result;
-  /** Reads the current active-store value without subscribing. Requires createEvstStore(). */
+  /** Reads the current active-store value without subscribing. Requires createEvst(). */
   value(): Result;
 };
 

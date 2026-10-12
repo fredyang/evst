@@ -15,16 +15,16 @@ export type EvstStoreConfig = Omit<
   ConfigureStoreOptions,
   "reducer" | "middleware"
 > & {
-  features?: readonly FeatureStateDefinition<any, any>[];
+  states?: readonly FeatureStateDefinition<any, any>[];
   tasks?: readonly Tasks[];
 };
 
 /** Creates the store, installs tasks, and enables event publishing and View snapshots. */
-export function createEvstStore(config: EvstStoreConfig = {}) {
+export function createEvst(config: EvstStoreConfig = {}) {
   const listener = createListenerMiddleware();
-  const { features = [], tasks, ...options } = config;
+  const { states = [], tasks, ...options } = config;
   const reducer = Object.fromEntries(
-    features.map((feature) => [feature.name, feature.reducer]),
+    states.map((state) => [state.name, state.reducer]),
   ) as Record<string, Reducer>;
   const rootReducer: Reducer<any> = Object.keys(reducer).length
     ? combineReducers(reducer)
@@ -41,29 +41,23 @@ export function createEvstStore(config: EvstStoreConfig = {}) {
     );
   }
   activeStore = store;
-  const registered = new Map(
-    features.map((feature) => [feature.name, feature]),
-  );
+  const registered = new Map(states.map((state) => [state.name, state]));
   const installedTasks = new Set<Tasks>();
-  /** Registers lazy features and tasks once, retaining them for the store lifetime. */
-  const provide = (
-    registration: Pick<EvstStoreConfig, "features" | "tasks">,
-  ) => {
+  /** Registers lazy states and tasks once, retaining them for the store lifetime. */
+  const provide = (registration: Pick<EvstStoreConfig, "states" | "tasks">) => {
     const proposed = new Map(registered);
-    for (const feature of registration.features ?? []) {
-      const existing = proposed.get(feature.name);
-      if (existing && existing !== feature) {
-        throw new Error(
-          `EVST feature "${feature.name}" is already registered.`,
-        );
+    for (const state of registration.states ?? []) {
+      const existing = proposed.get(state.name);
+      if (existing && existing !== state) {
+        throw new Error(`EVST state "${state.name}" is already registered.`);
       }
-      proposed.set(feature.name, feature);
+      proposed.set(state.name, state);
     }
     let changed = false;
-    for (const feature of registration.features ?? []) {
-      if (registered.has(feature.name)) continue;
-      registered.set(feature.name, feature);
-      reducer[feature.name] = feature.reducer;
+    for (const state of registration.states ?? []) {
+      if (registered.has(state.name)) continue;
+      registered.set(state.name, state);
+      reducer[state.name] = state.reducer;
       changed = true;
     }
     if (changed) store.replaceReducer(combineReducers(reducer));
@@ -74,10 +68,12 @@ export function createEvstStore(config: EvstStoreConfig = {}) {
     }
   };
   provide({ tasks });
-  return Object.assign(store, { provide });
+  return { store, provide };
 }
 
-/** Dispatches an event through the store initialized by `createEvstStore()`. */
+export type Evst = ReturnType<typeof createEvst>;
+
+/** Dispatches an event through the store initialized by `createEvst()`. */
 export function publish(
   action: Parameters<EnhancedStore["dispatch"]>[0],
 ): void {

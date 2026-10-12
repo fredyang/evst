@@ -24,13 +24,14 @@ visitors to `/login`. The Books module is loaded only after authentication:
 
 Unknown routes show a not-found page. Route changes update the document title.
 
-## Registering features
+## Registering states
 
 `src/store.ts` registers only auth and core state plus auth tasks at startup.
-The lazy Books loader calls `provideBooks()`, which registers Books state and tasks
-through `store.provide()` before rendering its pages. Registration is idempotent,
-and Books state persists across navigation and sign-out. Collection data remains
-in localStorage, as in EVST NgRx Books; it is not partitioned by demo username.
+The lazy `books-module.tsx` registers Books state and tasks through
+`store.provide()` when its module is imported, before rendering Books pages.
+Registration is idempotent, and Books state persists across navigation and
+sign-out. Collection data remains in localStorage, as in EVST NgRx Books; it is
+not partitioned by demo username.
 
 ## Running the example
 

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, expectTypeOf, it } from "vitest";
 import {
   clearEvstStore,
-  createEvstStore,
+  createEvst,
   emptyProps,
   events,
   props,
@@ -29,7 +29,7 @@ describe("@evst/rtk", () => {
     }));
 
   it("creates Redux Toolkit actions and applies event handlers", () => {
-    const store = createEvstStore({ features: [counter] });
+    const { store } = createEvst({ states: [counter] });
     expectTypeOf(counter.views.doubled.value()).toEqualTypeOf<number>();
     fromCounter.added.publish(2);
     expect(fromCounter.added(3)).toEqual({
@@ -51,8 +51,8 @@ describe("@evst/rtk", () => {
         return fromCounter.reset();
       }),
     }));
-    const store = createEvstStore({
-      features: [counter],
+    const { store } = createEvst({
+      states: [counter],
       tasks: [counterTasks],
     });
     store.dispatch(fromCounter.added(4));
@@ -63,7 +63,7 @@ describe("@evst/rtk", () => {
 
   it("reads typed current snapshots and derived Views without React", () => {
     const doubled = view(counter.views.count, (count) => count * 2);
-    createEvstStore({ features: [counter] });
+    createEvst({ states: [counter] });
     expectTypeOf(counter.views.count.value()).toEqualTypeOf<number>();
     expectTypeOf(doubled.value()).toEqualTypeOf<number>();
     expect(counter.views.count.value()).toBe(0);
@@ -77,13 +77,13 @@ describe("@evst/rtk", () => {
     expect(() => counter.views.count.value()).toThrow(
       "Create an EVST store before reading View values.",
     );
-    createEvstStore({ features: [counter] });
+    createEvst({ states: [counter] });
     fromCounter.added.publish(4);
     clearEvstStore();
     expect(() => counter.views.count.value()).toThrow(
       "Create an EVST store before reading View values.",
     );
-    createEvstStore({ features: [counter] });
+    createEvst({ states: [counter] });
     expect(counter.views.count.value()).toBe(0);
   });
 
@@ -111,7 +111,7 @@ describe("@evst/rtk", () => {
         return fromRequest.completed({ value });
       }),
     }));
-    const store = createEvstStore({ features: [result], tasks: [requests] });
+    const { store } = createEvst({ states: [result], tasks: [requests] });
     fromRequest.started.publish({ query: "first" });
     fromRequest.started.publish({ query: "second" });
     pending[1].resolve(2);
@@ -127,15 +127,16 @@ describe("@evst/rtk", () => {
 
   it("registers and stops an empty task collection", () => {
     expect(() =>
-      createEvstStore({
-        features: [counter],
+      createEvst({
+        states: [counter],
         tasks: [task.handle(() => ({}))],
       }),
     ).not.toThrow();
   });
 
   it("provides lazy features once, retains state, and rejects name collisions", () => {
-    const store = createEvstStore({});
+    const evst = createEvst({});
+    const { store } = evst;
     const observed: number[] = [];
     const definitions = task.handle((on) => ({
       observe: on(fromCounter.added, (value) => {
@@ -143,14 +144,14 @@ describe("@evst/rtk", () => {
       }),
     }));
     expect(store.getState()).toEqual({});
-    store.provide({ features: [counter], tasks: [definitions] });
+    evst.provide({ states: [counter], tasks: [definitions] });
     fromCounter.added.publish(2);
-    store.provide({ features: [counter], tasks: [definitions] });
+    evst.provide({ states: [counter], tasks: [definitions] });
     fromCounter.added.publish(3);
     expect(counter.views.count.value()).toBe(5);
     expect(observed).toEqual([2, 3]);
     expect(() =>
-      store.provide({ features: [state("counter", { count: 9 })] }),
+      evst.provide({ states: [state("counter", { count: 9 })] }),
     ).toThrow("already registered");
     expect(counter.views.count.value()).toBe(5);
   });

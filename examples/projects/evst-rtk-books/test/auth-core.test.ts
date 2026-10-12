@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
-import { clearEvstStore, createEvstStore } from "@evst/rtk";
+import { clearEvstStore, createEvst } from "@evst/rtk";
 import { authState, authViews } from "../src/auth/evst/auth.state";
 import { authTasks } from "../src/auth/evst/auth.tasks";
 import { fromAuth, fromLoginPage } from "../src/auth/evst/auth.events";
@@ -14,8 +14,8 @@ afterEach(() => {
 });
 
 it("handles invalid login, valid login, logout confirmation and dismissal", () => {
-  const store = createEvstStore({
-    features: [authState, coreState],
+  const { store } = createEvst({
+    states: [authState, coreState],
     tasks: [authTasks],
   });
   expect(Object.keys(store.getState())).toEqual(["auth", "core"]);
@@ -42,7 +42,7 @@ it("handles invalid login, valid login, logout confirmation and dismissal", () =
 
 it("resets the five-minute idle timer on activity and cleans up", () => {
   vi.useFakeTimers();
-  createEvstStore({ features: [authState], tasks: [authTasks] });
+  createEvst({ states: [authState], tasks: [authTasks] });
   fromLoginPage.login.publish({
     credentials: { username: "test", password: "" },
   });

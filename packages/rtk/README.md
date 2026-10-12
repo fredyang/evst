@@ -30,18 +30,17 @@ immutable updates and Immer-style mutations are supported.
 ## Configuring the store
 
 ```ts
-import { Provider } from "react-redux";
-import { createEvstStore } from "@evst/rtk";
+import { createEvst, EvstProvider } from "@evst/rtk";
 import { counter } from "./counter";
 
-const store = createEvstStore({ features: [counter] });
+const evst = createEvst({ states: [counter] });
 
 export function AppRoot() {
-  return <Provider store={store}>{/* application */}</Provider>;
+  return <EvstProvider evst={evst}>{/* application */}</EvstProvider>;
 }
 ```
 
-Views expose `.use()` for components under the matching React Redux provider. Events expose `.publish()` after `createEvstStore()` has configured the application store.
+Views expose `.use()` for components under the matching React Redux provider. Events expose `.publish()` after `createEvst()` has configured the application store.
 
 Views also expose `.value()` for a current snapshot outside React:
 
@@ -50,7 +49,7 @@ const count = counter.views.count.value();
 ```
 
 Snapshot reads do not subscribe or trigger renders. They use the active store
-configured by `createEvstStore()` and throw before initialization or after
+configured by `createEvst()` and throw before initialization or after
 `clearEvstStore()`. The `.use()` method remains a React hook.
 
 ```ts
@@ -60,16 +59,16 @@ function Counter() {
 }
 ```
 
-## Registering lazy features
+## Registering lazy states
 
-The root store can start with only shared features, or with no features.
-A lazy route loader registers its features before rendering components:
+The root store can start with only shared states, or with no states.
+A lazy route module registers its states before rendering components:
 
 ```ts
-const store = createEvstStore({ features: [authState, coreState] });
+const evst = createEvst({ states: [authState, coreState] });
 
 // Inside the lazy feature loader:
-store.provide({ features: [booksState], tasks: [booksTasks] });
+evst.provide({ states: [booksState], tasks: [booksTasks] });
 ```
 
 Repeated registration of the same definitions does not reset state or duplicate
@@ -91,7 +90,7 @@ const counterTasks = task.handle((on) => ({
   }),
 }));
 
-const store = createEvstStore({ features: [counter], tasks: [counterTasks] });
+const evst = createEvst({ states: [counter], tasks: [counterTasks] });
 ```
 
 One active publisher is supported per loaded package. Server-rendered or independently mounted applications should dispatch with their own Redux store rather than using `.publish()`.

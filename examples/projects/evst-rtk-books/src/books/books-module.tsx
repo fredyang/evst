@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Alert, Button, CircularProgress, Stack } from "@mui/material";
 import { Route, Routes } from "react-router-dom";
-import { store } from "../store";
+import { evst } from "../evst";
 import { booksState, booksViews } from "./evst/books.state";
 import { createBooksTasks } from "./evst/books.tasks";
 import { fromCollectionPage } from "./evst/books.events";
@@ -10,7 +10,7 @@ import { NotFoundPage } from "../core/components/not-found-page";
 
 const booksTasks = createBooksTasks();
 
-store.provide({ features: [booksState], tasks: [booksTasks] });
+evst.provide({ states: [booksState], tasks: [booksTasks] });
 
 export default function BooksModule() {
   const collection = booksViews.collection.use();

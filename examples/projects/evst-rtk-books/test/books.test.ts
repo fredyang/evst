@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { clearEvstStore, createEvstStore } from "@evst/rtk";
+import { clearEvstStore, createEvst } from "@evst/rtk";
 import {
   booksState,
   booksViews,
@@ -32,8 +32,8 @@ function setup(
     setItem: () => {},
   })),
 ) {
-  const store = createEvstStore({
-    features: [booksState],
+  const { store } = createEvst({
+    states: [booksState],
     tasks: [createBooksTasks(service, storage)],
   });
   return { store, service };

@@ -2,14 +2,14 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { Provider } from "react-redux";
 import { MemoryRouter } from "react-router-dom";
-import { clearEvstStore } from "@evst/rtk";
-import { store } from "../src/store";
+import { clearEvstStore, EvstProvider } from "@evst/rtk";
+import { evst } from "../src/evst";
 import { AppLayout } from "../src/app/layout";
 import { fromUser } from "../src/core/evst/core.events";
 
 let root: Root;
+const store = evst.store;
 let host: HTMLDivElement;
 (
   globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
@@ -28,8 +28,8 @@ it("guards Books, loads its feature after login, and supports navigation and sig
   expect(Object.keys(store.getState())).toEqual(["auth", "core"]);
   await act(async () => {
     root.render(
-      createElement(Provider, {
-        store,
+      createElement(EvstProvider, {
+        evst,
         children: createElement(
           MemoryRouter,
           { initialEntries: ["/books"] },

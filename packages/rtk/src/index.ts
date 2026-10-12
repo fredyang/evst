@@ -10,7 +10,9 @@ export { task, tasks, type TaskEffect, type Tasks } from "./tasks.js";
 export { view, type View } from "./view.js";
 export {
   clearEvstStore,
-  createEvstStore,
+  createEvst,
+  type Evst,
   publish,
   type EvstStoreConfig,
 } from "./store.js";
+export { EvstProvider } from "./provider.js";
