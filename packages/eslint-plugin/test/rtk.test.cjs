@@ -56,7 +56,7 @@ describe("RTK preset", () => {
     });
   });
 
-  it("tracks TSX hooks, state handlers and async returned outcomes across files", async () => {
+  it("tracks hooks, task outcomes and nested conditional publications without counting the condition", async () => {
     const cwd = path.join(__dirname, "fixtures/rtk");
     const eslint = new ESLint({
       cwd,
@@ -89,6 +89,22 @@ describe("RTK preset", () => {
         {
           ruleId: "evst/no-unsubscribed-events",
           message: "Event `unused` has no subscriber and can be removed.",
+        },
+        {
+          ruleId: "evst/no-unsubscribed-events",
+          message: "Event `added` has no subscriber and can be removed.",
+        },
+        {
+          ruleId: "evst/no-unsubscribed-events",
+          message: "Event `removed` has no subscriber and can be removed.",
+        },
+        {
+          ruleId: "evst/no-unpublished-events",
+          message: "Event `checked` is never published and can be removed.",
+        },
+        {
+          ruleId: "evst/no-unsubscribed-events",
+          message: "Event `checked` has no subscriber and can be removed.",
         },
         {
           ruleId: "evst/no-unused-views",

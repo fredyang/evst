@@ -62,10 +62,30 @@ export function eventReference(
 }
 
 export function isPublication(node: ts.PropertyAccessExpression): boolean {
-  const parent = node.parent;
+  let target: ts.Expression = node;
+  while (true) {
+    const wrapper = target.parent;
+    if (
+      ts.isParenthesizedExpression(wrapper) ||
+      ts.isAsExpression(wrapper) ||
+      ts.isTypeAssertionExpression(wrapper) ||
+      ts.isNonNullExpression(wrapper) ||
+      ts.isSatisfiesExpression(wrapper)
+    ) {
+      target = wrapper;
+    } else if (
+      ts.isConditionalExpression(wrapper) &&
+      (wrapper.whenTrue === target || wrapper.whenFalse === target)
+    ) {
+      target = wrapper;
+    } else {
+      break;
+    }
+  }
+  const parent = target.parent;
   if (
     ts.isPropertyAccessExpression(parent) &&
-    parent.expression === node &&
+    parent.expression === target &&
     parent.name.text === "publish" &&
     ts.isCallExpression(parent.parent) &&
     parent.parent.expression === parent
@@ -74,7 +94,7 @@ export function isPublication(node: ts.PropertyAccessExpression): boolean {
   }
   return (
     ts.isCallExpression(parent) &&
-    parent.expression === node &&
+    parent.expression === target &&
     isWithinTask(parent)
   );
 }

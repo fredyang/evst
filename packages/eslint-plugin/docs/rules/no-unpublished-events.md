@@ -21,6 +21,15 @@ const booksTasks = task.handle((on) => ({
 }));
 ```
 
+Conditional publication recognizes both possible event creators, including
+nested conditions and parenthesized expressions:
+
+```ts
+(saved ? fromBooksPage.removed : fromBooksPage.added).publish({ book });
+```
+
+References used only as the condition are not counted as publications.
+
 The rule requires type-aware linting with `parserOptions.project` or
 `projectService`. Imported aliases are resolved throughout the TypeScript
 program.

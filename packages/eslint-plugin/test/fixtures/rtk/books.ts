@@ -7,6 +7,11 @@ export const fromBooksPage = events("Books Page", {
 export const fromBooksApi = events("Books API", {
   loaded: props<{ titles: string[] }>(),
 });
+export const fromSelectionPage = events("Selection Page", {
+  added: emptyProps(),
+  removed: emptyProps(),
+  checked: emptyProps(),
+});
 export const booksState = state("books", { titles: [] as string[] })
   .extraViews(({ titles }) => ({
     total: view(titles, (titles) => titles.length),
