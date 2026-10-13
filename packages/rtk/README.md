@@ -1,51 +1,37 @@
 # @evst/rtk
 
-**Event, View, State, Task**
-
 `@evst/rtk` is a minimalist, event-driven layer on Redux Toolkit. It organizes
 feature code around events, views, state, and tasks while retaining a standard
 Redux Toolkit store, React Redux `Provider`, and Redux ecosystem compatibility.
 
-- [Understanding EVST](#understanding-evst)
-- [Understanding the coding model](#understanding-the-coding-model)
-- [Defining provider code](#defining-provider-code)
+- [Installing](#installing)
+- [Writing provider code](#writing-provider-code)
   - [Modeling events](#modeling-events)
-  - [Modeling state and views](#modeling-state-and-views)
-  - [Defining tasks](#defining-tasks)
+  - [Implementing State and Views](#implementing-state-and-views)
+  - [Implementing Tasks](#implementing-tasks)
 - [Writing consumer code](#writing-consumer-code)
 - [Configuring the store](#configuring-the-store)
-- [Registering lazy state](#registering-lazy-state)
-- [Working with Redux Toolkit](#working-with-redux-toolkit)
+  - [Registering lazy state](#registering-lazy-state)
 - [Enforcing event conventions](#enforcing-event-conventions)
-- [Testing features](#testing-features)
-- [Exploring the Books example](#exploring-the-books-example)
+- [Testing and developing](#testing-and-developing)
+- [Working with Redux Toolkit](#working-with-redux-toolkit)
+- [Exploring the Books examples](#exploring-the-books-examples)
 
-## Understanding EVST
+## Installing
 
-EVST organizes feature code around four concepts: Event, View, State, and Task.
-It keeps Redux Toolkit underneath: events are RTK action creators, views are
-memoized selectors, state definitions contain RTK reducers, and tasks use RTK
-listener middleware.
+In a React application:
 
-Redux Toolkit provides flexible primitives such as `createAction`,
-`createReducer`, `createSelector`, and listener middleware. EVST connects those
-primitives around a feature, making the flow from an event to state, a view, or
-a side effect easier to follow without replacing the store.
+```sh
+npm install @evst/rtk @reduxjs/toolkit react-redux
+```
 
-## Understanding the coding model
+The package supports Redux Toolkit 2, React 18 or 19, and React Redux 8 or 9.
+Events describe occurrences, Views expose state, State handles transitions,
+and Tasks perform external work. The
+[shared programming model](https://github.com/fredyang/evst#understanding-the-programming-model)
+explains the rationale and conventions; this guide applies them to a Books feature.
 
-| Object    | Role                                                                                  |
-| --------- | ------------------------------------------------------------------------------------- |
-| **Event** | Describes something that happened and is published by its source.                     |
-| **View**  | Exposes read-only state to React components and imperative integrations.              |
-| **State** | Handles events through pure state transitions and exposes Views.                      |
-| **Task**  | Handles events, performs asynchronous or imperative work, and returns outcome events. |
-
-Provider code defines events, state, views, and tasks. Consumer code reads
-views and publishes events without knowing which state definition or task
-reacts to them.
-
-## Defining provider code
+## Writing provider code
 
 ### Modeling events
 
@@ -77,7 +63,7 @@ readable RTK action type - `[Books Page] Book Selected` - and each event creator
 remains a standard Redux action creator. Events therefore work with RTK
 reducers, listener middleware, DevTools, and direct `store.dispatch(...)`.
 
-### Modeling state and views
+### Implementing State and Views
 
 `state()` infers feature state from its initial-state object and creates a typed
 View for every top-level field. `.extraViews()` composes derived Views and
@@ -126,7 +112,7 @@ export const booksViews = booksState.views;
 State handlers receive event data directly as their second argument. RTK's
 Immer-powered mutations and returned immutable updates are both supported.
 
-### Defining tasks
+### Implementing Tasks
 
 Tasks use the same `handle((on) => ({ ... }))` definition shape as state.
 Each handler receives event data and returns an optional outcome event. Returned
@@ -149,6 +135,7 @@ export const booksTasks = task.handle((on) => ({
 }));
 ```
 
+`booksApi.load()` is an application service returning `Promise<Book[]>`.
 Each published event invokes each matching task handler independently. Request
 ordering, cancellation, and debouncing remain application concerns.
 
@@ -165,10 +152,12 @@ import { booksViews } from "./books.state";
 export function BooksPage() {
   const books = booksViews.books.use();
   const loading = booksViews.loading.use();
+  const error = booksViews.error.use();
 
   useEffect(() => fromBooksPage.entered.publish(), []);
 
   if (loading) return <p>Loading books...</p>;
+  if (error) return <p role="alert">{error}</p>;
 
   return (
     <ul>
@@ -204,6 +193,7 @@ import { createEvst } from "@evst/rtk";
 import { Provider } from "react-redux";
 import { booksState } from "./books.state";
 import { booksTasks } from "./books.tasks";
+import { BooksPage } from "./books-page";
 
 export const evst = createEvst({
   states: [booksState],
@@ -211,7 +201,11 @@ export const evst = createEvst({
 });
 
 export function AppRoot() {
-  return <Provider store={evst}>{/* application */}</Provider>;
+  return (
+    <Provider store={evst}>
+      <BooksPage />
+    </Provider>
+  );
 }
 ```
 
@@ -222,10 +216,12 @@ state definitions and listener middleware.
 
 Events' `.publish()` and Views' `.value()` use the active store configured by
 `createEvst()`. One active EVST store is supported per loaded package. Server
-rendering or independently mounted applications should dispatch through their
-own store rather than use `.publish()` or `.value()`.
+rendering or independently mounted applications with separate stores require
+explicit store dispatch and selector calls instead of the shared helpers.
+A second `createEvst()` call throws while a store is active. `clearEvstStore()`
+clears the active reference for test isolation; it does not dispose task listeners.
 
-## Registering lazy state
+### Registering lazy state
 
 A root store can begin with shared state only, or with no feature state. A lazy
 route module registers its state definitions and tasks before rendering the
@@ -244,20 +240,40 @@ Repeated registration of the same definitions does not reset state or duplicate
 task listeners. Registering a different state definition with an existing name
 throws. Registered state and tasks remain installed for the store lifetime.
 
-## Working with Redux Toolkit
-
-EVST is an RTK extension, not a replacement. Its store is usable anywhere an
-RTK store is expected, and its events are ordinary RTK action creators. Existing
-RTK reducers, `createSlice`, `createEntityAdapter`, listener middleware,
-DevTools, and React Redux APIs remain available when they fit the application.
-
 ## Enforcing event conventions
 
 `@evst/eslint-plugin` provides an `rtk` preset for shared EVST conventions,
 including source naming, publisher ownership, duplicate state handlers, and
 unused events and derived Views. It supports TypeScript and TSX. The
-[plugin guide](../eslint-plugin/README.md#configuring-eslint) documents
+[plugin guide](https://github.com/fredyang/evst/tree/main/packages/eslint-plugin#configuring-eslint) documents
 configuration, type-aware analysis, and rule limitations.
+
+In `eslint.config.mjs`, after installing `@evst/eslint-plugin`, `eslint`,
+and `typescript-eslint` as development dependencies:
+
+```js
+import evst from "@evst/eslint-plugin";
+import tseslint from "typescript-eslint";
+
+export default [
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: "./tsconfig.eslint.json",
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    plugins: { evst },
+    ...evst.configs.rtk,
+  },
+];
+```
+
+The lint TypeScript project includes application sources and excludes tests;
+the plugin guide provides a complete example. This preset includes shared
+rules and excludes Angular-specific checks.
 
 From the repository root, the Books example can be checked with:
 
@@ -265,7 +281,7 @@ From the repository root, the Books example can be checked with:
 npm run lint:evst-rtk-books
 ```
 
-## Testing features
+## Testing and developing
 
 A state definition exposes its generated reducer, so state transitions can be
 tested without React or a store:
@@ -294,14 +310,28 @@ Tasks can be tested with an EVST store and mocked application dependencies.
 Publishing the source event and asserting the resulting View or store state
 tests the complete task-to-outcome path.
 
+From the repository root:
+
 ```sh
 npm test --workspace @evst/rtk
 npm pack --workspace @evst/rtk
 ```
 
-## Exploring the Books example
+## Working with Redux Toolkit
 
-[`evst-rtk-books`](../../examples/projects/evst-rtk-books) uses EVST with React
-and Material UI. [`rtk-books`](../../examples/projects/rtk-books) implements
+Events are RTK action creators, State exposes an RTK reducer, and Views are
+callable selectors. Composed Views use RTK's `createSelector`. Tasks register
+listeners through `createListenerMiddleware`; `createEvst()` uses
+`configureStore` with default middleware plus the task listener middleware.
+
+The returned store works directly with React Redux and Redux DevTools.
+Entity adapters can be used within feature reducers. Custom reducer maps and
+middleware configuration are not accepted by `createEvst()`; its configuration
+owns those two options.
+
+## Exploring the Books examples
+
+[`evst-rtk-books`](https://github.com/fredyang/evst/tree/main/examples/projects/evst-rtk-books) uses EVST with React
+and Material UI. [`rtk-books`](https://github.com/fredyang/evst/tree/main/examples/projects/rtk-books) implements
 the same application directly with Redux Toolkit, making the feature-level
 differences easy to compare.
