@@ -220,6 +220,22 @@ it("reports invalid saved collections and stops loading", () => {
   });
 });
 
+it("retries a failed collection load", () => {
+  const store = setup();
+  services.storage.load.mockImplementationOnce(() => {
+    throw new Error("Saved collection is invalid.");
+  });
+  books.fromCollectionPage.entered.publish();
+  services.storage.load.mockReturnValue([book]);
+  books.fromCollectionPage.retryRequested.publish();
+  expect(books.booksViews.collection(store.getState())).toMatchObject({
+    loaded: true,
+    loading: false,
+    error: "",
+  });
+  expect(books.booksViews.collectionBooks(store.getState())).toEqual([book]);
+});
+
 it("resets Books on logout and reloads persisted collection", () => {
   const store = setup();
   services.storage.load.mockReturnValue([book]);

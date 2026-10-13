@@ -67,6 +67,8 @@ export function AppLayout() {
   }, [pathname]);
 
   const closeMenu = () => fromLayout.sidenavClosed.publish();
+  const dismissLogoutConfirmation = () =>
+    fromAuth.logoutConfirmationDismiss.publish();
 
   return (
     <>
@@ -151,13 +153,13 @@ export function AppLayout() {
 
       <Dialog
         open={auth.confirmingLogout}
-        onClose={() => fromAuth.logoutConfirmationDismiss.publish()}
+        onClose={dismissLogoutConfirmation}
         aria-labelledby="logout-title"
       >
         <DialogTitle id="logout-title">Sign out?</DialogTitle>
         <DialogContent>Are you sure you want to sign out?</DialogContent>
         <DialogActions>
-          <Button onClick={() => fromAuth.logoutConfirmationDismiss.publish()}>
+          <Button onClick={dismissLogoutConfirmation}>
             Cancel
           </Button>
           <Button onClick={() => fromAuth.logout.publish()}>Sign Out</Button>

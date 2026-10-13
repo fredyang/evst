@@ -18,9 +18,16 @@ export default function BooksModule() {
     return collection.error ? (
       <Stack spacing={2}>
         <Alert severity="error">{collection.error}</Alert>
-        <Button onClick={() => fromCollectionPage.entered.publish()}>
+        <Button onClick={() => fromCollectionPage.retryRequested.publish()}>
           Retry collection
         </Button>
+        {/*
+          Republishing `entered` here creates a second publisher and is
+          reported by `evst/event-publisher-ownership` when uncommented:
+          <Button onClick={() => fromCollectionPage.entered.publish()}>
+            Retry collection
+          </Button>
+        */}
       </Stack>
     ) : (
       <CircularProgress aria-label="Loading collection" />

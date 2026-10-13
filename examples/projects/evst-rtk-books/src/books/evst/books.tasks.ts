@@ -59,6 +59,16 @@ export const booksTasks = task.handle((on) => ({
     }
   }),
 
+  retryCollection: on(fromCollectionPage.retryRequested, () => {
+    if (booksViews.collection.value().loaded) return;
+
+    try {
+      return fromCollectionApi.loadBooksSuccess({ books: bookStorage.load() });
+    } catch (error) {
+      return fromCollectionApi.loadBooksFailure({ error: message(error) });
+    }
+  }),
+
   addBook: on(fromSelectedBookPage.addBook, ({ book }) => {
     try {
       bookStorage.add(book);

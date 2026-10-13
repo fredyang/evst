@@ -14,6 +14,7 @@ export const fromBooksApi = events("Books API", {
 
 export const fromCollectionPage = events("Collection Page", {
   entered: emptyProps(),
+  retryRequested: emptyProps(),
 });
 
 export const fromCollectionApi = events("Collection API", {

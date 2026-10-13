@@ -25,6 +25,12 @@ export function BookPage() {
 
   useEffect(() => {
     if (id) fromViewBookPage.selected.publish({ id });
+    // uncomment the next line will trigger eslint warnings about event publisher ownership
+    // src/books/components/book-page.tsx:34:5
+    // src/books/components/search-page.tsx:22:5
+    // Publish it from one boundary, or model the shared operation as a service command  evst/event-publisher-ownership
+    //
+    // fromFindBookPage.searchQueryChanged.publish({ query: "xxx" });
   }, [id]);
 
   if (detail.id !== id || detail.loading) {

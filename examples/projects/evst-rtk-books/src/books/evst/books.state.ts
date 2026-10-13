@@ -72,6 +72,10 @@ export const booksState = state("books", initialState)
       if (!s.collection.loaded) s.collection.loading = true;
     }),
 
+    beginCollectionRetry: on(fromCollectionPage.retryRequested, (s) => {
+      if (!s.collection.loaded) s.collection.loading = true;
+    }),
+
     applyCollection: on(fromCollectionApi.loadBooksSuccess, (s, { books }) => {
       adapter.upsertMany(s.books, books);
       s.collection = {
