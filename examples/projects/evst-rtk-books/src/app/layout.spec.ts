@@ -26,7 +26,7 @@ it("guards Books, loads its feature after login, and supports navigation and sig
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
-  expect(Object.keys(store.getState())).toEqual(["auth", "core"]);
+  expect(Object.keys(store.getState()).sort()).toEqual(["auth", "core"]);
   await act(async () => {
     root.render(
       createElement(Provider, {

@@ -1,4 +1,4 @@
-import { emptyProps, events, props, state, task, view } from "@evst/rtk";
+import { emptyProps, events, props, state, taskOn, view } from "@evst/rtk";
 import { of } from "rxjs";
 
 export const fromBooksPage = events("Books Page", {
@@ -24,13 +24,13 @@ export const booksState = state("books", { titles: [] as string[] })
     total: view(titles, (titles) => titles.length),
     unused: view(titles, (titles) => titles.join(", ")),
   }))
-  .subscribe((on) => ({
+  .stateOn((on) => ({
     loaded: on(fromBooksApi.loaded, (current, { titles }) => {
       current.titles = titles;
     }),
   }));
 export const booksViews = booksState.views;
-export const booksTasks = task.subscribe((on) => ({
+export const booksTasks = taskOn((on) => ({
   load: on(fromBooksPage.entered, async () => {
     return fromBooksApi.loaded({ titles: ["The Hobbit"] });
   }),

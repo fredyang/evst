@@ -1,11 +1,10 @@
 import { createEvstStore } from "@evst/rtk";
-import { authState } from "./auth/evst/auth.state";
-import { authTasks } from "./auth/evst/auth.tasks";
+import { authBundle } from "./auth/evst/auth.evst";
 import { coreState } from "./core/evst/core.state";
-
 import { coreTasks } from "./core/evst/core.tasks";
 
 export const evst = createEvstStore({
-  states: [authState, coreState],
-  tasks: [authTasks, coreTasks],
+  bundles: [authBundle],
+  states: [coreState],
+  tasks: [coreTasks],
 });

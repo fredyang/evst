@@ -9,8 +9,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { fromLoginPage } from "../evst/auth.events";
-import { authViews } from "../evst/auth.state";
+import { fromLoginPage, authViews } from "../evst/auth.evst";
 
 export function LoginPage() {
   const auth = authViews.root.use();

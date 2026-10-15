@@ -7,7 +7,7 @@ import {
   events,
   props,
   state,
-  task,
+  taskOn,
   view,
   type NamedStateHandlers,
   type NamedTasks,
@@ -22,7 +22,7 @@ describe("@evst/rtk", () => {
   });
   const counter = state("counter", { count: 0 })
     .extraViews(({ count }) => ({ doubled: view(count, (count) => count * 2) }))
-    .subscribe((on) => ({
+    .stateOn((on) => ({
       add: on(fromCounter.added, (state, action) => {
         state.count += action;
       }),
@@ -45,7 +45,7 @@ describe("@evst/rtk", () => {
 
   it("registers tasks through listener middleware", async () => {
     const observed: number[] = [];
-    const counterTasks = task.subscribe(
+    const counterTasks = taskOn(
       (on) =>
         ({
           record: on(fromCounter.added, (action) => {
@@ -71,14 +71,14 @@ describe("@evst/rtk", () => {
     const fromObservation = events("Observation", {
       recorded: props<number>(),
     });
-    const observation = state("observation", { value: -1 }).subscribe((on) => ({
+    const observation = state("observation", { value: -1 }).stateOn((on) => ({
       record: on(fromObservation.recorded, (current, value) => {
         current.value = value;
       }),
     }));
     const observed: number[] = [];
     const parity = view(counter.views.count, (count) => count % 2);
-    const definitions = task.subscribe((on) => ({
+    const definitions = taskOn((on) => ({
       record: on(parity, (value) => {
         expectTypeOf(value).toEqualTypeOf<number>();
         observed.push(value);
@@ -100,14 +100,14 @@ describe("@evst/rtk", () => {
 
   it("combines multiple typed Views and runs once with a consistent snapshot", async () => {
     const fromSettings = events("Settings", { renamed: props<string>() });
-    const settings = state("settings", { name: "initial" }).subscribe((on) => ({
+    const settings = state("settings", { name: "initial" }).stateOn((on) => ({
       rename: on(fromSettings.renamed, (current, name) => {
         current.name = name;
       }),
     }));
     const positive = view(counter.views.count, (count) => count > 0);
     const observed: Array<[number, string, boolean]> = [];
-    const definitions = task.subscribe((on) => ({
+    const definitions = taskOn((on) => ({
       observe: on(
         counter.views.count,
         settings.views.name,
@@ -143,7 +143,7 @@ describe("@evst/rtk", () => {
     });
     const observed: number[] = [];
     let finish!: (outcome: ReturnType<typeof fromCounter.reset>) => void;
-    const definitions = task.subscribe((on) => ({
+    const definitions = taskOn((on) => ({
       record: on(counter.views.count, (value) => {
         observed.push(value);
         return new Promise((resolve) => {
@@ -168,7 +168,7 @@ describe("@evst/rtk", () => {
     let starts = 0;
     let stops = 0;
     let emitLate!: () => void;
-    const definitions = task.subscribe((on) => ({
+    const definitions = taskOn((on) => ({
       clicks: on((emit) => {
         starts++;
         const click = () => emit(fromCounter.added(1));
@@ -200,7 +200,7 @@ describe("@evst/rtk", () => {
     const listener = createListenerMiddleware();
     const store = configureStore({ reducer: { counter: counter.reducer } });
     let stops = 0;
-    const definitions = task.subscribe((on) => ({
+    const definitions = taskOn((on) => ({
       first: on(() => () => {
         stops++;
       }),
@@ -212,7 +212,7 @@ describe("@evst/rtk", () => {
       "Cannot subscribe",
     );
     expect(stops).toBe(1);
-    const withoutCleanup = task.subscribe((on) => ({
+    const withoutCleanup = taskOn((on) => ({
       once: on((emit) => {
         emit(fromCounter.added(1));
       }),
@@ -224,9 +224,79 @@ describe("@evst/rtk", () => {
     expect(stop).not.toThrow();
   });
 
+  it("bundles typed state, Views and Tasks for root registration", () => {
+    const base = state("bundled", { count: 0 })
+      .extraViews(({ count }) => ({
+        doubled: view(count, (value) => value * 2),
+      }))
+      .stateOn((on) => ({
+        add: on(fromCounter.added, (current, amount) => {
+          current.count += amount;
+        }),
+      }));
+    const observed: number[] = [];
+    const combined = base.taskOn((on, views) => ({
+      record: on(views.doubled, (value) => {
+        expectTypeOf(value).toEqualTypeOf<number>();
+        observed.push(value);
+      }),
+    }));
+    expectTypeOf(combined.effects.record.register).toBeFunction();
+    expectTypeOf(combined.views.doubled).returns.toEqualTypeOf<number>();
+    expect(combined.reducer).toBe(base.reducer);
+    expect(combined.views).toBe(base.views);
+    expect("effects" in base).toBe(false);
+    expect("stateOn" in combined).toBe(false);
+    createEvstStore({ bundles: [combined] });
+    fromCounter.added.publish(3);
+    expect(combined.views.doubled.value()).toBe(6);
+    expect(observed).toEqual([6]);
+  });
+
+  it("registers lazy bundles once, preserves state, rejects collisions, and cleans up sources", () => {
+    let starts = 0;
+    let stops = 0;
+    const combined = state("lazyBundle", { count: 0 })
+      .stateOn((on) => ({
+        add: on(fromCounter.added, (current, amount) => {
+          current.count += amount;
+        }),
+      }))
+      .taskOn((on, views) => ({
+        start: on((emit) => {
+          starts++;
+          expect(views.count.value()).toBe(0);
+          emit(fromCounter.added(2));
+          return () => {
+            stops++;
+          };
+        }),
+      }));
+    const store = createEvstStore();
+    store.provide({ bundles: [combined] });
+    store.provide({ bundles: [combined] });
+    expect(starts).toBe(1);
+    expect(combined.views.count.value()).toBe(2);
+    expect(() =>
+      store.provide({
+        bundles: [state("lazyBundle", { count: 0 }).taskOn(() => ({}))],
+      }),
+    ).toThrow("already registered");
+    clearEvstStore();
+    expect(stops).toBe(1);
+  });
+
+  it("rejects conflicting root bundle state names", () => {
+    const first = state("same", { value: 0 }).taskOn(() => ({}));
+    const second = state("same", { value: 1 }).taskOn(() => ({}));
+    expect(() => createEvstStore({ bundles: [first, second] })).toThrow(
+      "already registered",
+    );
+  });
+
   it("composes state subscriptions without changing earlier definitions", () => {
     const base = state("counter", { count: 0 });
-    const first = base.subscribe(
+    const first = base.stateOn(
       (on) =>
         ({
           add: on(fromCounter.added, (current, amount) => {
@@ -235,7 +305,7 @@ describe("@evst/rtk", () => {
           }),
         }) satisfies NamedStateHandlers<{ count: number }>,
     );
-    const second = first.subscribe((on) => ({
+    const second = first.stateOn((on) => ({
       reset: on(fromCounter.reset, (current) => {
         current.count = 0;
       }),
@@ -255,7 +325,7 @@ describe("@evst/rtk", () => {
 
   it("starts declared Tasks when the collection is registered", () => {
     const observed: number[] = [];
-    const pending = task.subscribe((on) => ({
+    const pending = taskOn((on) => ({
       record: on(fromCounter.added, (amount) => {
         observed.push(amount);
       }),
@@ -299,7 +369,7 @@ describe("@evst/rtk", () => {
       started: props<{ query: string }>(),
       completed: props<{ value: number }>(),
     });
-    const result = state("result", { value: 0 }).subscribe((on) => ({
+    const result = state("result", { value: 0 }).stateOn((on) => ({
       complete: on(fromRequest.completed, (current, { value }) => {
         expectTypeOf(value).toEqualTypeOf<number>();
         current.value = value;
@@ -308,7 +378,7 @@ describe("@evst/rtk", () => {
     const pending: Array<{
       resolve(value: number): void;
     }> = [];
-    const requests = task.subscribe((on) => ({
+    const requests = taskOn((on) => ({
       load: on(fromRequest.started, async ({ query }) => {
         expectTypeOf(query).toEqualTypeOf<string>();
         expectTypeOf(result.views.value.value()).toEqualTypeOf<number>();
@@ -336,7 +406,7 @@ describe("@evst/rtk", () => {
     expect(() =>
       createEvstStore({
         states: [counter],
-        tasks: [task.subscribe(() => ({}))],
+        tasks: [taskOn(() => ({}))],
       }),
     ).not.toThrow();
   });
@@ -344,7 +414,7 @@ describe("@evst/rtk", () => {
   it("provides lazy features once, retains state, and rejects name collisions", () => {
     const evst = createEvstStore({});
     const observed: number[] = [];
-    const definitions = task.subscribe((on) => ({
+    const definitions = taskOn((on) => ({
       observe: on(fromCounter.added, (value) => {
         observed.push(value);
       }),

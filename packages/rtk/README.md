@@ -67,7 +67,7 @@ reducers, listener middleware, DevTools, and direct `store.dispatch(...)`.
 
 `state()` infers feature state from its initial-state object and creates a typed
 View for every top-level field. `.extraViews()` composes derived Views and
-`.subscribe()` declares event subscriptions through named state handlers.
+`.stateOn()` declares event subscriptions through named state handlers.
 `NamedStateHandlers<State>` is a record of `StateHandler<State>` values returned
 by the supplied `on` builder. Each call returns a new state definition;
 registration through `createEvstStore()` or `evst.provide()` activates its subscriptions.
@@ -91,7 +91,7 @@ export const booksState = state("books", initialState)
       (books, id) => books.find((book) => book.id === id) ?? null,
     ),
   }))
-  .subscribe((on) => ({
+  .stateOn((on) => ({
     beginLoading: on(fromBooksPage.entered, (current) => {
       current.loading = true;
       current.error = null;
@@ -117,21 +117,21 @@ Immer-powered mutations and returned immutable updates are both supported.
 
 ### Implementing Tasks
 
-Tasks use the same `subscribe((on) => ({ ... }))` shape as State. The callback
+Standalone Tasks use `taskOn((on) => ({ ... }))`; State handlers use `.stateOn()`. The callback
 declares `NamedTasks`, a record of `Task` values created with `on()`. Each Task
 can respond to an event, changes in one or more Views, or an external source.
 Event and View effects return optional outcome events; external sources emit
 outcome events through a callback. Outcomes are dispatched through the RTK store.
 
-`task.subscribe()` returns a task collection. Listeners start when the collection
+`taskOn()` returns a task collection. Listeners start when the collection
 is registered through `createEvstStore()` or `evst.provide()`.
 
 ```ts
-import { task } from "@evst/rtk";
+import { taskOn } from "@evst/rtk";
 import { fromBooksApi, fromBooksPage } from "./books.events";
 import { booksApi } from "./books-api";
 
-export const booksTasks = task.subscribe((on) => ({
+export const booksTasks = taskOn((on) => ({
   load: on(fromBooksPage.entered, async () => {
     try {
       const books = await booksApi.load();
@@ -170,7 +170,7 @@ after an `await` can therefore return a newer value than a read before it.
 Tasks can also use a View as their source, without an event trigger:
 
 ```ts
-const selectionTasks = task.subscribe((on) => ({
+const selectionTasks = taskOn((on) => ({
   selectionChanged: on(booksViews.selectedId, (id) => {
     if (id === null) return;
     return fromBooksPage.bookSelected({ id });
@@ -209,7 +209,7 @@ External sources such as DOM events, timers, and subscription APIs can use
 return a cleanup function:
 
 ```ts
-const browserTasks = task.subscribe((on) => ({
+const browserTasks = taskOn((on) => ({
   activity: on((emit) => {
     const clicked = () => emit(fromUser.activityDetected());
     document.addEventListener("click", clicked);
@@ -225,6 +225,41 @@ called; emissions after cleanup are ignored. A source can bridge an observable
 without making RxJS a dependency: subscribe with `emit` and return a function
 that unsubscribes. Source functions themselves are synchronous; asynchronous
 work delivers its outcomes through `emit`.
+
+### Bundling Tasks with State
+
+`.stateOn()` returns a new composable state definition. `.taskOn((on, views) =>
+({ ... }))` finishes the chain with a bundle containing `name`, `views`, `reducer`,
+`effects`, and `register()`. Generated and derived Views retain their inferred
+types. The original state definition remains unchanged.
+
+```ts
+const booksBundle = state("books", { books: [] as Book[] })
+  .stateOn((on) => ({
+    loaded: on(fromBooksApi.loaded, (current, { books }) => {
+      current.books = books;
+    }),
+  }))
+  .taskOn((on, views) => ({
+    load: on(fromBooksPage.entered, async () => {
+      if (views.books.value().length) return;
+      return fromBooksApi.loaded({ books: await booksApi.load() });
+    }),
+  }));
+
+const evst = createEvstStore({ bundles: [booksBundle] });
+// Alternatively, register with an existing store:
+// evst.provide({ bundles: [booksBundle] });
+```
+
+Bundle registration installs its state before starting its Tasks. Repeated
+registration of the same bundle preserves state and avoids duplicate listeners;
+a different definition using the same state name is rejected. Clearing the
+store stops bundled Tasks, including external source cleanup.
+
+The [Auth example](../../examples/projects/evst-rtk-books/src/auth/evst/auth.evst.ts)
+combines Events, Views, State, and Tasks in one file. Larger features can retain
+separate definitions with `.stateOn()` and standalone `taskOn()`.
 
 ## Writing consumer code
 
@@ -298,7 +333,7 @@ export function AppRoot() {
 
 `evst.dispatch`, `evst.getState`, `evst.subscribe`, and `evst.replaceReducer`
 remain the standard RTK store methods. `createEvstStore()` accepts RTK store options
-other than `reducer` and `middleware`; EVST configures those to install its
+other than `reducer` and `middleware`, plus EVST `states`, `tasks`, and `bundles`; EVST configures those to install its
 state definitions and listener middleware.
 
 Events' `.publish()` and Views' `.value()` use the active store configured by

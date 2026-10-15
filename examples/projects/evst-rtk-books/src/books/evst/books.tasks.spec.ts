@@ -23,7 +23,7 @@ const book: Book = {
 
 let books: typeof import("../../books");
 let runtime: typeof import("@evst/rtk");
-let auth: typeof import("../../auth/evst/auth.events");
+let auth: typeof import("../../auth/evst/auth.evst");
 
 beforeEach(async () => {
   vi.resetModules();
@@ -31,7 +31,7 @@ beforeEach(async () => {
   vi.useFakeTimers();
   runtime = await import("@evst/rtk");
   books = await import("../../books");
-  auth = await import("../../auth/evst/auth.events");
+  auth = await import("../../auth/evst/auth.evst");
   services.api.search.mockResolvedValue([book]);
   services.api.retrieve.mockResolvedValue(book);
   services.storage.load.mockReturnValue([]);

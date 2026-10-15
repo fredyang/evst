@@ -1,4 +1,4 @@
-import { task } from "@evst/rtk";
+import { taskOn } from "@evst/rtk";
 import { latest } from "../../utils/concurrency";
 import { debounce } from "../../utils/debounce";
 import { bookStorage } from "../../services/book-storage";
@@ -18,7 +18,7 @@ const message = (error: unknown) =>
     ? error.message
     : "Unexpected error. Please try again.";
 
-export const booksTasks = task.subscribe((on) => ({
+export const booksTasks = taskOn((on) => ({
   search: on(
     fromFindBookPage.searchQueryChanged,
     latest(

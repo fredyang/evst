@@ -7,6 +7,13 @@ import {
 } from "@reduxjs/toolkit";
 import { view, type View } from "./view.js";
 
+import {
+  taskOn,
+  type NamedTasks,
+  type TaskBuilder,
+  type Tasks,
+} from "./tasks.js";
+
 type EventCreator = ActionCreatorWithPayload<any> | ActionCreatorWithoutPayload;
 type EventCaseReducer<State, Creator extends EventCreator> =
   CaseReducer<State, ReturnType<Creator>> extends (
@@ -30,6 +37,18 @@ type BaseViews<Name extends string, State extends object> = {
 };
 type ExtraViewRecord<Root> = Record<string, View<Root, any>>;
 
+/** A terminal state-and-Tasks bundle registered through the bundles option. */
+export interface FeatureBundle<
+  Name extends string,
+  State extends object,
+  ExtraViews extends ExtraViewRecord<Record<Name, State>> = {},
+  Effects extends NamedTasks = NamedTasks,
+> extends Tasks<Effects> {
+  readonly name: Name;
+  readonly reducer: Reducer<State>;
+  readonly views: BaseViews<Name, State> & ExtraViews;
+}
+
 export interface FeatureStateDefinition<
   Name extends string,
   State extends object,
@@ -40,12 +59,25 @@ export interface FeatureStateDefinition<
   readonly views: BaseViews<Name, State> & ExtraViews;
   /**
    * Declares event subscriptions through named state handlers.
-   * Returns a new definition, registered through `createEvstStore()` or `evst.provide()`.
+   * Returns a new definition retaining stateOn(), extraViews(), and taskOn().
+   * Registered through `createEvstStore()` or `evst.provide()`.
    * Handler names label transitions; events passed to `on` select their inputs.
    */
-  subscribe(
+  stateOn(
     build: (on: StateOn<State>) => NamedStateHandlers<State>,
   ): FeatureStateDefinition<Name, State, ExtraViews>;
+  /**
+   * Finishes state composition with named Tasks and inferred current Views.
+   * @returns A bundle exposing name, views, reducer, effects, and register().
+   * Register through createEvstStore({ bundles: [bundle] }) or evst.provide().
+   * The original definition remains unchanged; the bundle has no composition methods.
+   */
+  taskOn<Effects extends NamedTasks>(
+    build: (
+      on: TaskBuilder,
+      views: BaseViews<Name, State> & ExtraViews,
+    ) => Effects,
+  ): FeatureBundle<Name, State, ExtraViews, Effects>;
   extraViews<Added extends ExtraViewRecord<Record<Name, State>>>(
     build: (views: BaseViews<Name, State> & ExtraViews) => Added,
   ): FeatureStateDefinition<Name, State, ExtraViews & Added>;
@@ -83,16 +115,27 @@ function chain<
   handlers: readonly StateHandler<State>[],
   views: BaseViews<Name, State> & ExtraViews,
 ): FeatureStateDefinition<Name, State, ExtraViews> {
+  const reducer = createReducer(initialState, (builder) => {
+    for (const { event, reducer } of handlers)
+      builder.addCase(event as any, (draft, action: any) =>
+        reducer(draft, action.payload),
+      );
+  });
   return {
     name,
-    reducer: createReducer(initialState, (builder) => {
-      for (const { event, reducer } of handlers)
-        builder.addCase(event as any, (draft, action: any) =>
-          reducer(draft, action.payload),
-        );
-    }),
+    reducer,
     views,
-    subscribe: (build: (on: StateOn<State>) => NamedStateHandlers<State>) => {
+    taskOn: (build) => {
+      const tasks = taskOn((on) => build(on, views));
+      return {
+        name,
+        reducer,
+        views,
+        effects: tasks.effects,
+        register: tasks.register,
+      };
+    },
+    stateOn: (build: (on: StateOn<State>) => NamedStateHandlers<State>) => {
       const on: StateOn<State> = (event, reducer) => ({ event, reducer });
       return chain(
         name,

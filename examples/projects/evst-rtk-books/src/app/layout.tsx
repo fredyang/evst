@@ -22,8 +22,8 @@ import {
   CircularProgress,
   Box,
 } from "@mui/material";
-import { authViews } from "../auth/evst/auth.state";
-import { fromAuth } from "../auth/evst/auth.events";
+import { authViews, fromAuth } from "../auth/evst/auth.evst";
+
 import { LoginPage } from "../auth/components/login-page";
 import { coreViews } from "../core/evst/core.state";
 import { fromLayout } from "../core/evst/core.events";

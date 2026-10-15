@@ -1,7 +1,7 @@
 import { createEntityAdapter } from "@reduxjs/toolkit";
 import { state, view } from "@evst/rtk";
 import type { Book } from "../model/book";
-import { fromAuth } from "../../auth/evst/auth.events";
+import { fromAuth } from "../../auth/evst/auth.evst";
 import {
   fromBooksApi,
   fromCollectionApi,
@@ -29,7 +29,7 @@ export const initialState = {
 export type BooksRoot = { books: typeof initialState };
 
 export const booksState = state("books", initialState)
-  .subscribe((on) => ({
+  .stateOn((on) => ({
     resetState: on(fromAuth.logout, () => initialState),
 
     beginSearch: on(fromFindBookPage.searchQueryChanged, (s, { query }) => {

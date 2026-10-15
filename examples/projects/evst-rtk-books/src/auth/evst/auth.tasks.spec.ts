@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
 import { clearEvstStore, createEvstStore } from "@evst/rtk";
-import { authState, authViews } from "./auth.state";
-import { authTasks } from "./auth.tasks";
-import { fromAuth, fromLoginPage } from "./auth.events";
+import { authBundle, authViews, fromAuth, fromLoginPage } from "./auth.evst";
+
 import { coreState, coreViews } from "../../core/evst/core.state";
 import { fromLayout } from "../../core/evst/core.events";
 
@@ -14,10 +13,10 @@ afterEach(() => {
 
 it("handles invalid login, valid login, logout confirmation and dismissal", () => {
   const store = createEvstStore({
-    states: [authState, coreState],
-    tasks: [authTasks],
+    bundles: [authBundle],
+    states: [coreState],
   });
-  expect(Object.keys(store.getState())).toEqual(["auth", "core"]);
+  expect(Object.keys(store.getState()).sort()).toEqual(["auth", "core"]);
   fromLoginPage.login.publish({
     credentials: { username: "wrong", password: "x" },
   });

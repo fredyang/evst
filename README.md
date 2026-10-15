@@ -68,17 +68,17 @@ Views provide the read-only interface for consumer code. State exposes Views
 for its top-level fields, and `.extraViews()` and `view()` compose derived
 Views. Components consume them through `.signal()` in NgRx or `.use()` in RTK.
 
-Events are published; NgRx state handlers are declared with `.stateOn((on) =>
-({ ... }))` and optional bundled Tasks with `.taskOn((on, views) => ({ ... }))`.
-Standalone NgRx Tasks use `taskOn()`. RTK retains `.subscribe()` for State
-and `task.subscribe()` for Tasks. State subscriptions declare named state
-handlers, which perform pure state transitions. Task subscriptions declare
-named Tasks, which perform side effects and can return outcome events.
+Events are published; both adapters declare state handlers with
+`.stateOn((on) => ({ ... }))` and optional bundled Tasks with
+`.taskOn((on, views) => ({ ... }))`. Standalone Tasks use `taskOn()`.
+State handlers perform pure transitions; Tasks perform side effects and can
+return outcome events.
 
-These methods declare responses before registration. State returns a new
-state definition; Task returns a task collection. Registration activates the
-subscriptions through NgRx environment providers or RTK's `createEvstStore()` and
-`evst.provide()`. Subscription lifetimes follow that registration.
+These methods declare responses before registration. `.stateOn()` returns a
+composable state definition, standalone `taskOn()` returns a task collection,
+and fluent `.taskOn()` returns a state-and-Tasks bundle. Registration activates
+the subscriptions through NgRx environment providers or RTK's `createEvstStore()`
+and `evst.provide()`. Subscription lifetimes follow that registration.
 
 ## Enforcing event-driven programming
 

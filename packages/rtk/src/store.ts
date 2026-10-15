@@ -6,7 +6,7 @@ import {
   type EnhancedStore,
   type Reducer,
 } from "@reduxjs/toolkit";
-import type { FeatureStateDefinition } from "./state.js";
+import type { FeatureStateDefinition, FeatureBundle } from "./state.js";
 import type { Tasks } from "./tasks.js";
 
 let stopActiveTasks: (() => void) | undefined;
@@ -19,17 +19,33 @@ export type EvstStoreConfig = Omit<
 > & {
   states?: readonly FeatureStateDefinition<any, any>[];
   tasks?: readonly Tasks[];
+  bundles?: readonly FeatureBundle<any, any>[];
 };
 
 export type Evst = EnhancedStore & {
-  /** Registers lazy states and tasks once, retaining them for the store lifetime. */
-  provide(registration: Pick<EvstStoreConfig, "states" | "tasks">): void;
+  /** Registers lazy states, Tasks, and bundles once for the store lifetime. */
+  provide(
+    registration: Pick<EvstStoreConfig, "states" | "tasks" | "bundles">,
+  ): void;
 };
 
 /** Creates the store, installs tasks, and enables event publishing and View snapshots. */
 export function createEvstStore(config: EvstStoreConfig = {}): Evst {
   const listener = createListenerMiddleware();
-  const { states = [], tasks, ...options } = config;
+  const {
+    states: suppliedStates = [],
+    tasks,
+    bundles = [],
+    ...options
+  } = config;
+  const states = [...suppliedStates, ...bundles];
+  const registered = new Map<string, (typeof states)[number]>();
+  for (const definition of states) {
+    const existing = registered.get(definition.name);
+    if (existing && existing !== definition)
+      throw new Error(`EVST state "${definition.name}" is already registered.`);
+    registered.set(definition.name, definition);
+  }
   const reducer = Object.fromEntries(
     states.map((state) => [state.name, state.reducer]),
   ) as Record<string, Reducer>;
@@ -48,15 +64,20 @@ export function createEvstStore(config: EvstStoreConfig = {}): Evst {
     );
   }
   activeStore = store;
-  const registered = new Map(states.map((state) => [state.name, state]));
   const installedTasks = new Set<Tasks>();
   const taskStops: Array<() => void> = [];
   stopActiveTasks = () => {
     taskStops.splice(0).forEach((stop) => stop());
   };
-  const provide = (registration: Pick<EvstStoreConfig, "states" | "tasks">) => {
+  const provide = (
+    registration: Pick<EvstStoreConfig, "states" | "tasks" | "bundles">,
+  ) => {
+    const states = [
+      ...(registration.states ?? []),
+      ...(registration.bundles ?? []),
+    ];
     const proposed = new Map(registered);
-    for (const state of registration.states ?? []) {
+    for (const state of states) {
       const existing = proposed.get(state.name);
       if (existing && existing !== state) {
         throw new Error(`EVST state "${state.name}" is already registered.`);
@@ -64,20 +85,23 @@ export function createEvstStore(config: EvstStoreConfig = {}): Evst {
       proposed.set(state.name, state);
     }
     let changed = false;
-    for (const state of registration.states ?? []) {
+    for (const state of states) {
       if (registered.has(state.name)) continue;
       registered.set(state.name, state);
       reducer[state.name] = state.reducer;
       changed = true;
     }
     if (changed) store.replaceReducer(combineReducers(reducer));
-    for (const definition of registration.tasks ?? []) {
+    for (const definition of [
+      ...(registration.tasks ?? []),
+      ...(registration.bundles ?? []),
+    ]) {
       if (installedTasks.has(definition)) continue;
       taskStops.push(definition.register(listener, store));
       installedTasks.add(definition);
     }
   };
-  provide({ tasks });
+  provide({ tasks, bundles });
   return Object.assign(store, { provide });
 }
 

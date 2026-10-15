@@ -6,7 +6,7 @@ import {
   fromFindBookPage,
   fromViewBookPage,
 } from "./books.events";
-import { fromAuth } from "../../auth/evst/auth.events";
+import { fromAuth } from "../../auth/evst/auth.evst";
 import type { Book } from "../model/book";
 
 const book: Book = {

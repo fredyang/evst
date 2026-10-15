@@ -53,7 +53,9 @@ appear as errors in the interface. There is no mock-catalog fallback.
   book-grid components.
 - `src/auth/evst/` and `src/core/evst/` contain auth and app-shell events, state,
   and tasks. `src/books/evst/` contains books events, state, and tasks. EVST files
-  use feature-specific names such as `auth.state.ts` and `books.tasks.ts`.
+  use feature-specific names such as `books.state.ts` and `books.tasks.ts`.
+  The smaller Auth feature combines Events, Views, State, and Tasks in
+  `auth.evst.ts` using `.stateOn()` and `.taskOn()`.
 - `src/books/model/` contains the `Book` type and runtime validation.
 - `src/services/` contains the fetch and storage boundaries. Tests inject
   replacements to exercise cancellation and errors without network access.
