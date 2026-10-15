@@ -14,7 +14,7 @@ import {
   fromLoginPage,
 } from "./auth.events";
 
-export const authTasks = task.handle((on) => ({
+export const authTasks = task.subscribe((on) => ({
   login: on(fromLoginPage.login, (pipe, service = inject(AuthService)) =>
     pipe(
       exhaustMap(({ credentials }) =>

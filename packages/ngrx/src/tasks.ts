@@ -10,27 +10,30 @@ import {
 import type { ActionCreator } from "@ngrx/store";
 import type { Observable, OperatorFunction } from "rxjs";
 
-type Task = FunctionalEffect<() => Observable<unknown>> & {
-  provide(): EnvironmentProviders;
-};
-type EffectSource = (...args: any[]) => Observable<unknown>;
+/** Function that builds a task's observable pipeline. */
+export type TaskSource = (...args: any[]) => Observable<unknown>;
+/** Callable NgRx functional effect with environment-provider registration. */
+export type Task<Source extends TaskSource = () => Observable<unknown>> =
+  FunctionalEffect<Source> & {
+    provide(): EnvironmentProviders;
+  };
+/** Tasks keyed by descriptive names, also exposed under `.effects`. */
+export type NamedTasks = Record<string, Task>;
 type EventPipe<Creators extends readonly ActionCreator[]> = Observable<
   ReturnType<Creators[number]>
 >["pipe"];
-type TaskDefinition<Source extends EffectSource = () => Observable<unknown>> =
-  Task & Source;
 
 /**
- * Creates a task definition for a `task.handle()` collection.
+ * Creates a Task for a `task.subscribe()` collection.
  *
- * The builder is supplied as `on` to the callback passed to `task.handle`.
- * can be defined from an observable source, or scoped to one or more events.
+ * The builder is supplied as `on` to the callback passed to `task.subscribe`.
+ * Tasks can be defined from an observable source, or scoped to one or more events.
  * Event-scoped tasks receive a `pipe` function whose source emits only the
  * selected event types.
  *
  * @example
  * ```ts
- * const booksTasks = task.handle((on) => ({
+ * const booksTasks = task.subscribe((on) => ({
  *   load: on(fromBooksPage.entered, (pipe) =>
  *     pipe(
  *       exhaustMap(() => booksApi.getAll()),
@@ -46,30 +49,30 @@ export interface TaskBuilder {
    *
    * @param source - Function that returns the task source observable.
    * @param options - NgRx effect configuration.
-   * @returns A task definition for a `task.handle()` collection.
+   * @returns A Task for a `task.subscribe()` collection.
    */
   <Source extends () => Observable<unknown>>(
     source: Source,
     options?: EffectConfig,
-  ): TaskDefinition<Source>;
+  ): Task<Source>;
   /** Creates a task that runs for one or more event types. */
   <Creators extends readonly ActionCreator[]>(
     ...args: [
       ...Creators,
       source: (pipe: EventPipe<Creators>) => Observable<unknown>,
     ]
-  ): TaskDefinition;
+  ): Task;
   <Creators extends readonly ActionCreator[]>(
     ...args: [
       ...Creators,
       source: (pipe: EventPipe<Creators>) => Observable<unknown>,
       options: EffectConfig,
     ]
-  ): TaskDefinition;
+  ): Task;
 }
 
 /** A named collection of EVST tasks that can be registered together. */
-export interface Tasks<Effects extends Record<string, TaskDefinition> = {}> {
+export interface Tasks<Effects extends NamedTasks = {}> {
   /**
    * Generated NgRx functional effects, keyed by task name.
    *
@@ -85,9 +88,7 @@ export interface Tasks<Effects extends Record<string, TaskDefinition> = {}> {
   provide(): EnvironmentProviders;
 }
 
-class TasksCollection<
-  Effects extends Record<string, TaskDefinition>,
-> implements Tasks<Effects> {
+class TasksCollection<Effects extends NamedTasks> implements Tasks<Effects> {
   constructor(readonly effects: Effects) {}
   provide(): EnvironmentProviders {
     return provideEffects(this.effects);
@@ -95,9 +96,10 @@ class TasksCollection<
 }
 
 /**
- * Defines a named task collection. Each returned property is registered as a
- * task and exposed under `.effects` with the same name.
- * Definition keys are descriptive labels for tasks; they do not name subscribed
+ * Declares event subscriptions through named Tasks.
+ * Returns a task collection whose subscriptions take effect when its environment
+ * providers are registered. Each Task is exposed under `.effects` with its name.
+ * Task keys are descriptive labels; they do not name subscribed
  * events. The event creators passed to `on` determine which events each task
  * receives.
  *
@@ -107,38 +109,38 @@ class TasksCollection<
  *
  * @example
  * ```ts
- * const booksTasks = task.handle((on) => ({
+ * const booksTasks = task.subscribe((on) => ({
  *   load: on(fromBooksPage.entered, (pipe) => pipe(exhaustMap(loadBooks))),
  * }));
  * ```
  */
-function handle<Definitions extends Record<string, TaskDefinition>>(
-  build: (on: TaskBuilder) => Definitions,
-): Tasks<Definitions> {
-  const definitions = build(createTask);
-  const entries = Object.entries(definitions);
+function subscribe<Subscriptions extends NamedTasks>(
+  build: (on: TaskBuilder) => Subscriptions,
+): Tasks<Subscriptions> {
+  const namedTasks = build(createTask);
+  const entries = Object.entries(namedTasks);
   for (const [name, task] of entries) {
-    if (!isTaskDefinition(task)) {
+    if (!isTask(task)) {
       throw new Error(
         `Task "${name}" must be created with the supplied on function.`,
       );
     }
   }
-  return new TasksCollection(definitions);
+  return new TasksCollection(namedTasks);
 }
 
 /**
- * Creates named task handlers. Definition keys label each task and are exposed
- * under `.effects`; they do not determine which events the task receives.
+ * Declares subscriptions using named Tasks. Events passed to `on` select each
+ * Task's inputs; Task names label the generated effects.
  */
-export const task = { handle };
+export const task = { subscribe };
 
 /**
- * @deprecated Use `task.handle()` to align task and state handler definitions.
+ * @deprecated Use `task.subscribe()` to align task and state handler definitions.
  */
-export const tasks = handle;
+export const tasks = subscribe;
 
-const createTask: TaskBuilder = ((...args: any[]): TaskDefinition => {
+const createTask: TaskBuilder = ((...args: any[]): Task => {
   const [first] = args;
   const eventDriven = isActionCreator(first);
   const options = eventDriven
@@ -173,7 +175,7 @@ const createTask: TaskBuilder = ((...args: any[]): TaskDefinition => {
   });
 }) as TaskBuilder;
 
-function isTaskDefinition(value: unknown): value is TaskDefinition {
+function isTask(value: unknown): value is Task {
   return typeof value === "function" && "provide" in value;
 }
 

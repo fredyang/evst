@@ -67,7 +67,10 @@ reducers, listener middleware, DevTools, and direct `store.dispatch(...)`.
 
 `state()` infers feature state from its initial-state object and creates a typed
 View for every top-level field. `.extraViews()` composes derived Views and
-`.handle()` adds named event handlers.
+`.subscribe()` declares event subscriptions through named state handlers.
+`NamedStateHandlers<State>` is a record of `StateHandler<State>` values returned
+by the supplied `on` builder. Each call returns a new state definition;
+registration through `createEvst()` or `evst.provide()` activates its subscriptions.
 
 ```ts
 import { state, view } from "@evst/rtk";
@@ -88,7 +91,7 @@ export const booksState = state("books", initialState)
       (books, id) => books.find((book) => book.id === id) ?? null,
     ),
   }))
-  .handle((on) => ({
+  .subscribe((on) => ({
     beginLoading: on(fromBooksPage.entered, (current) => {
       current.loading = true;
       current.error = null;
@@ -114,16 +117,20 @@ Immer-powered mutations and returned immutable updates are both supported.
 
 ### Implementing Tasks
 
-Tasks use the same `handle((on) => ({ ... }))` definition shape as state.
-Each handler receives event data and returns an optional outcome event. Returned
-events are dispatched through the RTK store.
+Tasks use the same `subscribe((on) => ({ ... }))` shape as State. The callback
+declares `NamedTasks`, a record of `Task` values created with `on()`. Each Task
+registers a listener whose effect function receives event data and returns an
+optional outcome event. Returned events are dispatched through the RTK store.
+
+`task.subscribe()` returns a task collection. Listeners start when the collection
+is registered through `createEvst()` or `evst.provide()`.
 
 ```ts
 import { task } from "@evst/rtk";
 import { fromBooksApi, fromBooksPage } from "./books.events";
 import { booksApi } from "./books-api";
 
-export const booksTasks = task.handle((on) => ({
+export const booksTasks = task.subscribe((on) => ({
   load: on(fromBooksPage.entered, async () => {
     try {
       const books = await booksApi.load();
@@ -136,7 +143,7 @@ export const booksTasks = task.handle((on) => ({
 ```
 
 `booksApi.load()` is an application service returning `Promise<Book[]>`.
-Each published event invokes each matching task handler independently. Request
+Each published event invokes each matching Task independently. Request
 ordering, cancellation, and debouncing remain application concerns.
 
 ## Writing consumer code

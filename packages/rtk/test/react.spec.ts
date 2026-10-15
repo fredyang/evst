@@ -8,6 +8,8 @@ import {
   state,
   task,
   view,
+  type NamedStateHandlers,
+  type NamedTasks,
 } from "../src/index.js";
 
 afterEach(clearEvstStore);
@@ -19,7 +21,7 @@ describe("@evst/rtk", () => {
   });
   const counter = state("counter", { count: 0 })
     .extraViews(({ count }) => ({ doubled: view(count, (count) => count * 2) }))
-    .handle((on) => ({
+    .subscribe((on) => ({
       add: on(fromCounter.added, (state, action) => {
         state.count += action;
       }),
@@ -42,15 +44,18 @@ describe("@evst/rtk", () => {
 
   it("registers tasks through listener middleware", async () => {
     const observed: number[] = [];
-    const counterTasks = task.handle((on) => ({
-      record: on(fromCounter.added, (action) => {
-        observed.push(action);
-      }),
-      inspectApi: on(fromCounter.added, () => {
-        counter.views.count.value() satisfies number;
-        return fromCounter.reset();
-      }),
-    }));
+    const counterTasks = task.subscribe(
+      (on) =>
+        ({
+          record: on(fromCounter.added, (action) => {
+            observed.push(action);
+          }),
+          inspectApi: on(fromCounter.added, () => {
+            counter.views.count.value() satisfies number;
+            return fromCounter.reset();
+          }),
+        }) satisfies NamedTasks,
+    );
     const store = createEvst({
       states: [counter],
       tasks: [counterTasks],
@@ -59,6 +64,50 @@ describe("@evst/rtk", () => {
     await Promise.resolve();
     expect(observed).toEqual([4]);
     expect(store.getState()).toEqual({ counter: { count: 0 } });
+  });
+
+  it("composes state subscriptions without changing earlier definitions", () => {
+    const base = state("counter", { count: 0 });
+    const first = base.subscribe(
+      (on) =>
+        ({
+          add: on(fromCounter.added, (current, amount) => {
+            expectTypeOf(amount).toEqualTypeOf<number>();
+            current.count += amount;
+          }),
+        }) satisfies NamedStateHandlers<{ count: number }>,
+    );
+    const second = first.subscribe((on) => ({
+      reset: on(fromCounter.reset, (current) => {
+        current.count = 0;
+      }),
+    }));
+    expect(base.reducer(undefined, fromCounter.added(3))).toEqual({ count: 0 });
+    expect(first.reducer({ count: 3 }, fromCounter.reset())).toEqual({
+      count: 3,
+    });
+    expect(second.reducer(undefined, fromCounter.added(3))).toEqual({
+      count: 3,
+    });
+    expect(second.reducer({ count: 3 }, fromCounter.reset())).toEqual({
+      count: 0,
+    });
+    expect(second.views).toBe(base.views);
+  });
+
+  it("starts declared Tasks when the collection is registered", () => {
+    const observed: number[] = [];
+    const pending = task.subscribe((on) => ({
+      record: on(fromCounter.added, (amount) => {
+        observed.push(amount);
+      }),
+    }));
+    const evst = createEvst({ states: [counter] });
+    fromCounter.added.publish(1);
+    expect(observed).toEqual([]);
+    evst.provide({ tasks: [pending] });
+    fromCounter.added.publish(2);
+    expect(observed).toEqual([2]);
   });
 
   it("reads typed current snapshots and derived Views without React", () => {
@@ -92,7 +141,7 @@ describe("@evst/rtk", () => {
       started: props<{ query: string }>(),
       completed: props<{ value: number }>(),
     });
-    const result = state("result", { value: 0 }).handle((on) => ({
+    const result = state("result", { value: 0 }).subscribe((on) => ({
       complete: on(fromRequest.completed, (current, { value }) => {
         expectTypeOf(value).toEqualTypeOf<number>();
         current.value = value;
@@ -101,7 +150,7 @@ describe("@evst/rtk", () => {
     const pending: Array<{
       resolve(value: number): void;
     }> = [];
-    const requests = task.handle((on) => ({
+    const requests = task.subscribe((on) => ({
       load: on(fromRequest.started, async ({ query }) => {
         expectTypeOf(query).toEqualTypeOf<string>();
         expectTypeOf(result.views.value.value()).toEqualTypeOf<number>();
@@ -129,7 +178,7 @@ describe("@evst/rtk", () => {
     expect(() =>
       createEvst({
         states: [counter],
-        tasks: [task.handle(() => ({}))],
+        tasks: [task.subscribe(() => ({}))],
       }),
     ).not.toThrow();
   });
@@ -137,7 +186,7 @@ describe("@evst/rtk", () => {
   it("provides lazy features once, retains state, and rejects name collisions", () => {
     const evst = createEvst({});
     const observed: number[] = [];
-    const definitions = task.handle((on) => ({
+    const definitions = task.subscribe((on) => ({
       observe: on(fromCounter.added, (value) => {
         observed.push(value);
       }),

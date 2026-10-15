@@ -4,9 +4,15 @@ import {
   ɵINJECTOR_SCOPE,
 } from "@angular/core";
 import { createAction, provideStore, Store } from "@ngrx/store";
-import { map, of, type Observable } from "rxjs";
-import { expect, expectTypeOf, it } from "vitest";
-import { task, tasks } from "../src/index.js";
+import { finalize, map, of, type Observable } from "rxjs";
+import { expect, expectTypeOf, it, vi } from "vitest";
+import {
+  state,
+  task,
+  tasks,
+  type NamedTasks,
+  type Task,
+} from "../src/index.js";
 
 const clicked = createAction("[Test] Clicked");
 const doubleClicked = createAction(
@@ -31,13 +37,63 @@ const sextupleClicked = createAction(
 );
 
 it("exposes named generated effects", () => {
-  const registry = task.handle((on) => ({
-    source: on((event = clicked()) => of(event)),
-    complete: on(clicked, (pipe) => pipe(map(() => 1))),
-  }));
+  const registry = task.subscribe(
+    (on) =>
+      ({
+        source: on((event = clicked()) => of(event)),
+        complete: on(clicked, (pipe) => pipe(map(() => 1))),
+      }) satisfies NamedTasks,
+  );
 
   expect(registry.effects.source).toBeDefined();
   expect(registry.effects.complete).toBeDefined();
+  expectTypeOf(registry.effects.source).toMatchTypeOf<Task>();
+  expectTypeOf(registry.effects.source).parameters.toEqualTypeOf<
+    [event?: ReturnType<typeof clicked>]
+  >();
+  expectTypeOf<keyof typeof registry.effects>().toEqualTypeOf<
+    "source" | "complete"
+  >();
+});
+
+it("activates declared task subscriptions only at registration", () => {
+  const completed = createAction("[Test] Completed");
+  const counter = state("counter", { count: 0 }).subscribe((on) => ({
+    increment: on(completed, (current) => ({ count: current.count + 1 })),
+  }));
+  const started = vi.fn();
+  const stopped = vi.fn();
+  const registry = task.subscribe((on) => ({
+    complete: on(clicked, (pipe) => {
+      started();
+      return pipe(
+        map(() => completed()),
+        finalize(stopped),
+      );
+    }),
+  }));
+  expect(started).not.toHaveBeenCalled();
+
+  const injector = createEnvironmentInjector(
+    [
+      { provide: ɵINJECTOR_SCOPE, useValue: "root" },
+      ErrorHandler,
+      provideStore(),
+      counter.provide(),
+      registry.provide(),
+    ],
+    null!,
+  );
+  try {
+    expect(started).toHaveBeenCalledOnce();
+    const store = injector.get(Store);
+    store.dispatch(clicked());
+    expect(store.selectSignal(counter.views.count)()).toBe(1);
+    injector.destroy();
+    expect(stopped).toHaveBeenCalledOnce();
+  } finally {
+    if (!injector.destroyed) injector.destroy();
+  }
 });
 
 it("keeps tasks as a compatibility alias", () => {
@@ -47,7 +103,7 @@ it("keeps tasks as a compatibility alias", () => {
 });
 
 it("forwards options to generated effects", () => {
-  const registry = tasks((on) => ({
+  const registry = task.subscribe((on) => ({
     source: on(() => of(42), { dispatch: false, functional: false }),
   }));
   const effect = registry.effects.source as unknown as Record<string, unknown>;
@@ -62,7 +118,7 @@ it("runs event tasks and dispatches their results", () => {
   const completed = createAction("[Test] Completed", (count: number) => ({
     count,
   }));
-  const registry = tasks((on) => ({
+  const registry = task.subscribe((on) => ({
     complete: on(clicked, doubleClicked, (pipe) =>
       pipe(map((event) => completed("count" in event ? event.count : 1))),
     ),
@@ -92,7 +148,7 @@ it("runs event tasks and dispatches their results", () => {
 });
 
 it("infers the event union for tasks with more than five event sources", () => {
-  tasks((on) => ({
+  task.subscribe((on) => ({
     complete: on(
       clicked,
       doubleClicked,
@@ -119,7 +175,7 @@ it("infers the event union for tasks with more than five event sources", () => {
 });
 
 it("rejects values not created by the supplied builder", () => {
-  expect(() => tasks(() => ({ invalid: (() => of(1)) as any }))).toThrow(
-    "must be created",
-  );
+  expect(() =>
+    task.subscribe(() => ({ invalid: (() => of(1)) as any })),
+  ).toThrow("must be created");
 });

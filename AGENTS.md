@@ -11,9 +11,11 @@ generate the full JSDoc API reference with `npm run docs:api`.
   such as `bookSelected`.
 - Model feature state with `state(name, initialState)`. Initial-state fields
   automatically provide Views. Use `.extraViews()` for derived Views and
-  `.handle((on) => ({ ... }))` for pure state transitions.
-- Define side effects with `task.handle((on) => ({ ... }))`. Task `on()` handlers
+  `.subscribe((on) => ({ ... }))` for pure state transitions.
+- Define side effects with `task.subscribe((on) => ({ ... }))`. Task source functions
   receive event-filtered observable pipelines and return outcome events.
+- `subscribe()` declares named state handlers (`NamedStateHandlers<State>`) or
+  Tasks (`NamedTasks`); application registration activates the subscriptions.
 - Consumer code reads `state.views` through `.signal()` by default. Use
   `.observable()` for RxJS composition or Angular `AsyncPipe` templates.
 - Consumer code publishes events through `.publish(...)`. Do not introduce raw

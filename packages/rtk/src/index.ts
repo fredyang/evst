@@ -5,8 +5,21 @@ export {
   type EmptyProps,
   type Props,
 } from "./events.js";
-export { state, type FeatureStateDefinition } from "./state.js";
-export { task, tasks, type TaskEffect, type Tasks } from "./tasks.js";
+export {
+  state,
+  type FeatureStateDefinition,
+  type NamedStateHandlers,
+  type StateHandler,
+} from "./state.js";
+export {
+  task,
+  tasks,
+  type NamedTasks,
+  type Task,
+  type TaskBuilder,
+  type TaskEffect,
+  type Tasks,
+} from "./tasks.js";
 export { view, type View } from "./view.js";
 export {
   clearEvstStore,

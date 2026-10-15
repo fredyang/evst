@@ -99,7 +99,10 @@ export function isPublication(node: ts.PropertyAccessExpression): boolean {
   );
 }
 
-export function isSubscription(node: ts.PropertyAccessExpression): boolean {
+export function isSubscription(
+  node: ts.PropertyAccessExpression,
+  checker: ts.TypeChecker,
+): boolean {
   const parent = node.parent;
   if (!ts.isCallExpression(parent) || !parent.arguments.includes(node)) {
     return false;
@@ -113,7 +116,7 @@ export function isSubscription(node: ts.PropertyAccessExpression): boolean {
   return (
     ts.isIdentifier(parent.expression) &&
     parent.expression.text === "on" &&
-    (isWithinTask(parent) || isWithinStateHandle(parent))
+    (isWithinTask(parent) || isWithinStateSubscription(parent, checker))
   );
 }
 
@@ -134,7 +137,7 @@ function isWithinTask(node: ts.Node): boolean {
         (ts.isPropertyAccessExpression(current.expression) &&
           ts.isIdentifier(current.expression.expression) &&
           current.expression.expression.text === "task" &&
-          current.expression.name.text === "handle"))
+          current.expression.name.text === "subscribe"))
     ) {
       return true;
     }
@@ -143,15 +146,21 @@ function isWithinTask(node: ts.Node): boolean {
   return false;
 }
 
-function isWithinStateHandle(node: ts.Node): boolean {
+function isWithinStateSubscription(
+  node: ts.Node,
+  checker: ts.TypeChecker,
+): boolean {
   let current: ts.Node | undefined = node.parent;
   while (current) {
     if (
       ts.isCallExpression(current) &&
       ts.isPropertyAccessExpression(current.expression) &&
-      current.expression.name.text === "handle"
+      current.expression.name.text === "subscribe"
     ) {
-      return true;
+      const receiver = checker.getTypeAtLocation(current.expression.expression);
+      if (receiver.getProperty("reducer") && receiver.getProperty("views")) {
+        return true;
+      }
     }
     current = current.parent;
   }

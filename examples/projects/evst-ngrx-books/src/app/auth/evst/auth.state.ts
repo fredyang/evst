@@ -24,7 +24,7 @@ export const authState = state("auth", {
   status: initialStatusState,
   loginPage: initialLoginPageState,
 })
-  .handle((on) => ({
+  .subscribe((on) => ({
     beginLogin: on(fromLoginPage.login, (current) => ({
       ...current,
       loginPage: {

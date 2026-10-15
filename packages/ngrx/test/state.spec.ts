@@ -8,7 +8,7 @@ import { Actions, createEffect, ofType, provideEffects } from "@ngrx/effects";
 import { createAction, props, provideStore, Store } from "@ngrx/store";
 import { map } from "rxjs";
 import { expect, expectTypeOf, it, vi } from "vitest";
-import { state, view } from "../src/index.js";
+import { state, view, type NamedStateHandlers } from "../src/index.js";
 
 const add = createAction("[Counter] Add", props<{ amount: number }>());
 const other = createAction("[Counter] Other", props<{ amount: number }>());
@@ -28,7 +28,7 @@ it("infers handlers and preserves independent branches", () => {
   expect(plus.views.count).toBe(base.views.count);
 });
 it("creates reducers from named handlers", () => {
-  const counter = state("namedCounter", { count: 0 }).handle((on) => ({
+  const counter = state("namedCounter", { count: 0 }).subscribe((on) => ({
     addAmount: on(add, (current, { amount }) => {
       expectTypeOf(current).toEqualTypeOf<{ count: number }>();
       expectTypeOf(amount).toEqualTypeOf<number>();
@@ -42,6 +42,32 @@ it("creates reducers from named handlers", () => {
   expect(counter.reducer({ count: 3 }, other({ amount: 1 }))).toEqual({
     count: 2,
   });
+});
+it("composes subscriptions without changing earlier definitions or views", () => {
+  const base = state("counter", { count: 0 });
+  const first = base.subscribe(
+    (on) =>
+      ({
+        add: on(add, (current, { amount }) => ({
+          count: current.count + amount,
+        })),
+      }) satisfies NamedStateHandlers<{ count: number }>,
+  );
+  const second = first.subscribe((on) => ({
+    subtract: on(other, (current, { amount }) => ({
+      count: current.count - amount,
+    })),
+  }));
+
+  expect(base.reducer(undefined, add({ amount: 3 }))).toEqual({ count: 0 });
+  expect(first.reducer({ count: 3 }, other({ amount: 1 }))).toEqual({
+    count: 3,
+  });
+  expect(second.reducer(undefined, add({ amount: 3 }))).toEqual({ count: 3 });
+  expect(second.reducer({ count: 3 }, other({ amount: 1 }))).toEqual({
+    count: 2,
+  });
+  expect(second.views).toBe(base.views);
 });
 it("composes successive extra views once and retains their types and caches", () => {
   const build = vi.fn();

@@ -32,7 +32,7 @@ export default createRule<Options, MessageIds>({
 
     return {
       CallExpression(node) {
-        if (!isTaskHandleCall(node)) return;
+        if (!isTaskSubscribeCall(node)) return;
 
         const [builder] = node.arguments;
         if (
@@ -43,7 +43,7 @@ export default createRule<Options, MessageIds>({
         }
       },
       "CallExpression:exit"(node) {
-        if (!isTaskHandleCall(node)) return;
+        if (!isTaskSubscribeCall(node)) return;
 
         const [builder] = node.arguments;
         if (
@@ -65,7 +65,7 @@ export default createRule<Options, MessageIds>({
   },
 });
 
-function isTaskHandleCall(node: TSESTree.CallExpression): boolean {
+function isTaskSubscribeCall(node: TSESTree.CallExpression): boolean {
   return (
     (node.callee.type === "Identifier" && node.callee.name === "tasks") ||
     (node.callee.type === "MemberExpression" &&
@@ -73,7 +73,7 @@ function isTaskHandleCall(node: TSESTree.CallExpression): boolean {
       node.callee.object.type === "Identifier" &&
       node.callee.object.name === "task" &&
       node.callee.property.type === "Identifier" &&
-      node.callee.property.name === "handle")
+      node.callee.property.name === "subscribe")
   );
 }
 

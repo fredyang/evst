@@ -5,7 +5,7 @@ same event make the resulting state transition harder to understand.
 
 ```ts
 // Reported
-const booksState = state("books", initialState).handle((on) => ({
+const booksState = state("books", initialState).subscribe((on) => ({
   finishLoading: on(BooksEvents.loaded, (state) => ({
     ...state,
     loading: false,
@@ -14,7 +14,7 @@ const booksState = state("books", initialState).handle((on) => ({
 }));
 
 // Accepted
-const booksState = state("books", initialState).handle((on) => ({
+const booksState = state("books", initialState).subscribe((on) => ({
   finishLoading: on(BooksEvents.loaded, (state) => ({
     ...state,
     loading: false,

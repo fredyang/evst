@@ -68,8 +68,13 @@ effects, and DevTools.
 
 `state()` infers the feature-state shape from its initial-state object and
 automatically exposes a typed View for each top-level field. Optionally,
-`.extraViews()` composes derived Views from those default Views. `.handle()`
-adds named, pure event handlers; names document each state transition.
+`.extraViews()` composes derived Views from those default Views. `.subscribe()`
+declares event subscriptions through named, pure state handlers. Names document
+each state transition. `NamedStateHandlers<State>` is a record of `StateHandler<State>`
+values returned by the supplied `on` builder.
+
+`subscribe()` returns a new state definition. Event subscriptions take effect
+when that definition's providers are registered with the application.
 
 ```ts
 import { state, view } from "@evst/ngrx";
@@ -93,7 +98,7 @@ export const booksState = state("books", initialState)
     ),
   }))
   // Named event handlers define pure state transitions.
-  .handle((on) => ({
+  .subscribe((on) => ({
     beginLoading: on(fromBooksPage.entered, (current) => ({
       ...current,
       loading: true,
@@ -121,13 +126,20 @@ export const booksViews = booksState.views;
 
 ### Implementing Tasks
 
-State and Task share the `handle((on) => ({ ... }))` definition shape. In both,
-`on()` associates one or more events with a named handler. State handlers return
-the next immutable state; Task handlers receive an event-filtered pipeline and
-return outcome events. Each Task handler creates a functional NgRx Effect with
-`createEffect()`. Handler object keys document intent; the events passed to
-`on()` determine what each handler receives. Task keys are also exposed under
-`.effects`.
+State and Task share the `subscribe((on) => ({ ... }))` shape. State declares
+named state handlers; Task declares named Tasks. In both, `on()` associates
+one or more events with a response. State handlers return the next immutable
+state. Task source functions receive an event-filtered pipeline and return
+an observable of outcome events.
+
+A `Task` is a callable functional NgRx Effect with a `.provide()` method.
+`NamedTasks` is a record of Tasks. Object keys document intent; events passed
+to `on()` determine each Task's inputs. Task keys are also exposed under
+`.effects`, preserving each source function's type.
+
+`task.subscribe()` returns a task collection. Its effects start listening when
+the collection's providers are registered with the application. Angular manages
+their lifetime through the injector.
 
 ```ts
 import { HttpClient } from "@angular/common/http";
@@ -136,7 +148,7 @@ import { task } from "@evst/ngrx";
 import { catchError, exhaustMap, map, of } from "rxjs";
 import { fromBooksApi, fromBooksPage, type Book } from "./books.events";
 
-export const booksTasks = task.handle((on) => ({
+export const booksTasks = task.subscribe((on) => ({
   load: on(fromBooksPage.entered, (pipe, http = inject(HttpClient)) => {
     return pipe(
       exhaustMap(() =>

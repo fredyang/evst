@@ -22,7 +22,7 @@ import {
   fromSelectedBookPage,
 } from "./books.events";
 
-export const booksTasks = task.handle((on) => ({
+export const booksTasks = task.subscribe((on) => ({
   search: on(
     fromFindBookPage.searchQueryChanged,
     (pipe, googleBooks = inject(GoogleBooksService)) => {

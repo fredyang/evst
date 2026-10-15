@@ -60,7 +60,7 @@ function findSubscribedEvents(
       if (
         event &&
         ts.isPropertyAccessExpression(node) &&
-        isSubscription(node)
+        isSubscription(node, checker)
       ) {
         subscribed.add(event);
       }

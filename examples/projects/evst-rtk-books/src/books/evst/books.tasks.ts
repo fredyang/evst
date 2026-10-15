@@ -18,7 +18,7 @@ const message = (error: unknown) =>
     ? error.message
     : "Unexpected error. Please try again.";
 
-export const booksTasks = task.handle((on) => ({
+export const booksTasks = task.subscribe((on) => ({
   search: on(
     fromFindBookPage.searchQueryChanged,
     latest(

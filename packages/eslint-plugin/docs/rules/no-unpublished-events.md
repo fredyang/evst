@@ -14,7 +14,7 @@ The rule recognizes direct publications and events emitted from EVST tasks.
 ```ts
 BooksEvents.loaded.publish();
 
-const booksTasks = task.handle((on) => ({
+const booksTasks = task.subscribe((on) => ({
   load: on(BooksPageEvents.entered, (pipe) =>
     pipe(map(() => BooksEvents.loaded())),
   ),

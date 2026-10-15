@@ -1,0 +1,85 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="800"
+  height="570"
+  viewBox="0 0 800 570"
+  role="img"
+  aria-labelledby="title description"
+>
+  <title id="title">EVST programming model</title>
+  <desc id="description">
+    Components read Views and publish Events. State and Task subscribe to
+    Events. State exposes Views, and Tasks return outcome Events. Arrows show
+    the direction of information flow.
+  </desc>
+  <defs>
+    <marker
+      id="arrow"
+      viewBox="0 0 10 10"
+      refX="9"
+      refY="5"
+      markerWidth="9"
+      markerHeight="9"
+      orient="auto-start-reverse"
+    >
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#333" />
+    </marker>
+  </defs>
+  <rect width="800" height="570" fill="white" />
+  <rect x="16" y="16" width="768" height="270" rx="42" fill="#cce5ff" />
+  <rect x="16" y="288" width="768" height="266" rx="42" fill="#e7ffcc" />
+  <g fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)">
+    <path d="M 284 142 L 166 245" />
+    <path d="M 498 142 L 594 245" />
+    <path d="M 279 430 L 173 327" />
+    <path d="M 488 307 L 322 430" />
+    <path d="M 495 327 Q 471 382 518 430" />
+    <path d="M 596 430 Q 660 369 574 327" />
+  </g>
+  <g stroke="#9866ff" stroke-width="1.5">
+    <rect x="284" y="61" width="214" height="81" fill="#ff66bf" />
+    <rect x="142" y="245" width="142" height="81" fill="#efebff" />
+    <rect x="488" y="245" width="152" height="81" fill="#efebff" />
+    <rect x="248" y="430" width="146" height="81" fill="#efebff" />
+    <rect x="518" y="430" width="140" height="81" fill="#efebff" />
+  </g>
+  <g
+    font-family="Arial, sans-serif"
+    fill="#333"
+    font-size="24"
+    text-anchor="middle"
+  >
+    <text x="391" y="111">Component</text>
+    <text x="213" y="294">View</text>
+    <text x="564" y="294">Event</text>
+    <text x="321" y="479">State</text>
+    <text x="588" y="479">Task</text>
+  </g>
+  <g
+    font-family="Arial, sans-serif"
+    fill="#111"
+    font-size="27"
+    font-weight="bold"
+    text-anchor="middle"
+  >
+    <text x="113" y="90">Consumer</text>
+    <text x="113" y="123">code</text>
+    <text x="103" y="480">Provider</text>
+    <text x="103" y="513">code</text>
+  </g>
+  <g font-family="Arial, sans-serif" fill="#333" font-size="22">
+    <rect x="225" y="164" width="169" height="58" fill="#e8edf1" />
+    <text x="227" y="186">.signal() - NgRx</text>
+    <text x="227" y="215">.use() - RTK</text>
+    <rect x="498" y="178" width="113" height="29" fill="#e8edf1" />
+    <text x="500" y="201">.publish()</text>
+    <rect x="49" y="377" width="245" height="29" fill="#ecf4e4" />
+    <text x="51" y="400">exposes / .extraViews()</text>
+    <rect x="311" y="334" width="130" height="29" fill="#ecf4e4" />
+    <text x="313" y="357">.subscribe()</text>
+    <rect x="425" y="378" width="130" height="29" fill="#ecf4e4" />
+    <text x="427" y="401">.subscribe()</text>
+    <rect x="518" y="345" width="258" height="29" fill="#ecf4e4" />
+    <text x="520" y="368">returns an outcome event</text>
+  </g>
+</svg>

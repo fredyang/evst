@@ -44,17 +44,17 @@ guides cover the concrete APIs, registration, integration, and testing.
 
 Events and Views connect consumer code with provider code. Components publish
 Events to describe what happened and read Views to render state. Provider code
-defines how State and Task respond to those Events and which Views expose the
+declares how State and Task subscribe to those Events and which Views expose the
 resulting state. Components do not need to know which handlers respond.
 
-![EVST programming model: components read Views and publish Events; State and Task handle Events; State exposes Views and Task returns outcome Events.](images/evst.png)
+![EVST programming model: components read Views and publish Events; State and Task subscribe to Events through handlers; State exposes Views and Task returns outcome Events.](images/evst.svg)
 
-| Object    | Role                                                                                     |
-| --------- | ---------------------------------------------------------------------------------------- |
-| **Event** | Describes something that happened and belongs to its source.                             |
-| **View**  | Exposes read-only state to consumer code.                                                |
-| **State** | Handles events through pure state transitions and exposes Views.                         |
-| **Task**  | Handles events, performs asynchronous or imperative work, and can return outcome events. |
+| Object    | Role                                                                        |
+| --------- | --------------------------------------------------------------------------- |
+| **Event** | Describes something that happened and belongs to its source.                |
+| **View**  | Exposes read-only state to consumer code.                                   |
+| **State** | Subscribes to events through pure state handlers and exposes Views.         |
+| **Task**  | Subscribes to events, performs side effects, and can return outcome events. |
 
 “Consumer” and “provider” describe programming roles here. They do not refer
 specifically to Angular dependency injection or React's Provider component.
@@ -68,9 +68,15 @@ Views provide the read-only interface for consumer code. State exposes Views
 for its top-level fields, and `.extraViews()` and `view()` compose derived
 Views. Components consume them through `.signal()` in NgRx or `.use()` in RTK.
 
-State and Task share the `.handle((on) => ({ ... }))` definition shape, which
-defines named event handlers. State handlers perform pure state transitions;
-Task handlers perform external work and can return outcome events to the store.
+Events are published; States and Tasks subscribe through the shared
+`.subscribe((on) => ({ ... }))` shape. State subscriptions declare named state
+handlers, which perform pure state transitions. Task subscriptions declare
+named Tasks, which perform side effects and can return outcome events.
+
+`subscribe()` declares these responses before registration. State returns a new
+state definition; Task returns a task collection. Registration activates the
+subscriptions through NgRx environment providers or RTK's `createEvst()` and
+`evst.provide()`. Subscription lifetimes follow that registration.
 
 ## Enforcing event-driven programming
 

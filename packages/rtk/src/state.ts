@@ -19,7 +19,10 @@ type StateOn<State> = <Creator extends EventCreator>(
   event: Creator,
   reducer: EventCaseReducer<State, Creator>,
 ) => { event: Creator; reducer: EventCaseReducer<State, Creator> };
-type Handler<State> = ReturnType<StateOn<State>>;
+/** Associates a subscribed event with a pure state transition using Immer. */
+export type StateHandler<State> = ReturnType<StateOn<State>>;
+/** State handlers keyed by descriptive transition names. */
+export type NamedStateHandlers<State> = Record<string, StateHandler<State>>;
 type BaseViews<Name extends string, State extends object> = {
   [Key in keyof State]: View<Record<Name, State>, State[Key]>;
 } & {
@@ -35,8 +38,13 @@ export interface FeatureStateDefinition<
   readonly name: Name;
   readonly reducer: Reducer<State>;
   readonly views: BaseViews<Name, State> & ExtraViews;
-  handle(
-    build: (on: StateOn<State>) => Record<string, Handler<State>>,
+  /**
+   * Declares event subscriptions through named state handlers.
+   * Returns a new definition, registered through `createEvst()` or `evst.provide()`.
+   * Handler names label transitions; events passed to `on` select their inputs.
+   */
+  subscribe(
+    build: (on: StateOn<State>) => NamedStateHandlers<State>,
   ): FeatureStateDefinition<Name, State, ExtraViews>;
   extraViews<Added extends ExtraViewRecord<Record<Name, State>>>(
     build: (views: BaseViews<Name, State> & ExtraViews) => Added,
@@ -72,7 +80,7 @@ function chain<
 >(
   name: Name,
   initialState: State,
-  handlers: readonly Handler<State>[],
+  handlers: readonly StateHandler<State>[],
   views: BaseViews<Name, State> & ExtraViews,
 ): FeatureStateDefinition<Name, State, ExtraViews> {
   return {
@@ -84,7 +92,7 @@ function chain<
         );
     }),
     views,
-    handle: (build: (on: StateOn<State>) => Record<string, Handler<State>>) => {
+    subscribe: (build: (on: StateOn<State>) => NamedStateHandlers<State>) => {
       const on: StateOn<State> = (event, reducer) => ({ event, reducer });
       return chain(
         name,

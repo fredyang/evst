@@ -35,7 +35,13 @@ type StateViews<State> = {
 type StateOn<State> = <Creators extends readonly ActionCreator[]>(
   ...args: [...Creators, ReducerTypes<State, Creators>["reducer"]]
 ) => ReducerTypes<State, Creators>;
-type StateHandler<State extends object> = ReducerTypes<State, any>;
+/** Associates subscribed events with a pure state transition. */
+export type StateHandler<State extends object> = ReducerTypes<State, any>;
+/** State handlers keyed by descriptive transition names. */
+export type NamedStateHandlers<State extends object> = Record<
+  string,
+  StateHandler<State>
+>;
 
 /** An immutable state definition with composable handlers and views. */
 export interface FeatureStateDefinition<
@@ -66,15 +72,19 @@ export interface FeatureStateDefinition<
     ...args: [...Creators, ReducerTypes<State, Creators>["reducer"]]
   ): FeatureStateDefinition<State, ExtraViews>;
   /**
-   * Adds named state handlers. Definition keys are descriptive labels for each
+   * Declares event subscriptions through named state handlers.
+   * Subscriptions take effect when the returned definition is registered
+   * through its environment providers. This method returns a new definition.
+   *
+   * Handler keys are descriptive labels for each
    * transition; they do not name events or affect reducer behavior. The event
    * creators passed to `on` determine which events each handler receives.
    *
    * @param build - Creates named handlers with the supplied event `on` builder.
    * @returns A new definition containing the added handlers.
    */
-  handle<Definitions extends Record<string, StateHandler<State>>>(
-    build: (on: StateOn<State>) => Definitions,
+  subscribe<Handlers extends NamedStateHandlers<State>>(
+    build: (on: StateOn<State>) => Handlers,
   ): FeatureStateDefinition<State, ExtraViews>;
   /**
    * Optionally adds named, derived views alongside the default field and `root`
@@ -92,7 +102,7 @@ export interface FeatureStateDefinition<
 /**
  * Defines feature state with typed handlers and memoized views.
  *
- * `.handle()` and `.extraViews()` return new definitions without
+ * `.subscribe()` and `.extraViews()` return new definitions without
  * changing earlier steps. Every step exposes `views`, `reducer`, and `provide()`;
  * no final `.build()` call is required. Registration uses the final definition.
  * Handlers must return state immutably.
@@ -164,7 +174,7 @@ export interface FeatureStateDefinition<
  *   added: props<{ amount: number }>(),
  * });
  *
- * export const counter = state('counter', { count: 0 }).handle(on => ({
+ * export const counter = state('counter', { count: 0 }).subscribe(on => ({
  *   addAmount: on(fromCounter.added, (current, { amount }) => ({
  *     count: current.count + amount,
  *   })),
@@ -189,7 +199,7 @@ export interface FeatureStateDefinition<
  * import { booksTasks } from './books.tasks';
  * import { initialBooksState } from './books.initial-state';
  *
- * const books = state('books', initialBooksState).handle(on => ({
+ * const books = state('books', initialBooksState).subscribe(on => ({
  *   storeLoadedBooks: on(fromBooksApi.loaded, (current, { books }) => ({
  *     ...current,
  *     books,
@@ -244,7 +254,7 @@ function chainState<
         [...handlers, (on as StateOn<State>)(...args)],
         views,
       ),
-    handle: (build) =>
+    subscribe: (build) =>
       chainState(
         name,
         initialState,

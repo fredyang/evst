@@ -27,8 +27,19 @@ new RuleTester({ languageOptions: { parser } }).run(
       taskWithEvent,
       `on(() => source$);`,
       `tasks((on) => ({ load: on(event, () => source$, { dispatch: false }) }));`,
+      `task.subscribe((on) => ({ load: on(event, (pipe) => pipe()) }));`,
+      `task.subscribe((on) => ({ load: on(event, (pipe) => pipe(), { dispatch: false }) }));`,
+      `source$.subscribe(() => on(() => source$));`,
     ],
     invalid: [
+      {
+        code: `task.subscribe((on) => ({ startup: on(() => source$) }));`,
+        errors: [{ messageId }],
+      },
+      {
+        code: `task.subscribe((on) => ({ startup: on(() => source$, { dispatch: false }) }));`,
+        errors: [{ messageId }],
+      },
       {
         code: `tasks((on) => ({ startup: on(() => source$) }));`,
         errors: [{ messageId }],

@@ -9,19 +9,30 @@ export type TaskEffect<Payload = void> = (
   payload: Payload,
 ) => Outcome | Promise<Outcome>;
 
-type Task = { register(listener: ListenerMiddlewareInstance): () => void };
+/** Event-driven side effect registered through RTK listener middleware. */
+export type Task = {
+  register(listener: ListenerMiddlewareInstance): () => void;
+};
+/** Tasks keyed by descriptive names. */
+export type NamedTasks = Record<string, Task>;
 export interface Tasks {
   register(listener: ListenerMiddlewareInstance): () => void;
 }
-type On = <Creator extends EventCreator>(
+/** Associates an event with a Task receiving its payload. */
+export type TaskBuilder = <Creator extends EventCreator>(
   event: Creator,
   effect: TaskEffect<ReturnType<Creator>["payload"]>,
 ) => Task;
 
-/** Defines named tasks receiving event data and returning an optional outcome event. */
+/** Declares event subscriptions through named Tasks. */
 export const task = {
-  handle(build: (on: On) => Record<string, Task>): Tasks {
-    const on: On = (event, effect) => {
+  /**
+   * Returns a task collection, registered through `createEvst()` or `evst.provide()`.
+   * Task names label responses; events passed to `on` select their inputs.
+   * Each effect receives event data and returns an optional outcome event.
+   */
+  subscribe(build: (on: TaskBuilder) => NamedTasks): Tasks {
+    const on: TaskBuilder = (event, effect) => {
       return {
         register: (listener) => {
           const stop = listener.startListening({
@@ -43,11 +54,11 @@ export const task = {
         },
       };
     };
-    const definitions = build(on);
+    const namedTasks = build(on);
     return {
       register: (listener) => {
-        const stops = Object.values(definitions).map((definition) =>
-          definition.register(listener),
+        const stops = Object.values(namedTasks).map((task) =>
+          task.register(listener),
         );
         return () => stops.forEach((stop) => stop());
       },
@@ -55,5 +66,5 @@ export const task = {
   },
 };
 
-/** @deprecated Use task.handle(). */
-export const tasks = task.handle;
+/** @deprecated Use task.subscribe(). */
+export const tasks = task.subscribe;

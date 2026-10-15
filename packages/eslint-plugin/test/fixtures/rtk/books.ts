@@ -1,4 +1,5 @@
 import { emptyProps, events, props, state, task, view } from "@evst/rtk";
+import { of } from "rxjs";
 
 export const fromBooksPage = events("Books Page", {
   entered: emptyProps(),
@@ -12,18 +13,24 @@ export const fromSelectionPage = events("Selection Page", {
   removed: emptyProps(),
   checked: emptyProps(),
 });
+
+// An unrelated RxJS subscription must not count as a State event subscription.
+of(null).subscribe(() => {
+  const on = (_event: unknown, _handler: () => void) => {};
+  on(fromSelectionPage.checked, () => {});
+});
 export const booksState = state("books", { titles: [] as string[] })
   .extraViews(({ titles }) => ({
     total: view(titles, (titles) => titles.length),
     unused: view(titles, (titles) => titles.join(", ")),
   }))
-  .handle((on) => ({
+  .subscribe((on) => ({
     loaded: on(fromBooksApi.loaded, (current, { titles }) => {
       current.titles = titles;
     }),
   }));
 export const booksViews = booksState.views;
-export const booksTasks = task.handle((on) => ({
+export const booksTasks = task.subscribe((on) => ({
   load: on(fromBooksPage.entered, async () => {
     return fromBooksApi.loaded({ titles: ["The Hobbit"] });
   }),

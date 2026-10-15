@@ -29,7 +29,7 @@ export const initialState = {
 export type BooksRoot = { books: typeof initialState };
 
 export const booksState = state("books", initialState)
-  .handle((on) => ({
+  .subscribe((on) => ({
     resetState: on(fromAuth.logout, () => initialState),
 
     beginSearch: on(fromFindBookPage.searchQueryChanged, (s, { query }) => {

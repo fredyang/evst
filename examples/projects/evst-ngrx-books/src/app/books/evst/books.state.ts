@@ -70,7 +70,7 @@ export const booksState = state("books", initialState)
       (b, c) => !!b.selectedBookId && c.ids.includes(b.selectedBookId),
     ),
   }))
-  .handle((on) => ({
+  .subscribe((on) => ({
     resetState: on(fromAuth.logout, () => initialState),
 
     applySearchResults: on(

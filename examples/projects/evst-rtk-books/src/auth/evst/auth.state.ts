@@ -7,7 +7,7 @@ export const authState = state("auth", {
   error: "",
   confirmingLogout: false,
 })
-  .handle((on) => ({
+  .subscribe((on) => ({
     beginLogin: on(fromLoginPage.login, (current) => {
       current.pending = true;
       current.error = "";
