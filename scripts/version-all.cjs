@@ -25,7 +25,7 @@ if (output("git", ["tag", "--list", tag])) {
   throw new Error(`The Git tag ${tag} already exists.`);
 }
 
-// Bump both public packages without creating one tag per workspace.
+// Bump all public packages without creating one tag per workspace.
 run("npm", [
   "version",
   version,
@@ -33,6 +33,8 @@ run("npm", [
   "@evst/ngrx",
   "--workspace",
   "@evst/eslint-plugin",
+  "--workspace",
+  "@evst/rtk",
   "--no-git-tag-version",
   "--ignore-scripts",
 ]);
@@ -41,8 +43,9 @@ const store = JSON.parse(readFileSync("packages/ngrx/package.json", "utf8"));
 const eslintPlugin = JSON.parse(
   readFileSync("packages/eslint-plugin/package.json", "utf8"),
 );
-if (store.version !== version || eslintPlugin.version !== version) {
-  throw new Error("Both public packages must have the requested version.");
+const rtk = JSON.parse(readFileSync("packages/rtk/package.json", "utf8"));
+if ([store, eslintPlugin, rtk].some((pkg) => pkg.version !== version)) {
+  throw new Error("All public packages must have the requested version.");
 }
 
 run("git", [
@@ -50,6 +53,7 @@ run("git", [
   "package-lock.json",
   "packages/ngrx/package.json",
   "packages/eslint-plugin/package.json",
+  "packages/rtk/package.json",
 ]);
 run("git", ["commit", "-m", `chore(release): ${tag}`]);
 run("git", ["tag", "-a", tag, "-m", tag]);
