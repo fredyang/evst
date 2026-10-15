@@ -1,7 +1,7 @@
 import { firstValueFrom, of } from "rxjs";
 import { authGuard } from "./auth-guard.service";
-import { authViews } from "../evst/auth.state";
-import { fromAuthGuard } from "../evst/auth.events";
+import { authViews } from "../evst/auth.evst";
+import { fromAuthGuard } from "../evst/auth.evst";
 
 describe("Auth Guard", () => {
   beforeEach(() => {

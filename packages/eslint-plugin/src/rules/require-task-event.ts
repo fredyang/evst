@@ -67,13 +67,15 @@ export default createRule<Options, MessageIds>({
 
 function isTaskSubscribeCall(node: TSESTree.CallExpression): boolean {
   return (
-    (node.callee.type === "Identifier" && node.callee.name === "tasks") ||
+    (node.callee.type === "Identifier" &&
+      ["tasks", "taskOn"].includes(node.callee.name)) ||
     (node.callee.type === "MemberExpression" &&
       !node.callee.computed &&
-      node.callee.object.type === "Identifier" &&
-      node.callee.object.name === "task" &&
       node.callee.property.type === "Identifier" &&
-      node.callee.property.name === "subscribe")
+      (node.callee.property.name === "taskOn" ||
+        (node.callee.object.type === "Identifier" &&
+          node.callee.object.name === "task" &&
+          node.callee.property.name === "subscribe")))
   );
 }
 

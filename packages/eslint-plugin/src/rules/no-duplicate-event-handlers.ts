@@ -39,7 +39,7 @@ export default createRule<Options, MessageIds>({
       if (!collectHandlers(expression.callee.object, handledEvents))
         return false;
 
-      if (expression.callee.property.name === "subscribe") {
+      if (["subscribe", "stateOn"].includes(expression.callee.property.name)) {
         const [build] = expression.arguments;
         if (build?.type === "ArrowFunctionExpression") {
           collectNamedHandlers(build.body, handledEvents);

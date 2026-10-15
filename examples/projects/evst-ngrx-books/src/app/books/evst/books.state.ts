@@ -10,7 +10,7 @@ import {
   fromSelectedBookPage,
   fromViewBookPage,
 } from "./books.events";
-import { fromAuth } from "@example-app/auth/evst/auth.events";
+import { fromAuth } from "@example-app/auth/evst/auth.evst";
 interface EntityBooksState extends EntityState<Book> {
   selectedBookId: string | null;
 }
@@ -70,7 +70,7 @@ export const booksState = state("books", initialState)
       (b, c) => !!b.selectedBookId && c.ids.includes(b.selectedBookId),
     ),
   }))
-  .subscribe((on) => ({
+  .stateOn((on) => ({
     resetState: on(fromAuth.logout, () => initialState),
 
     applySearchResults: on(

@@ -25,6 +25,8 @@ new RuleTester({ languageOptions: { parser } }).run(
   {
     valid: [
       taskWithEvent,
+      `taskOn((on) => ({ load: on(event, (pipe) => pipe()) }));`,
+      `state("books", {}).taskOn((on, views) => ({ load: on(event, (pipe) => pipe()) }));`,
       `on(() => source$);`,
       `tasks((on) => ({ load: on(event, () => source$, { dispatch: false }) }));`,
       `task.subscribe((on) => ({ load: on(event, (pipe) => pipe()) }));`,
@@ -32,6 +34,14 @@ new RuleTester({ languageOptions: { parser } }).run(
       `source$.subscribe(() => on(() => source$));`,
     ],
     invalid: [
+      {
+        code: `taskOn((on) => ({ startup: on(() => source$) }));`,
+        errors: [{ messageId }],
+      },
+      {
+        code: `state("books", {}).taskOn((on, views) => ({ startup: on(() => source$) }));`,
+        errors: [{ messageId }],
+      },
       {
         code: `task.subscribe((on) => ({ startup: on(() => source$) }));`,
         errors: [{ messageId }],

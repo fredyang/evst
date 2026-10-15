@@ -1,7 +1,7 @@
 import { Component } from "@angular/core";
 import { Credentials } from "@example-app/auth/models";
-import { authViews } from "@example-app/auth/evst/auth.state";
-import { fromLoginPage } from "@example-app/auth/evst/auth.events";
+import { authViews } from "@example-app/auth/evst/auth.evst";
+import { fromLoginPage } from "@example-app/auth/evst/auth.evst";
 import { LoginFormComponent } from "../components/login-form.component";
 
 @Component({

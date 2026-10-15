@@ -24,16 +24,16 @@ type EventPipe<Creators extends readonly ActionCreator[]> = Observable<
 >["pipe"];
 
 /**
- * Creates a Task for a `task.subscribe()` collection.
+ * Creates a Task for a `taskOn()` collection.
  *
- * The builder is supplied as `on` to the callback passed to `task.subscribe`.
+ * The builder is supplied as `on` to the callback passed to `taskOn`.
  * Tasks can be defined from an observable source, or scoped to one or more events.
  * Event-scoped tasks receive a `pipe` function whose source emits only the
  * selected event types.
  *
  * @example
  * ```ts
- * const booksTasks = task.subscribe((on) => ({
+ * const booksTasks = taskOn((on) => ({
  *   load: on(fromBooksPage.entered, (pipe) =>
  *     pipe(
  *       exhaustMap(() => booksApi.getAll()),
@@ -49,7 +49,7 @@ export interface TaskBuilder {
    *
    * @param source - Function that returns the task source observable.
    * @param options - NgRx effect configuration.
-   * @returns A Task for a `task.subscribe()` collection.
+   * @returns A Task for a `taskOn()` collection.
    */
   <Source extends () => Observable<unknown>>(
     source: Source,
@@ -109,12 +109,12 @@ class TasksCollection<Effects extends NamedTasks> implements Tasks<Effects> {
  *
  * @example
  * ```ts
- * const booksTasks = task.subscribe((on) => ({
+ * const booksTasks = taskOn((on) => ({
  *   load: on(fromBooksPage.entered, (pipe) => pipe(exhaustMap(loadBooks))),
  * }));
  * ```
  */
-function subscribe<Subscriptions extends NamedTasks>(
+export function taskOn<Subscriptions extends NamedTasks>(
   build: (on: TaskBuilder) => Subscriptions,
 ): Tasks<Subscriptions> {
   const namedTasks = build(createTask);
@@ -130,15 +130,9 @@ function subscribe<Subscriptions extends NamedTasks>(
 }
 
 /**
- * Declares subscriptions using named Tasks. Events passed to `on` select each
- * Task's inputs; Task names label the generated effects.
+ * @deprecated Use `taskOn()` for standalone Task definitions.
  */
-export const task = { subscribe };
-
-/**
- * @deprecated Use `task.subscribe()` to align task and state handler definitions.
- */
-export const tasks = subscribe;
+export const tasks = taskOn;
 
 const createTask: TaskBuilder = ((...args: any[]): Task => {
   const [first] = args;

@@ -7,7 +7,7 @@ const project = path.resolve(
   __dirname,
   "../../../examples/projects/evst-ngrx-books",
 );
-const file = path.join(project, "src/app/auth/evst/auth.state.ts");
+const file = path.join(project, "src/app/auth/evst/auth.evst.ts");
 
 describe("no-unused-views", () => {
   it("reports the unreferenced auth user view", async () => {

@@ -12,8 +12,8 @@ import {
   fromAuthApi,
   fromAuthGuard,
   fromLoginPage,
-} from "./auth.events";
-import { authTasks } from "./auth.tasks";
+} from "./auth.evst";
+import { authBundle } from "./auth.evst";
 
 describe("authTasks", () => {
   function setup() {
@@ -45,7 +45,7 @@ describe("authTasks", () => {
     const context = setup();
     const credentials = { username: "ada", password: "pw" };
     try {
-      const output = context.run(authTasks.effects.login);
+      const output = context.run(authBundle.effects.login);
       context.events.next(fromLoginPage.login({ credentials }));
       context.auth.login.mockReturnValueOnce(
         throwError(() => new Error("Unavailable")),
@@ -65,8 +65,8 @@ describe("authTasks", () => {
   it("navigates after login success and whenever login is required or logout occurs", () => {
     const context = setup();
     try {
-      expect(context.run(authTasks.effects.loginSuccess)).toEqual([]);
-      expect(context.run(authTasks.effects.loginRedirect)).toEqual([]);
+      expect(context.run(authBundle.effects.loginSuccess)).toEqual([]);
+      expect(context.run(authBundle.effects.loginRedirect)).toEqual([]);
       context.events.next(fromAuthApi.loginSuccess({ user: { name: "Ada" } }));
       context.events.next(fromAuthGuard.loginRequired());
       context.events.next(fromAuth.logout());
@@ -82,8 +82,8 @@ describe("authTasks", () => {
   it("confirms logout through the dialog and logs idle users out", () => {
     const context = setup();
     try {
-      const confirmation = context.run(authTasks.effects.logoutConfirmation);
-      const idle = context.run(authTasks.effects.logoutIdleUser);
+      const confirmation = context.run(authBundle.effects.logoutConfirmation);
+      const idle = context.run(authBundle.effects.logoutIdleUser);
       context.events.next(fromAuth.logoutConfirmation());
       context.dialog.open.mockReturnValueOnce({ afterClosed: () => of(false) });
       context.events.next(fromAuth.logoutConfirmation());

@@ -3,11 +3,12 @@ export { bundle, type Bundle } from "./bundle.js";
 export {
   state,
   type FeatureStateDefinition,
+  type FeatureBundle,
   type NamedStateHandlers,
   type StateHandler,
 } from "./state.js";
 export {
-  task,
+  taskOn,
   tasks,
   type NamedTasks,
   type Task,

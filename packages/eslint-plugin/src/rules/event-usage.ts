@@ -133,11 +133,12 @@ function isWithinTask(node: ts.Node): boolean {
     if (
       ts.isCallExpression(current) &&
       ((ts.isIdentifier(current.expression) &&
-        current.expression.text === "tasks") ||
+        ["tasks", "taskOn"].includes(current.expression.text)) ||
         (ts.isPropertyAccessExpression(current.expression) &&
-          ts.isIdentifier(current.expression.expression) &&
-          current.expression.expression.text === "task" &&
-          current.expression.name.text === "subscribe"))
+          (current.expression.name.text === "taskOn" ||
+            (ts.isIdentifier(current.expression.expression) &&
+              current.expression.expression.text === "task" &&
+              current.expression.name.text === "subscribe"))))
     ) {
       return true;
     }
@@ -155,7 +156,7 @@ function isWithinStateSubscription(
     if (
       ts.isCallExpression(current) &&
       ts.isPropertyAccessExpression(current.expression) &&
-      current.expression.name.text === "subscribe"
+      ["subscribe", "stateOn"].includes(current.expression.name.text)
     ) {
       const receiver = checker.getTypeAtLocation(current.expression.expression);
       if (receiver.getProperty("reducer") && receiver.getProperty("views")) {

@@ -1,3 +1,4 @@
+import type { EnvironmentProviders } from "@angular/core";
 import {
   createFeatureSelector,
   createReducer,
@@ -10,6 +11,9 @@ import {
 import { provideFeature } from "./provide-feature.js";
 import type { Action } from "@ngrx/store";
 import { attachViewMethods, type ViewMethods, view } from "./view.js";
+
+import { bundle } from "./bundle.js";
+import { taskOn, type NamedTasks, type TaskBuilder } from "./tasks.js";
 
 /** Adds signal and observable access to each named memoized view. */
 type InjectableViews<
@@ -43,6 +47,18 @@ export type NamedStateHandlers<State extends object> = Record<
   StateHandler<State>
 >;
 
+/** A state and its Tasks, registered together through one provider. */
+export interface FeatureBundle<
+  State extends object,
+  ExtraViews extends Record<string, MemoizedSelector<object, any>>,
+  Effects extends NamedTasks,
+> {
+  readonly views: StateViews<State> & InjectableViews<ExtraViews>;
+  readonly reducer: ActionReducer<State, Action>;
+  readonly effects: Readonly<Effects>;
+  provide(): EnvironmentProviders;
+}
+
 /** An immutable state definition with composable handlers and views. */
 export interface FeatureStateDefinition<
   State extends object,
@@ -63,6 +79,33 @@ export interface FeatureStateDefinition<
    */
   provide(): ReturnType<typeof provideFeature>;
   /**
+   * Declares named Tasks and finishes the state composition chain.
+   * The builder receives all generated and extra Views with their inferred types.
+   * The original state definition remains unchanged. Register the returned bundle
+   * once to activate both its state handlers and Tasks.
+   *
+   * @param build - Creates named Tasks with the Task `on` builder and current Views.
+   * @returns A bundle exposing `views`, `reducer`, `effects`, and `provide()`;
+   * further state composition methods are not available on the bundle.
+   *
+   * @example
+   * ```ts
+   * const counter = state('counter', { count: 0 })
+   *   .stateOn((on) => ({
+   *     increment: on(fromCounterTask.counted, (current) => ({ count: current.count + 1 })),
+   *   }))
+   *   .taskOn((on, views) => ({
+   *     count: on(fromCounterPage.clicked, (pipe) => pipe(map(() => fromCounterTask.counted()))),
+   *   }));
+   * ```
+   */
+  taskOn<Effects extends NamedTasks>(
+    build: (
+      on: TaskBuilder,
+      views: StateViews<State> & InjectableViews<ExtraViews>,
+    ) => Effects,
+  ): FeatureBundle<State, ExtraViews, Effects>;
+  /**
    * Adds immutable event handlers while preserving each event payload type.
    *
    * @param args - Event creators followed by a reducer handler.
@@ -81,9 +124,10 @@ export interface FeatureStateDefinition<
    * creators passed to `on` determine which events each handler receives.
    *
    * @param build - Creates named handlers with the supplied event `on` builder.
-   * @returns A new definition containing the added handlers.
+   * @returns A new state definition retaining `stateOn()`, `extraViews()`, and
+   * `taskOn()` for further composition; the original definition is unchanged.
    */
-  subscribe<Handlers extends NamedStateHandlers<State>>(
+  stateOn<Handlers extends NamedStateHandlers<State>>(
     build: (on: StateOn<State>) => Handlers,
   ): FeatureStateDefinition<State, ExtraViews>;
   /**
@@ -102,7 +146,7 @@ export interface FeatureStateDefinition<
 /**
  * Defines feature state with typed handlers and memoized views.
  *
- * `.subscribe()` and `.extraViews()` return new definitions without
+ * `.stateOn()` and `.extraViews()` return new definitions without
  * changing earlier steps. Every step exposes `views`, `reducer`, and `provide()`;
  * no final `.build()` call is required. Registration uses the final definition.
  * Handlers must return state immutably.
@@ -174,7 +218,7 @@ export interface FeatureStateDefinition<
  *   added: props<{ amount: number }>(),
  * });
  *
- * export const counter = state('counter', { count: 0 }).subscribe(on => ({
+ * export const counter = state('counter', { count: 0 }).stateOn(on => ({
  *   addAmount: on(fromCounter.added, (current, { amount }) => ({
  *     count: current.count + amount,
  *   })),
@@ -199,7 +243,7 @@ export interface FeatureStateDefinition<
  * import { booksTasks } from './books.tasks';
  * import { initialBooksState } from './books.initial-state';
  *
- * const books = state('books', initialBooksState).subscribe(on => ({
+ * const books = state('books', initialBooksState).stateOn(on => ({
  *   storeLoadedBooks: on(fromBooksApi.loaded, (current, { books }) => ({
  *     ...current,
  *     books,
@@ -247,6 +291,19 @@ function chainState<
     views,
     reducer,
     provide: () => provideFeature({ name, reducer }),
+    taskOn: (build) => {
+      const tasks = taskOn((on) => build(on, views));
+      return {
+        views,
+        reducer,
+        effects: tasks.effects,
+        provide: () =>
+          bundle(
+            { provide: () => provideFeature({ name, reducer }) },
+            tasks,
+          ).provide(),
+      };
+    },
     on: (...args) =>
       chainState(
         name,
@@ -254,7 +311,7 @@ function chainState<
         [...handlers, (on as StateOn<State>)(...args)],
         views,
       ),
-    subscribe: (build) =>
+    stateOn: (build) =>
       chainState(
         name,
         initialState,

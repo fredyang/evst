@@ -68,12 +68,12 @@ effects, and DevTools.
 
 `state()` infers the feature-state shape from its initial-state object and
 automatically exposes a typed View for each top-level field. Optionally,
-`.extraViews()` composes derived Views from those default Views. `.subscribe()`
+`.extraViews()` composes derived Views from those default Views. `.stateOn()`
 declares event subscriptions through named, pure state handlers. Names document
 each state transition. `NamedStateHandlers<State>` is a record of `StateHandler<State>`
 values returned by the supplied `on` builder.
 
-`subscribe()` returns a new state definition. Event subscriptions take effect
+`stateOn()` returns a new state definition. Event subscriptions take effect
 when that definition's providers are registered with the application.
 
 ```ts
@@ -98,7 +98,7 @@ export const booksState = state("books", initialState)
     ),
   }))
   // Named event handlers define pure state transitions.
-  .subscribe((on) => ({
+  .stateOn((on) => ({
     beginLoading: on(fromBooksPage.entered, (current) => ({
       ...current,
       loading: true,
@@ -137,18 +137,18 @@ A `Task` is a callable functional NgRx Effect with a `.provide()` method.
 to `on()` determine each Task's inputs. Task keys are also exposed under
 `.effects`, preserving each source function's type.
 
-`task.subscribe()` returns a task collection. Its effects start listening when
+`taskOn()` returns a task collection. Its effects start listening when
 the collection's providers are registered with the application. Angular manages
 their lifetime through the injector.
 
 ```ts
 import { HttpClient } from "@angular/common/http";
 import { inject } from "@angular/core";
-import { task } from "@evst/ngrx";
+import { taskOn } from "@evst/ngrx";
 import { catchError, exhaustMap, map, of } from "rxjs";
 import { fromBooksApi, fromBooksPage, type Book } from "./books.events";
 
-export const booksTasks = task.subscribe((on) => ({
+export const booksTasks = taskOn((on) => ({
   load: on(fromBooksPage.entered, (pipe, http = inject(HttpClient)) => {
     return pipe(
       exhaustMap(() =>
@@ -229,6 +229,49 @@ readonly books$ = booksViews.books.observable();
 Manual View subscriptions are normally unnecessary. Angular manages the
 lifecycle of Signals and `AsyncPipe` subscriptions. Imperative integrations can
 use a documented ESLint suppression with automatic teardown.
+
+### Bundling Tasks with State
+
+`.taskOn((on, views) => ({ ... }))` combines a state definition with named
+Tasks. The callback receives the Task builder and all generated and extra Views,
+with their inferred types:
+
+```ts
+import { events, state, view } from "@evst/ngrx";
+import { emptyProps } from "@ngrx/store";
+import { map, withLatestFrom } from "rxjs";
+
+const fromCounterPage = events("Counter Page", { clicked: emptyProps() });
+const fromCounterTask = events("Counter Task", { counted: emptyProps() });
+
+export const counter = state("counter", { count: 0 })
+  .extraViews(({ count }) => ({ doubled: view(count, (count) => count * 2) }))
+  .stateOn((on) => ({
+    increment: on(fromCounterTask.counted, (current) => ({
+      count: current.count + 1,
+    })),
+  }))
+  .taskOn((on, views) => ({
+    count: on(fromCounterPage.clicked, (pipe) =>
+      pipe(
+        withLatestFrom(views.doubled.observable()),
+        map(() => fromCounterTask.counted()),
+      ),
+    ),
+  }));
+```
+
+The returned bundle exposes `views`, `reducer`, `effects`, and `provide()`.
+`counter.provide()` registers both State and Tasks. `effects` exposes named
+functional effects for testing. `.taskOn()` finishes the chain; state
+handlers and extra Views are defined before it. The original state definition
+is unchanged, and omitting `.taskOn()` retains the existing state API.
+
+Events, Views, State, and Tasks can be defined in one file. The
+[Auth example](../../examples/projects/evst-ngrx-books/src/app/auth/evst/auth.evst.ts)
+demonstrates this approach for a small feature. Events shared across
+features can remain in separate modules to avoid circular imports. Independently
+defined Tasks and `bundle(stateDefinition, taskCollection)` remain supported.
 
 ## Registering EVST
 

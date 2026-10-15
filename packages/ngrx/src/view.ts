@@ -1,6 +1,7 @@
-import type { Signal } from "@angular/core";
+import { inject, type Signal } from "@angular/core";
 import type { Observable } from "rxjs";
 import {
+  Store,
   createSelector,
   type MemoizedSelector,
   type Selector,
@@ -18,7 +19,8 @@ export type ViewMethods<Result> = {
    */
   signal(options?: SelectSignalOptions<Result>): Signal<Result>;
   /**
-   * Reads this view as an observable from the registered EVST Store.
+   * Reads this view as an observable from the injected Store during effect setup,
+   * or the registered EVST Store outside an injection context.
    *
    * @returns An observable of view results.
    */
@@ -41,7 +43,15 @@ export function attachViewMethods<
   return Object.assign(selector, {
     signal: (options?: SelectSignalOptions<ReturnType<ViewSelector>>) =>
       cachedStore().selectSignal(selector, options),
-    observable: () => cachedStore().select(selector),
+    observable: () => {
+      let store: Store;
+      try {
+        store = inject(Store);
+      } catch {
+        store = cachedStore();
+      }
+      return store.select(selector);
+    },
   });
 }
 

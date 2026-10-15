@@ -1,5 +1,5 @@
 import { generateMockBook } from "../models/book";
-import { fromAuth } from "@example-app/auth/evst/auth.events";
+import { fromAuth } from "@example-app/auth/evst/auth.evst";
 import {
   fromBookExistsGuard,
   fromBooksApi,

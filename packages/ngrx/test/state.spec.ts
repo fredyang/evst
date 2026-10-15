@@ -28,7 +28,7 @@ it("infers handlers and preserves independent branches", () => {
   expect(plus.views.count).toBe(base.views.count);
 });
 it("creates reducers from named handlers", () => {
-  const counter = state("namedCounter", { count: 0 }).subscribe((on) => ({
+  const counter = state("namedCounter", { count: 0 }).stateOn((on) => ({
     addAmount: on(add, (current, { amount }) => {
       expectTypeOf(current).toEqualTypeOf<{ count: number }>();
       expectTypeOf(amount).toEqualTypeOf<number>();
@@ -45,7 +45,7 @@ it("creates reducers from named handlers", () => {
 });
 it("composes subscriptions without changing earlier definitions or views", () => {
   const base = state("counter", { count: 0 });
-  const first = base.subscribe(
+  const first = base.stateOn(
     (on) =>
       ({
         add: on(add, (current, { amount }) => ({
@@ -53,7 +53,7 @@ it("composes subscriptions without changing earlier definitions or views", () =>
         })),
       }) satisfies NamedStateHandlers<{ count: number }>,
   );
-  const second = first.subscribe((on) => ({
+  const second = first.stateOn((on) => ({
     subtract: on(other, (current, { amount }) => ({
       count: current.count - amount,
     })),

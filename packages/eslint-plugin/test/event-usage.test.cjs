@@ -16,7 +16,7 @@ async function lint(relativeFile) {
 }
 
 describe("event usage", () => {
-  it("recognizes events emitted by tasks as publications", async () => {
+  it("recognizes events emitted by Tasks as publications", async () => {
     const messages = await lint("src/app/books/evst/books.events.ts");
     assert.deepEqual(
       messages.filter(

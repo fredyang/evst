@@ -1,9 +1,9 @@
-import { fromAuth, fromAuthApi, fromLoginPage } from "./auth.events";
-import { authState } from "./auth.state";
+import { fromAuth, fromAuthApi, fromLoginPage } from "./auth.evst";
+import { authBundle } from "./auth.evst";
 
 describe("authState", () => {
   const user = { name: "Ada" };
-  const authReducer = authState.reducer;
+  const authReducer = authBundle.reducer;
 
   it("marks login as pending and clears a previous error", () => {
     const failed = authReducer(
@@ -48,13 +48,13 @@ describe("authState", () => {
     );
     const signedIn = authReducer(failed, fromAuthApi.loginSuccess({ user }));
 
-    expect(authState.views.user.projector(signedIn.status)).toEqual(user);
-    expect(authState.views.loggedIn.projector(signedIn.status)).toBe(true);
-    expect(authState.views.loginPageError.projector(failed.loginPage)).toBe(
+    expect(authBundle.views.user.projector(signedIn.status)).toEqual(user);
+    expect(authBundle.views.loggedIn.projector(signedIn.status)).toBe(true);
+    expect(authBundle.views.loginPageError.projector(failed.loginPage)).toBe(
       "Unavailable",
     );
-    expect(authState.views.loginPagePending.projector(signedIn.loginPage)).toBe(
-      false,
-    );
+    expect(
+      authBundle.views.loginPagePending.projector(signedIn.loginPage),
+    ).toBe(false);
   });
 });
