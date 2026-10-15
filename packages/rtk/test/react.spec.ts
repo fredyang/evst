@@ -33,7 +33,7 @@ describe("@evst/rtk", () => {
 
   it("creates Redux Toolkit actions and applies event handlers", () => {
     const store = createEvstStore({ states: [counter] });
-    expectTypeOf(counter.views.doubled.value()).toEqualTypeOf<number>();
+    expectTypeOf(counter.views.doubled.snapshot).toEqualTypeOf<number>();
     fromCounter.added.publish(2);
     expect(fromCounter.added(3)).toEqual({
       type: "[Counter] Added",
@@ -52,7 +52,7 @@ describe("@evst/rtk", () => {
             observed.push(action);
           }),
           inspectApi: on(fromCounter.added, () => {
-            counter.views.count.value() satisfies number;
+            counter.views.count.snapshot satisfies number;
             return fromCounter.reset();
           }),
         }) satisfies NamedTasks,
@@ -93,7 +93,7 @@ describe("@evst/rtk", () => {
     expect(observed).toEqual([]);
     fromCounter.added.publish(1);
     expect(observed).toEqual([1]);
-    expect(observation.views.value.value()).toBe(1);
+    expect(observation.views.value.snapshot).toBe(1);
     fromCounter.added.publish(1);
     expect(observed).toEqual([1, 0]);
   });
@@ -249,7 +249,7 @@ describe("@evst/rtk", () => {
     expect("stateOn" in combined).toBe(false);
     createEvstStore({ bundles: [combined] });
     fromCounter.added.publish(3);
-    expect(combined.views.doubled.value()).toBe(6);
+    expect(combined.views.doubled.snapshot).toBe(6);
     expect(observed).toEqual([6]);
   });
 
@@ -265,7 +265,7 @@ describe("@evst/rtk", () => {
       .taskOn((on, views) => ({
         start: on((emit) => {
           starts++;
-          expect(views.count.value()).toBe(0);
+          expect(views.count.snapshot).toBe(0);
           emit(fromCounter.added(2));
           return () => {
             stops++;
@@ -276,7 +276,7 @@ describe("@evst/rtk", () => {
     store.provide({ bundles: [combined] });
     store.provide({ bundles: [combined] });
     expect(starts).toBe(1);
-    expect(combined.views.count.value()).toBe(2);
+    expect(combined.views.count.snapshot).toBe(2);
     expect(() =>
       store.provide({
         bundles: [state("lazyBundle", { count: 0 }).taskOn(() => ({}))],
@@ -341,27 +341,32 @@ describe("@evst/rtk", () => {
   it("reads typed current snapshots and derived Views without React", () => {
     const doubled = view(counter.views.count, (count) => count * 2);
     createEvstStore({ states: [counter] });
-    expectTypeOf(counter.views.count.value()).toEqualTypeOf<number>();
-    expectTypeOf(doubled.value()).toEqualTypeOf<number>();
-    expect(counter.views.count.value()).toBe(0);
+    expectTypeOf(counter.views.count.snapshot).toEqualTypeOf<number>();
+    expectTypeOf(doubled.snapshot).toEqualTypeOf<number>();
+    expect(counter.views.count.snapshot).toBe(0);
+    const captured = counter.views.root.snapshot;
+    expect(
+      Object.getOwnPropertyDescriptor(counter.views.count, "snapshot")?.set,
+    ).toBeUndefined();
     fromCounter.added.publish(3);
-    expect(counter.views.count.value()).toBe(3);
-    expect(counter.views.root.value()).toEqual({ count: 3 });
-    expect(doubled.value()).toBe(6);
+    expect(captured).toEqual({ count: 0 });
+    expect(counter.views.count.snapshot).toBe(3);
+    expect(counter.views.root.snapshot).toEqual({ count: 3 });
+    expect(doubled.snapshot).toBe(6);
   });
 
   it("requires an active store and reads the replacement after clearing", () => {
-    expect(() => counter.views.count.value()).toThrow(
+    expect(() => counter.views.count.snapshot).toThrow(
       "Create an EVST store before reading View values.",
     );
     createEvstStore({ states: [counter] });
     fromCounter.added.publish(4);
     clearEvstStore();
-    expect(() => counter.views.count.value()).toThrow(
+    expect(() => counter.views.count.snapshot).toThrow(
       "Create an EVST store before reading View values.",
     );
     createEvstStore({ states: [counter] });
-    expect(counter.views.count.value()).toBe(0);
+    expect(counter.views.count.snapshot).toBe(0);
   });
 
   it("publishes every returned outcome independently of completion order", async () => {
@@ -381,7 +386,7 @@ describe("@evst/rtk", () => {
     const requests = taskOn((on) => ({
       load: on(fromRequest.started, async ({ query }) => {
         expectTypeOf(query).toEqualTypeOf<string>();
-        expectTypeOf(result.views.value.value()).toEqualTypeOf<number>();
+        expectTypeOf(result.views.value.snapshot).toEqualTypeOf<number>();
         const value = await new Promise<number>((resolve) => {
           pending.push({ resolve });
         });
@@ -424,11 +429,11 @@ describe("@evst/rtk", () => {
     fromCounter.added.publish(2);
     evst.provide({ states: [counter], tasks: [definitions] });
     fromCounter.added.publish(3);
-    expect(counter.views.count.value()).toBe(5);
+    expect(counter.views.count.snapshot).toBe(5);
     expect(observed).toEqual([2, 3]);
     expect(() =>
       evst.provide({ states: [state("counter", { count: 9 })] }),
     ).toThrow("already registered");
-    expect(counter.views.count.value()).toBe(5);
+    expect(counter.views.count.snapshot).toBe(5);
   });
 });

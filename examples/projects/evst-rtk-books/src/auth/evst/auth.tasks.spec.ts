@@ -20,20 +20,20 @@ it("handles invalid login, valid login, logout confirmation and dismissal", () =
   fromLoginPage.login.publish({
     credentials: { username: "wrong", password: "x" },
   });
-  expect(authViews.error.value()).toBe("Invalid username or password");
-  expect(authViews.pending.value()).toBe(false);
+  expect(authViews.error.snapshot).toBe("Invalid username or password");
+  expect(authViews.pending.snapshot).toBe(false);
   fromLoginPage.login.publish({
     credentials: { username: "ngrx", password: "x" },
   });
-  expect(authViews.loggedIn.value()).toBe(true);
+  expect(authViews.loggedIn.snapshot).toBe(true);
   fromLayout.sidenavOpened.publish();
-  expect(coreViews.showSidenav.value()).toBe(true);
+  expect(coreViews.showSidenav.snapshot).toBe(true);
   fromAuth.logoutConfirmation.publish();
-  expect(coreViews.showSidenav.value()).toBe(false);
-  expect(authViews.confirmingLogout.value()).toBe(true);
+  expect(coreViews.showSidenav.snapshot).toBe(false);
+  expect(authViews.confirmingLogout.snapshot).toBe(true);
   fromAuth.logoutConfirmationDismiss.publish();
-  expect(authViews.loggedIn.value()).toBe(true);
-  expect(authViews.confirmingLogout.value()).toBe(false);
+  expect(authViews.loggedIn.snapshot).toBe(true);
+  expect(authViews.confirmingLogout.snapshot).toBe(false);
   fromAuth.logout.publish();
-  expect(authViews.loggedIn.value()).toBe(false);
+  expect(authViews.loggedIn.snapshot).toBe(false);
 });

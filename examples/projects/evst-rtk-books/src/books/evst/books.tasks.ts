@@ -38,7 +38,7 @@ export const booksTasks = taskOn((on) => ({
   retrieveSelectedBook: on(
     fromViewBookPage.selected,
     latest(async ({ id }: { id: string }) => {
-      if (booksViews.books.value().entities[id]) return;
+      if (booksViews.books.snapshot.entities[id]) return;
 
       try {
         const book = await googleBooksApi.retrieve(id);
@@ -50,7 +50,7 @@ export const booksTasks = taskOn((on) => ({
   ),
 
   loadCollection: on(fromCollectionPage.entered, () => {
-    if (booksViews.collection.value().loaded) return;
+    if (booksViews.collection.snapshot.loaded) return;
 
     try {
       return fromCollectionApi.loadBooksSuccess({ books: bookStorage.load() });
@@ -60,7 +60,7 @@ export const booksTasks = taskOn((on) => ({
   }),
 
   retryCollection: on(fromCollectionPage.retryRequested, () => {
-    if (booksViews.collection.value().loaded) return;
+    if (booksViews.collection.snapshot.loaded) return;
 
     try {
       return fromCollectionApi.loadBooksSuccess({ books: bookStorage.load() });

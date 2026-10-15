@@ -32,7 +32,7 @@ export const booksState = state("books", { titles: [] as string[] })
   }))
   .taskOn((on, views) => ({
     inspect: on(fromBooksApi.loaded, () => {
-      views.taskOnly.value();
+      views.taskOnly.snapshot;
     }),
   }));
 export const booksViews = booksState.views;

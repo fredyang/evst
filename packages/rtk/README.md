@@ -153,17 +153,17 @@ Tasks support three subscription forms:
 - `on(view1, view2, ..., effect)` runs when any selected View value changes.
 - `on(source)` starts an external subscription that emits outcome events.
 
-Event-triggered Tasks read current View values directly with `.value()`; no
+Event-triggered Tasks read current View values directly with `.snapshot`; no
 additional Task option is needed:
 
 ```ts
 load: on(fromBooksPage.entered, async () => {
-  if (booksViews.books.value().length) return;
+  if (booksViews.books.snapshot.length) return;
   return fromBooksApi.loaded({ books: await booksApi.load() });
 }),
 ```
 
-The event triggers the Task after its state transitions. `.value()` reads the
+The event triggers the Task after its state transitions. `.snapshot` reads the
 active store at the point of the call; it does not subscribe to changes. A read
 after an `await` can therefore return a newer value than a read before it.
 
@@ -242,7 +242,7 @@ const booksBundle = state("books", { books: [] as Book[] })
   }))
   .taskOn((on, views) => ({
     load: on(fromBooksPage.entered, async () => {
-      if (views.books.value().length) return;
+      if (views.books.snapshot.length) return;
       return fromBooksApi.loaded({ books: await booksApi.load() });
     }),
   }));
@@ -298,11 +298,12 @@ export function BooksPage() {
 ```
 
 Views are also callable selectors, so they can be passed to `useSelector`, used
-with `store.getState()`, or composed into another `view()`. `.value()` reads a
-current snapshot outside React without subscribing:
+with `store.getState()`, or composed into another `view()`. `.snapshot` reads a
+current value through a read-only getter without subscribing. Each access reads
+the latest state; a previously captured value remains a snapshot:
 
 ```ts
-const selectedBook = booksViews.selectedBook.value();
+const selectedBook = booksViews.selectedBook.snapshot;
 ```
 
 ## Configuring the store
@@ -336,7 +337,7 @@ remain the standard RTK store methods. `createEvstStore()` accepts RTK store opt
 other than `reducer` and `middleware`, plus EVST `states`, `tasks`, and `bundles`; EVST configures those to install its
 state definitions and listener middleware.
 
-Events' `.publish()` and Views' `.value()` use the active store configured by
+Events' `.publish()` and Views' `.snapshot` use the active store configured by
 `createEvstStore()`. One active EVST store is supported per loaded package. Server
 rendering or independently mounted applications with separate stores require
 explicit store dispatch and selector calls instead of the shared helpers.

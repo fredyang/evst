@@ -6,7 +6,7 @@ export type View<RootState, Result> = Selector<RootState, Result> & {
   /** Reads this view using React Redux's current Provider. */
   use(): Result;
   /** Reads the current active-store value without subscribing. Requires createEvstStore(). */
-  value(): Result;
+  readonly snapshot: Result;
 };
 
 /** Creates a View with a reactive React hook and an imperative snapshot reader. */
@@ -25,8 +25,13 @@ export function view<RootState, A, B, Result>(
 export function view(...args: any[]): View<any, any> {
   const selector =
     args.length === 1 ? args[0] : (createSelector as any)(...args);
-  return Object.assign(selector, {
-    use: () => useSelector(selector),
-    value: () => readView(selector),
-  });
+  return Object.defineProperty(
+    Object.assign(selector, { use: () => useSelector(selector) }),
+    "snapshot",
+    {
+      get: () => readView(selector),
+      enumerable: true,
+      configurable: true,
+    },
+  ) as View<any, any>;
 }
