@@ -1,4 +1,4 @@
-const { describe, it } = require("node:test");
+const { before, describe, it } = require("node:test");
 const assert = require("node:assert/strict");
 const path = require("node:path");
 const { ESLint } = require("eslint");
@@ -16,8 +16,15 @@ async function lint(relativeFile) {
 }
 
 describe("event usage", () => {
-  it("recognizes events emitted by Tasks as publications", async () => {
-    const messages = await lint("src/app/books/evst/books.events.ts");
+  let messages;
+
+  before(async () => {
+    // In CI, repeated parsing of one file can produce an isolated TypeScript
+    // program for autofix passes, hiding subscriptions in other project files.
+    messages = await lint("src/app/books/evst/books.events.ts");
+  });
+
+  it("recognizes events emitted by Tasks as publications", () => {
     assert.deepEqual(
       messages.filter(
         (message) => message.ruleId === "evst/no-unpublished-events",
@@ -26,8 +33,7 @@ describe("event usage", () => {
     );
   });
 
-  it("reports events without a state or task subscription", async () => {
-    const messages = await lint("src/app/books/evst/books.events.ts");
+  it("reports events without a state or task subscription", () => {
     assert.deepEqual(
       messages
         .filter((message) => message.ruleId === "evst/no-unsubscribed-events")
