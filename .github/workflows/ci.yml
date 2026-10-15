@@ -30,12 +30,12 @@ jobs:
       - run: npm run docs:api
       - run: npx tsc --noEmit -p examples/projects/ngrx-books/tsconfig.app.json
       - run: npx tsc --noEmit -p examples/projects/ngrx-books-standalone/tsconfig.app.json
-      - run: npx tsc --noEmit -p examples/projects/evst-books/tsconfig.app.json
+      - run: npx tsc --noEmit -p examples/projects/evst-ngrx-books/tsconfig.app.json
       - run: npx tsc --noEmit -p examples/projects/svc-books/tsconfig.app.json
       - run: npm run test:ngrx-books
       - run: npm run test:ngrx-books-standalone
-      - run: npm run test:evst-books
-      - run: npm run lint:evst-books
+      - run: npm run test:evst-ngrx-books
+      - run: npm run lint:evst-ngrx-books
       - run: npm run lint:ngrx-books-standalone
       - run: npm run lint:svc-books
       - run: npm pack --workspaces --dry-run
