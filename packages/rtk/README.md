@@ -70,7 +70,7 @@ View for every top-level field. `.extraViews()` composes derived Views and
 `.subscribe()` declares event subscriptions through named state handlers.
 `NamedStateHandlers<State>` is a record of `StateHandler<State>` values returned
 by the supplied `on` builder. Each call returns a new state definition;
-registration through `createEvst()` or `evst.provide()` activates its subscriptions.
+registration through `createEvstStore()` or `evst.provide()` activates its subscriptions.
 
 ```ts
 import { state, view } from "@evst/rtk";
@@ -124,7 +124,7 @@ Event and View effects return optional outcome events; external sources emit
 outcome events through a callback. Outcomes are dispatched through the RTK store.
 
 `task.subscribe()` returns a task collection. Listeners start when the collection
-is registered through `createEvst()` or `evst.provide()`.
+is registered through `createEvstStore()` or `evst.provide()`.
 
 ```ts
 import { task } from "@evst/rtk";
@@ -272,17 +272,17 @@ const selectedBook = booksViews.selectedBook.value();
 
 ## Configuring the store
 
-`createEvst()` returns the actual enhanced Redux Toolkit store with one added
+`createEvstStore()` returns the actual enhanced Redux Toolkit store with one added
 method: `provide()`. It is passed directly to React Redux's standard Provider.
 
 ```tsx
-import { createEvst } from "@evst/rtk";
+import { createEvstStore } from "@evst/rtk";
 import { Provider } from "react-redux";
 import { booksState } from "./books.state";
 import { booksTasks } from "./books.tasks";
 import { BooksPage } from "./books-page";
 
-export const evst = createEvst({
+export const evst = createEvstStore({
   states: [booksState],
   tasks: [booksTasks],
 });
@@ -297,15 +297,15 @@ export function AppRoot() {
 ```
 
 `evst.dispatch`, `evst.getState`, `evst.subscribe`, and `evst.replaceReducer`
-remain the standard RTK store methods. `createEvst()` accepts RTK store options
+remain the standard RTK store methods. `createEvstStore()` accepts RTK store options
 other than `reducer` and `middleware`; EVST configures those to install its
 state definitions and listener middleware.
 
 Events' `.publish()` and Views' `.value()` use the active store configured by
-`createEvst()`. One active EVST store is supported per loaded package. Server
+`createEvstStore()`. One active EVST store is supported per loaded package. Server
 rendering or independently mounted applications with separate stores require
 explicit store dispatch and selector calls instead of the shared helpers.
-A second `createEvst()` call throws while a store is active. `clearEvstStore()`
+A second `createEvstStore()` call throws while a store is active. `clearEvstStore()`
 stops registered Tasks and clears the active reference for test isolation.
 
 ### Registering lazy state
@@ -315,7 +315,7 @@ route module registers its state definitions and tasks before rendering the
 feature.
 
 ```ts
-const evst = createEvst({ states: [authState] });
+const evst = createEvstStore({ states: [authState] });
 
 evst.provide({
   states: [booksState],
@@ -408,12 +408,12 @@ npm pack --workspace @evst/rtk
 
 Events are RTK action creators, State exposes an RTK reducer, and Views are
 callable selectors. Composed Views use RTK's `createSelector`. Tasks register
-listeners through `createListenerMiddleware`; `createEvst()` uses
+listeners through `createListenerMiddleware`; `createEvstStore()` uses
 `configureStore` with default middleware plus the task listener middleware.
 
 The returned store works directly with React Redux and Redux DevTools.
 Entity adapters can be used within feature reducers. Custom reducer maps and
-middleware configuration are not accepted by `createEvst()`; its configuration
+middleware configuration are not accepted by `createEvstStore()`; its configuration
 owns those two options.
 
 ## Exploring the Books examples

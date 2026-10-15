@@ -27,7 +27,7 @@ export type Evst = EnhancedStore & {
 };
 
 /** Creates the store, installs tasks, and enables event publishing and View snapshots. */
-export function createEvst(config: EvstStoreConfig = {}): Evst {
+export function createEvstStore(config: EvstStoreConfig = {}): Evst {
   const listener = createListenerMiddleware();
   const { states = [], tasks, ...options } = config;
   const reducer = Object.fromEntries(
@@ -81,7 +81,7 @@ export function createEvst(config: EvstStoreConfig = {}): Evst {
   return Object.assign(store, { provide });
 }
 
-/** Dispatches an event through the store initialized by `createEvst()`. */
+/** Dispatches an event through the store initialized by `createEvstStore()`. */
 export function publish(
   action: Parameters<EnhancedStore["dispatch"]>[0],
 ): void {

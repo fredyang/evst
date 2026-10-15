@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
-import { clearEvstStore, createEvst, task } from "@evst/rtk";
+import { clearEvstStore, createEvstStore, task } from "@evst/rtk";
 import { coreTasks } from "./core.tasks";
 import { fromUser } from "./core.events";
 
@@ -17,7 +17,7 @@ it("emits idle outcomes from browser activity and stops the watcher on cleanup",
       timeouts++;
     }),
   }));
-  createEvst({ tasks: [observer, coreTasks] });
+  createEvstStore({ tasks: [observer, coreTasks] });
   vi.advanceTimersByTime(4 * 60 * 1000);
   document.dispatchEvent(new Event("click"));
   vi.advanceTimersByTime(4 * 60 * 1000);

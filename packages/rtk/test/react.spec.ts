@@ -2,7 +2,7 @@ import { configureStore, createListenerMiddleware } from "@reduxjs/toolkit";
 import { afterEach, describe, expect, expectTypeOf, it } from "vitest";
 import {
   clearEvstStore,
-  createEvst,
+  createEvstStore,
   emptyProps,
   events,
   props,
@@ -32,7 +32,7 @@ describe("@evst/rtk", () => {
     }));
 
   it("creates Redux Toolkit actions and applies event handlers", () => {
-    const store = createEvst({ states: [counter] });
+    const store = createEvstStore({ states: [counter] });
     expectTypeOf(counter.views.doubled.value()).toEqualTypeOf<number>();
     fromCounter.added.publish(2);
     expect(fromCounter.added(3)).toEqual({
@@ -57,7 +57,7 @@ describe("@evst/rtk", () => {
           }),
         }) satisfies NamedTasks,
     );
-    const store = createEvst({
+    const store = createEvstStore({
       states: [counter],
       tasks: [counterTasks],
     });
@@ -85,7 +85,7 @@ describe("@evst/rtk", () => {
         return fromObservation.recorded(value);
       }),
     }));
-    const store = createEvst({ states: [counter, observation] });
+    const store = createEvstStore({ states: [counter, observation] });
     store.provide({ tasks: [definitions] });
     store.provide({ tasks: [definitions] });
     expect(observed).toEqual([]);
@@ -120,7 +120,7 @@ describe("@evst/rtk", () => {
         },
       ),
     }));
-    createEvst({ states: [counter, settings], tasks: [definitions] });
+    createEvstStore({ states: [counter, settings], tasks: [definitions] });
     expect(observed).toEqual([]);
     fromCounter.added.publish(1);
     expect(observed).toEqual([[1, "initial", true]]);
@@ -182,7 +182,7 @@ describe("@evst/rtk", () => {
       }),
     }));
     expect(starts).toBe(0);
-    const store = createEvst({ states: [counter], tasks: [definitions] });
+    const store = createEvstStore({ states: [counter], tasks: [definitions] });
     store.provide({ tasks: [definitions] });
     expect(starts).toBe(1);
     expect(store.getState().counter.count).toBe(2);
@@ -260,7 +260,7 @@ describe("@evst/rtk", () => {
         observed.push(amount);
       }),
     }));
-    const evst = createEvst({ states: [counter] });
+    const evst = createEvstStore({ states: [counter] });
     fromCounter.added.publish(1);
     expect(observed).toEqual([]);
     evst.provide({ tasks: [pending] });
@@ -270,7 +270,7 @@ describe("@evst/rtk", () => {
 
   it("reads typed current snapshots and derived Views without React", () => {
     const doubled = view(counter.views.count, (count) => count * 2);
-    createEvst({ states: [counter] });
+    createEvstStore({ states: [counter] });
     expectTypeOf(counter.views.count.value()).toEqualTypeOf<number>();
     expectTypeOf(doubled.value()).toEqualTypeOf<number>();
     expect(counter.views.count.value()).toBe(0);
@@ -284,13 +284,13 @@ describe("@evst/rtk", () => {
     expect(() => counter.views.count.value()).toThrow(
       "Create an EVST store before reading View values.",
     );
-    createEvst({ states: [counter] });
+    createEvstStore({ states: [counter] });
     fromCounter.added.publish(4);
     clearEvstStore();
     expect(() => counter.views.count.value()).toThrow(
       "Create an EVST store before reading View values.",
     );
-    createEvst({ states: [counter] });
+    createEvstStore({ states: [counter] });
     expect(counter.views.count.value()).toBe(0);
   });
 
@@ -318,7 +318,7 @@ describe("@evst/rtk", () => {
         return fromRequest.completed({ value });
       }),
     }));
-    const store = createEvst({ states: [result], tasks: [requests] });
+    const store = createEvstStore({ states: [result], tasks: [requests] });
     fromRequest.started.publish({ query: "first" });
     fromRequest.started.publish({ query: "second" });
     pending[1].resolve(2);
@@ -334,7 +334,7 @@ describe("@evst/rtk", () => {
 
   it("registers and stops an empty task collection", () => {
     expect(() =>
-      createEvst({
+      createEvstStore({
         states: [counter],
         tasks: [task.subscribe(() => ({}))],
       }),
@@ -342,7 +342,7 @@ describe("@evst/rtk", () => {
   });
 
   it("provides lazy features once, retains state, and rejects name collisions", () => {
-    const evst = createEvst({});
+    const evst = createEvstStore({});
     const observed: number[] = [];
     const definitions = task.subscribe((on) => ({
       observe: on(fromCounter.added, (value) => {

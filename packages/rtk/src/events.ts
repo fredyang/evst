@@ -49,7 +49,7 @@ type EventLabel<Key extends string> = Capitalize<Words<Key>>;
 
 /**
  * Creates typed Redux Toolkit action creators grouped by the event source.
- * Calling `.publish()` dispatches through the store configured by `createEvst()`.
+ * Calling `.publish()` dispatches through the store configured by `createEvstStore()`.
  */
 export function events<
   const Source extends string,

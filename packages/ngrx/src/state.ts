@@ -57,7 +57,7 @@ export interface FeatureStateDefinition<
   readonly reducer: ActionReducer<State, Action>;
   /**
    * Registers this feature reducer in an application or route injector.
-   * A root Store is required, normally from `provideEvst()`.
+   * A root Store is required, normally from `provideEvstStore()`.
    *
    * @returns Environment providers for the feature reducer.
    */
@@ -111,7 +111,7 @@ export interface FeatureStateDefinition<
  * `views.root` selects the complete feature state. Extra views can compose
  * generated or previously added views, but cannot overwrite existing names.
  * Views remain callable NgRx selectors. Their `.signal()` and `.observable()`
- * methods use the Store registered through `provideEvst()`.
+ * methods use the Store registered through `provideEvstStore()`.
  *
  * @example Generated and composed feature views
  * ```ts
@@ -156,7 +156,7 @@ export interface FeatureStateDefinition<
  * ```
  *
  * `.provide()` registers the feature in an application or route
- * injector. `provideEvst()` normally supplies the required root Store.
+ * injector. `provideEvstStore()` normally supplies the required root Store.
  * Defining state alone does not register it or execute tasks.
  *
  * @param name - Key under which the feature is registered in the root store.
@@ -194,7 +194,7 @@ export interface FeatureStateDefinition<
  *
  * @example Registering state and tasks
  * ```ts
- * import { state, provideEvst } from '@evst/ngrx';
+ * import { state, provideEvstStore } from '@evst/ngrx';
  * import { fromBooksApi } from './books.events';
  * import { booksTasks } from './books.tasks';
  * import { initialBooksState } from './books.initial-state';
@@ -207,7 +207,7 @@ export interface FeatureStateDefinition<
  * }));
  *
  * const appConfig = {
- *   providers: [provideEvst(), books.provide(), booksTasks.provide()],
+ *   providers: [provideEvstStore(), books.provide(), booksTasks.provide()],
  * };
  * ```
  */

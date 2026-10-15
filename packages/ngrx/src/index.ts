@@ -16,4 +16,4 @@ export {
   type TaskSource,
 } from "./tasks.js";
 export { view, type ViewBuilder, type ViewMethods } from "./view.js";
-export { provideEvst, type EvstConfig } from "./provide-evst.js";
+export { provideEvstStore, type EvstConfig } from "./provide-evst.js";

@@ -232,7 +232,7 @@ use a documented ESLint suppression with automatic teardown.
 
 ## Registering EVST
 
-`provideEvst()` registers the root NgRx Store and EVST publishing support once.
+`provideEvstStore()` registers the root NgRx Store and EVST publishing support once.
 State and Tasks can be registered separately or as one `bundle()`.
 
 ```ts
@@ -240,12 +240,12 @@ import { type ApplicationConfig } from "@angular/core";
 import { provideHttpClient } from "@angular/common/http";
 import { booksState } from "./books.state";
 import { booksTasks } from "./books.tasks";
-import { provideEvst } from "@evst/ngrx";
+import { provideEvstStore } from "@evst/ngrx";
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(),
-    provideEvst(),
+    provideEvstStore(),
     booksState.provide(),
     booksTasks.provide(),
   ],
@@ -255,21 +255,21 @@ export const appConfig: ApplicationConfig = {
 ```ts
 import { type ApplicationConfig } from "@angular/core";
 import { provideHttpClient } from "@angular/common/http";
-import { bundle, provideEvst } from "@evst/ngrx";
+import { bundle, provideEvstStore } from "@evst/ngrx";
 import { booksState } from "./books.state";
 import { booksTasks } from "./books.tasks";
 
 export const booksBundle = bundle(booksState, booksTasks);
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideHttpClient(), provideEvst(), booksBundle.provide()],
+  providers: [provideHttpClient(), provideEvstStore(), booksBundle.provide()],
 };
 ```
 
 ### Registering route features
 
 Feature State and Tasks can also be registered through a route's `providers`.
-For a route-based Books feature, the application registers `provideEvst()` once
+For a route-based Books feature, the application registers `provideEvstStore()` once
 at the root, and the feature route registers its own definitions.
 
 ```ts
@@ -277,7 +277,7 @@ at the root, and the feature route registers its own definitions.
 import { type ApplicationConfig } from "@angular/core";
 import { provideHttpClient } from "@angular/common/http";
 import { provideRouter, type Routes } from "@angular/router";
-import { provideEvst } from "@evst/ngrx";
+import { provideEvstStore } from "@evst/ngrx";
 
 const routes: Routes = [
   {
@@ -287,7 +287,7 @@ const routes: Routes = [
 ];
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideHttpClient(), provideEvst(), provideRouter(routes)],
+  providers: [provideHttpClient(), provideEvstStore(), provideRouter(routes)],
 };
 ```
 
@@ -309,7 +309,7 @@ export const booksRoutes: Routes = [
 
 The route can use `booksBundle.provide()` instead of the separate State and
 Task providers. Route providers use Angular's route environment injector;
-`provideEvst()` remains registered at the application root. Root registration
+`provideEvstStore()` remains registered at the application root. Root registration
 and route registration are alternative placements for the same feature
 definitions.
 
@@ -430,7 +430,7 @@ The generated site is written to `packages/ngrx/docs/api/index.html`.
 
 One active EVST Store is supported per loaded module. Concurrent SSR applications
 or independent stores require NgRx providers and an injected Store instead of
-`provideEvst()` and the shared publication/View helpers.
+`provideEvstStore()` and the shared publication/View helpers.
 
 ## Working with NgRx
 
@@ -445,12 +445,12 @@ available when direct integration is needed. Entity adapters, router state,
 meta-reducers, DevTools, and other standard NgRx APIs can still be used where
 they fit the feature.
 
-`provideEvst()` initializes an empty root reducer map and enables Redux DevTools
+`provideEvstStore()` initializes an empty root reducer map and enables Redux DevTools
 in Angular development mode. It accepts NgRx root Store configuration and
 optional DevTools options:
 
 ```ts
-provideEvst({
+provideEvstStore({
   runtimeChecks: { strictActionSerializability: true },
   devtools: { name: "Books" },
 });

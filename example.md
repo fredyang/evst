@@ -92,7 +92,7 @@ style.
 [`evst-ngrx-books`](examples/projects/evst-ngrx-books) uses the same NgRx runtime through
 EVST's Event, View, State, and Task model. Its
 [application config](examples/projects/evst-ngrx-books/src/app/app.config.ts) calls
-`provideEvst(...)` and registers a root bundle.
+`provideEvstStore(...)` and registers a root bundle.
 
 Provider code is grouped by intent:
 

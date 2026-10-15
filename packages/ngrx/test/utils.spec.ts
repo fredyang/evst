@@ -10,7 +10,7 @@ import { Store } from "@ngrx/store";
 import { of, type Observable } from "rxjs";
 import { afterEach, expect, expectTypeOf, it, vi } from "vitest";
 import { state as createState, view } from "../src/index.js";
-import { provideEvst } from "../src/provide-evst.js";
+import { provideEvstStore } from "../src/provide-evst.js";
 
 const injectors: ReturnType<typeof createEnvironmentInjector>[] = [];
 afterEach(() => {
@@ -28,7 +28,7 @@ function createViewContext() {
     [
       { provide: ɵINJECTOR_SCOPE, useValue: "root" },
       ErrorHandler,
-      provideEvst({ devtools: false }),
+      provideEvstStore({ devtools: false }),
       { provide: Store, useValue: mock },
     ],
     null!,
@@ -43,8 +43,8 @@ function createViewContext() {
 it("requires EVST Store registration before reading views", () => {
   const feature = createState("counter", { count: 0 });
 
-  expect(() => feature.views.count.signal()).toThrow("provideEvst");
-  expect(() => feature.views.count.observable()).toThrow("provideEvst");
+  expect(() => feature.views.count.signal()).toThrow("provideEvstStore");
+  expect(() => feature.views.count.observable()).toThrow("provideEvstStore");
 });
 
 it("reads generated and derived views with inferred signal types and equality options", () => {

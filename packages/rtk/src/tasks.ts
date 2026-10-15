@@ -53,7 +53,7 @@ export interface TaskBuilder {
 /** Declares event, View, or external-source subscriptions through named Tasks. */
 export const task = {
   /**
-   * Returns a task collection, registered through `createEvst()` or `evst.provide()`.
+   * Returns a task collection, registered through `createEvstStore()` or `evst.provide()`.
    * Task names label responses; events or Views passed to `on` select their inputs.
    * Each effect receives event data or the changed View value and returns an optional outcome event.
    */

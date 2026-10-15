@@ -53,7 +53,7 @@ export type EvstConfig = RootStoreConfig<object> & {
  * ```ts
  * const appConfig = {
  *   providers: [
- *     provideEvst({
+ *     provideEvstStore({
  *       runtimeChecks: { strictActionSerializability: true },
  *       devtools: { name: "Books" },
  *     }),
@@ -62,7 +62,9 @@ export type EvstConfig = RootStoreConfig<object> & {
  * };
  * ```
  */
-export function provideEvst(config: EvstConfig = {}): EnvironmentProviders {
+export function provideEvstStore(
+  config: EvstConfig = {},
+): EnvironmentProviders {
   let { devtools, ...storeConfig } = config;
   // Default omitted options without overriding an explicit false or custom options.
   devtools ??= { name: "EVST Store" };
@@ -98,7 +100,7 @@ export function publishEvent(event: Action): void {
 export function cachedStore(): Store {
   if (!_store) {
     throw new Error(
-      "Register provideEvst() before using EVST events or views.",
+      "Register provideEvstStore() before using EVST events or views.",
     );
   }
   return _store;

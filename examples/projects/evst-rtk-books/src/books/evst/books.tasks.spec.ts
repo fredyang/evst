@@ -44,7 +44,7 @@ afterEach(() => {
 });
 
 function setup() {
-  return runtime.createEvst({
+  return runtime.createEvstStore({
     states: [books.booksState],
     tasks: [books.booksTasks],
   });

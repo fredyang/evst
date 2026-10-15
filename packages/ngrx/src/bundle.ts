@@ -25,7 +25,7 @@ interface Provideable {
  * const books = bundle(booksState, booksTasks);
  *
  * const appConfig = {
- *   providers: [provideEvst(), books.provide()],
+ *   providers: [provideEvstStore(), books.provide()],
  * };
  * ```
  */

@@ -75,7 +75,7 @@ named Tasks, which perform side effects and can return outcome events.
 
 `subscribe()` declares these responses before registration. State returns a new
 state definition; Task returns a task collection. Registration activates the
-subscriptions through NgRx environment providers or RTK's `createEvst()` and
+subscriptions through NgRx environment providers or RTK's `createEvstStore()` and
 `evst.provide()`. Subscription lifetimes follow that registration.
 
 ## Enforcing event-driven programming
@@ -141,13 +141,13 @@ RxJS Observables, and React hooks.
 
 The following table summarizes how each implementation integrates with its framework:
 
-| Concern           | `@evst/ngrx`                                | `@evst/rtk`                                          |
-| ----------------- | ------------------------------------------- | ---------------------------------------------------- |
-| Component Views   | Angular Signals; Observables also available | React Redux hooks                                    |
-| State transitions | Immutable NgRx reducers                     | RTK reducers with Immer support                      |
-| Tasks             | NgRx Effects and RxJS pipelines             | RTK listener middleware and sync/async handlers      |
-| Store setup       | `provideEvst()` and feature providers       | `createEvst()` returns an RTK store with `provide()` |
-| Event publication | `.publish()`                                | `.publish()`                                         |
+| Concern           | `@evst/ngrx`                                | `@evst/rtk`                                               |
+| ----------------- | ------------------------------------------- | --------------------------------------------------------- |
+| Component Views   | Angular Signals; Observables also available | React Redux hooks                                         |
+| State transitions | Immutable NgRx reducers                     | RTK reducers with Immer support                           |
+| Tasks             | NgRx Effects and RxJS pipelines             | RTK listener middleware and sync/async handlers           |
+| Store setup       | `provideEvstStore()` and feature providers  | `createEvstStore()` returns an RTK store with `provide()` |
+| Event publication | `.publish()`                                | `.publish()`                                              |
 
 The [NgRx guide](packages/ngrx/README.md) and
 [RTK guide](packages/rtk/README.md) each walk through a Books feature,

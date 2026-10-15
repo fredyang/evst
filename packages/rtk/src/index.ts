@@ -24,7 +24,7 @@ export {
 export { view, type View } from "./view.js";
 export {
   clearEvstStore,
-  createEvst,
+  createEvstStore,
   type Evst,
   publish,
   type EvstStoreConfig,

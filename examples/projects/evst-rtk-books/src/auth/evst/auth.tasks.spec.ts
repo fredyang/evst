@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
-import { clearEvstStore, createEvst } from "@evst/rtk";
+import { clearEvstStore, createEvstStore } from "@evst/rtk";
 import { authState, authViews } from "./auth.state";
 import { authTasks } from "./auth.tasks";
 import { fromAuth, fromLoginPage } from "./auth.events";
@@ -13,7 +13,7 @@ afterEach(() => {
 });
 
 it("handles invalid login, valid login, logout confirmation and dismissal", () => {
-  const store = createEvst({
+  const store = createEvstStore({
     states: [authState, coreState],
     tasks: [authTasks],
   });

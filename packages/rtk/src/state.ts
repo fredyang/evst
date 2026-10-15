@@ -40,7 +40,7 @@ export interface FeatureStateDefinition<
   readonly views: BaseViews<Name, State> & ExtraViews;
   /**
    * Declares event subscriptions through named state handlers.
-   * Returns a new definition, registered through `createEvst()` or `evst.provide()`.
+   * Returns a new definition, registered through `createEvstStore()` or `evst.provide()`.
    * Handler names label transitions; events passed to `on` select their inputs.
    */
   subscribe(

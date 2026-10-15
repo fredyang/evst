@@ -9,7 +9,7 @@ import {
 import { Store, emptyProps, props } from "@ngrx/store";
 import { INITIAL_OPTIONS } from "@ngrx/store-devtools";
 import { afterEach, expect, expectTypeOf, it, vi } from "vitest";
-import { events, state, provideEvst } from "../src/index.js";
+import { events, state, provideEvstStore } from "../src/index.js";
 
 const page = events("Page", {
   entered: emptyProps(),
@@ -23,7 +23,10 @@ afterEach(() => {
 });
 function context(store = { dispatch: vi.fn() }) {
   const injector = createEnvironmentInjector(
-    [provideEvst({ devtools: false }), { provide: Store, useValue: store }],
+    [
+      provideEvstStore({ devtools: false }),
+      { provide: Store, useValue: store },
+    ],
     null!,
   );
   injectors.push(injector);
@@ -38,17 +41,17 @@ it("uses a recognizable default DevTools name in development", () => {
   expect(isDevMode()).toBe(true);
 
   const defaults = createEnvironmentInjector(
-    [ErrorHandler, provideEvst()],
+    [ErrorHandler, provideEvstStore()],
     null!,
   );
   injectors.push(defaults);
   const custom = createEnvironmentInjector(
-    [ErrorHandler, provideEvst({ devtools: { name: "Books" } })],
+    [ErrorHandler, provideEvstStore({ devtools: { name: "Books" } })],
     null!,
   );
   injectors.push(custom);
   const disabled = createEnvironmentInjector(
-    [ErrorHandler, provideEvst({ devtools: false })],
+    [ErrorHandler, provideEvstStore({ devtools: false })],
     null!,
   );
   injectors.push(disabled);
@@ -60,7 +63,7 @@ it("uses a recognizable default DevTools name in development", () => {
 
 it("provides and captures an empty root Store", () => {
   const injector = createEnvironmentInjector(
-    [provideEvst({ devtools: false })],
+    [provideEvstStore({ devtools: false })],
     null!,
   );
   injectors.push(injector);
@@ -86,7 +89,7 @@ it("publishes through a registered feature and forwards root configuration", () 
     [
       { provide: ɵINJECTOR_SCOPE, useValue: "root" },
       ErrorHandler,
-      provideEvst({
+      provideEvstStore({
         devtools: false,
         metaReducers: [
           (reducer) => (value, event) => {
@@ -115,9 +118,9 @@ it("publishes through a registered feature and forwards root configuration", () 
 it("requires initialization and keeps created events plain", () => {
   expect(page.entered()).toEqual({ type: "[Page] Entered" });
   expect(page.entered()).not.toHaveProperty("publish");
-  expect(() => page.entered.publish()).toThrow("provideEvst");
+  expect(() => page.entered.publish()).toThrow("provideEvstStore");
   const app = context();
-  expect(() => page.entered.publish()).toThrow("provideEvst");
+  expect(() => page.entered.publish()).toThrow("provideEvstStore");
   app.initialize();
   page.entered.publish();
   page.selected.publish({ id: "42" });
@@ -145,7 +148,7 @@ it("releases registration when its root injector is destroyed", () => {
   const first = context();
   first.initialize();
   first.injector.destroy();
-  expect(() => page.entered.publish()).toThrow("provideEvst");
+  expect(() => page.entered.publish()).toThrow("provideEvstStore");
   const next = context();
   next.initialize();
   page.entered.publish();
