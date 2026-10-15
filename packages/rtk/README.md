@@ -119,8 +119,9 @@ Immer-powered mutations and returned immutable updates are both supported.
 
 Tasks use the same `subscribe((on) => ({ ... }))` shape as State. The callback
 declares `NamedTasks`, a record of `Task` values created with `on()`. Each Task
-registers a listener whose effect function receives event data and returns an
-optional outcome event. Returned events are dispatched through the RTK store.
+can respond to an event, changes in one or more Views, or an external source.
+Event and View effects return optional outcome events; external sources emit
+outcome events through a callback. Outcomes are dispatched through the RTK store.
 
 `task.subscribe()` returns a task collection. Listeners start when the collection
 is registered through `createEvst()` or `evst.provide()`.
@@ -145,6 +146,85 @@ export const booksTasks = task.subscribe((on) => ({
 `booksApi.load()` is an application service returning `Promise<Book[]>`.
 Each published event invokes each matching Task independently. Request
 ordering, cancellation, and debouncing remain application concerns.
+
+Tasks support three subscription forms:
+
+- `on(event, effect)` runs when the event is published.
+- `on(view1, view2, ..., effect)` runs when any selected View value changes.
+- `on(source)` starts an external subscription that emits outcome events.
+
+Event-triggered Tasks read current View values directly with `.value()`; no
+additional Task option is needed:
+
+```ts
+load: on(fromBooksPage.entered, async () => {
+  if (booksViews.books.value().length) return;
+  return fromBooksApi.loaded({ books: await booksApi.load() });
+}),
+```
+
+The event triggers the Task after its state transitions. `.value()` reads the
+active store at the point of the call; it does not subscribe to changes. A read
+after an `await` can therefore return a newer value than a read before it.
+
+Tasks can also use a View as their source, without an event trigger:
+
+```ts
+const selectionTasks = task.subscribe((on) => ({
+  selectionChanged: on(booksViews.selectedId, (id) => {
+    if (id === null) return;
+    return fromBooksPage.bookSelected({ id });
+  }),
+}));
+```
+
+Multiple Views can be passed before the effect. The callback receives their
+current values as separate, inferred arguments:
+
+```ts
+on(
+  booksViews.selectedId,
+  booksViews.loading,
+  booksViews.error,
+  (selectedId, loading, error) => {
+    // React to changes in any of the three Views.
+  },
+);
+```
+
+The Task runs once per state transition when any selected value changes. All
+arguments come from the same current state snapshot, including values of Views
+that did not change.
+
+A View Task starts listening when registered and runs only when its selected
+value changes according to `Object.is`. Registration does not emit the initial
+value. The effect receives the new value after state transitions and can return
+a synchronous or asynchronous outcome event. Unrelated state changes do not
+trigger it. As with event Tasks, stopping the collection cancels pending outcome
+dispatches. Outcome events that change the source View can trigger the Task
+again, so such feedback requires a terminating condition.
+
+External sources such as DOM events, timers, and subscription APIs can use
+`on(source)`. The source receives an `emit` callback for outcome events and can
+return a cleanup function:
+
+```ts
+const browserTasks = task.subscribe((on) => ({
+  activity: on((emit) => {
+    const clicked = () => emit(fromUser.activityDetected());
+    document.addEventListener("click", clicked);
+    return () => document.removeEventListener("click", clicked);
+  }),
+}));
+```
+
+The source starts on registration, rather than declaration. Each `emit` call
+dispatches through the registering store, including synchronous emissions during
+setup. Cleanup runs when the collection is stopped or `clearEvstStore()` is
+called; emissions after cleanup are ignored. A source can bridge an observable
+without making RxJS a dependency: subscribe with `emit` and return a function
+that unsubscribes. Source functions themselves are synchronous; asynchronous
+work delivers its outcomes through `emit`.
 
 ## Writing consumer code
 
@@ -226,7 +306,7 @@ Events' `.publish()` and Views' `.value()` use the active store configured by
 rendering or independently mounted applications with separate stores require
 explicit store dispatch and selector calls instead of the shared helpers.
 A second `createEvst()` call throws while a store is active. `clearEvstStore()`
-clears the active reference for test isolation; it does not dispose task listeners.
+stops registered Tasks and clears the active reference for test isolation.
 
 ### Registering lazy state
 

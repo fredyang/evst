@@ -26,8 +26,7 @@ import { authViews } from "../auth/evst/auth.state";
 import { fromAuth } from "../auth/evst/auth.events";
 import { LoginPage } from "../auth/components/login-page";
 import { coreViews } from "../core/evst/core.state";
-import { fromLayout, fromUser } from "../core/evst/core.events";
-import { watchIdle } from "../core/services/idle";
+import { fromLayout } from "../core/evst/core.events";
 import { NotFoundPage } from "../core/components/not-found-page";
 
 const BooksModule = lazy(() => import("../books/books-module"));
@@ -46,11 +45,6 @@ export function AppLayout() {
   const auth = authViews.root.use();
   const showSidenav = coreViews.showSidenav.use();
   const { pathname } = useLocation();
-
-  useEffect(() => {
-    if (!auth.user) return;
-    return watchIdle(document, () => fromUser.idleTimeoutElapsed.publish());
-  }, [auth.user]);
 
   useEffect(() => {
     const title =
@@ -159,9 +153,7 @@ export function AppLayout() {
         <DialogTitle id="logout-title">Sign out?</DialogTitle>
         <DialogContent>Are you sure you want to sign out?</DialogContent>
         <DialogActions>
-          <Button onClick={dismissLogoutConfirmation}>
-            Cancel
-          </Button>
+          <Button onClick={dismissLogoutConfirmation}>Cancel</Button>
           <Button onClick={() => fromAuth.logout.publish()}>Sign Out</Button>
         </DialogActions>
       </Dialog>

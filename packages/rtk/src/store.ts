@@ -9,6 +9,8 @@ import {
 import type { FeatureStateDefinition } from "./state.js";
 import type { Tasks } from "./tasks.js";
 
+let stopActiveTasks: (() => void) | undefined;
+
 let activeStore: Pick<EnhancedStore, "dispatch" | "getState"> | undefined;
 
 export type EvstStoreConfig = Omit<
@@ -48,6 +50,10 @@ export function createEvst(config: EvstStoreConfig = {}): Evst {
   activeStore = store;
   const registered = new Map(states.map((state) => [state.name, state]));
   const installedTasks = new Set<Tasks>();
+  const taskStops: Array<() => void> = [];
+  stopActiveTasks = () => {
+    taskStops.splice(0).forEach((stop) => stop());
+  };
   const provide = (registration: Pick<EvstStoreConfig, "states" | "tasks">) => {
     const proposed = new Map(registered);
     for (const state of registration.states ?? []) {
@@ -67,7 +73,7 @@ export function createEvst(config: EvstStoreConfig = {}): Evst {
     if (changed) store.replaceReducer(combineReducers(reducer));
     for (const definition of registration.tasks ?? []) {
       if (installedTasks.has(definition)) continue;
-      definition.register(listener);
+      taskStops.push(definition.register(listener, store));
       installedTasks.add(definition);
     }
   };
@@ -93,7 +99,10 @@ export function readView<Root, Result>(
   return selector(activeStore.getState());
 }
 
-/** Clears the active store used by event publishing and View snapshots. */
+/** Stops registered Tasks and clears the active store used by publishing and Views. */
 export function clearEvstStore(): void {
+  const stop = stopActiveTasks;
+  stopActiveTasks = undefined;
   activeStore = undefined;
+  stop?.();
 }

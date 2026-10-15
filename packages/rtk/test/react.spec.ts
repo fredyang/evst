@@ -1,3 +1,4 @@
+import { configureStore, createListenerMiddleware } from "@reduxjs/toolkit";
 import { afterEach, describe, expect, expectTypeOf, it } from "vitest";
 import {
   clearEvstStore,
@@ -64,6 +65,163 @@ describe("@evst/rtk", () => {
     await Promise.resolve();
     expect(observed).toEqual([4]);
     expect(store.getState()).toEqual({ counter: { count: 0 } });
+  });
+
+  it("runs View tasks only on selected value changes and dispatches outcomes", () => {
+    const fromObservation = events("Observation", {
+      recorded: props<number>(),
+    });
+    const observation = state("observation", { value: -1 }).subscribe((on) => ({
+      record: on(fromObservation.recorded, (current, value) => {
+        current.value = value;
+      }),
+    }));
+    const observed: number[] = [];
+    const parity = view(counter.views.count, (count) => count % 2);
+    const definitions = task.subscribe((on) => ({
+      record: on(parity, (value) => {
+        expectTypeOf(value).toEqualTypeOf<number>();
+        observed.push(value);
+        return fromObservation.recorded(value);
+      }),
+    }));
+    const store = createEvst({ states: [counter, observation] });
+    store.provide({ tasks: [definitions] });
+    store.provide({ tasks: [definitions] });
+    expect(observed).toEqual([]);
+    fromCounter.added.publish(2);
+    expect(observed).toEqual([]);
+    fromCounter.added.publish(1);
+    expect(observed).toEqual([1]);
+    expect(observation.views.value.value()).toBe(1);
+    fromCounter.added.publish(1);
+    expect(observed).toEqual([1, 0]);
+  });
+
+  it("combines multiple typed Views and runs once with a consistent snapshot", async () => {
+    const fromSettings = events("Settings", { renamed: props<string>() });
+    const settings = state("settings", { name: "initial" }).subscribe((on) => ({
+      rename: on(fromSettings.renamed, (current, name) => {
+        current.name = name;
+      }),
+    }));
+    const positive = view(counter.views.count, (count) => count > 0);
+    const observed: Array<[number, string, boolean]> = [];
+    const definitions = task.subscribe((on) => ({
+      observe: on(
+        counter.views.count,
+        settings.views.name,
+        positive,
+        async (count, name, isPositive) => {
+          expectTypeOf(count).toEqualTypeOf<number>();
+          expectTypeOf(name).toEqualTypeOf<string>();
+          expectTypeOf(isPositive).toEqualTypeOf<boolean>();
+          observed.push([count, name, isPositive]);
+        },
+      ),
+    }));
+    createEvst({ states: [counter, settings], tasks: [definitions] });
+    expect(observed).toEqual([]);
+    fromCounter.added.publish(1);
+    expect(observed).toEqual([[1, "initial", true]]);
+    fromSettings.renamed.publish("updated");
+    expect(observed).toEqual([
+      [1, "initial", true],
+      [1, "updated", true],
+    ]);
+    fromSettings.renamed.publish("updated");
+    fromCounter.added.publish(0);
+    expect(observed).toHaveLength(2);
+    await Promise.resolve();
+  });
+
+  it("stops View tasks and discards pending outcomes on teardown", async () => {
+    const listener = createListenerMiddleware();
+    const store = configureStore({
+      reducer: { counter: counter.reducer },
+      middleware: (defaults) => defaults().prepend(listener.middleware),
+    });
+    const observed: number[] = [];
+    let finish!: (outcome: ReturnType<typeof fromCounter.reset>) => void;
+    const definitions = task.subscribe((on) => ({
+      record: on(counter.views.count, (value) => {
+        observed.push(value);
+        return new Promise((resolve) => {
+          finish = resolve;
+        });
+      }),
+    }));
+    const stop = definitions.register(listener);
+    store.dispatch(fromCounter.added(1));
+    expect(observed).toEqual([1]);
+    stop();
+    finish(fromCounter.reset());
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(store.getState().counter.count).toBe(1);
+    store.dispatch(fromCounter.added(1));
+    expect(observed).toEqual([1]);
+  });
+
+  it("starts external sources once and cleans up DOM listeners when cleared", () => {
+    const target = new EventTarget();
+    let starts = 0;
+    let stops = 0;
+    let emitLate!: () => void;
+    const definitions = task.subscribe((on) => ({
+      clicks: on((emit) => {
+        starts++;
+        const click = () => emit(fromCounter.added(1));
+        emitLate = click;
+        target.addEventListener("click", click);
+        emit(fromCounter.added(2));
+        return () => {
+          stops++;
+          target.removeEventListener("click", click);
+        };
+      }),
+    }));
+    expect(starts).toBe(0);
+    const store = createEvst({ states: [counter], tasks: [definitions] });
+    store.provide({ tasks: [definitions] });
+    expect(starts).toBe(1);
+    expect(store.getState().counter.count).toBe(2);
+    target.dispatchEvent(new Event("click"));
+    expect(store.getState().counter.count).toBe(3);
+    clearEvstStore();
+    clearEvstStore();
+    expect(stops).toBe(1);
+    target.dispatchEvent(new Event("click"));
+    emitLate();
+    expect(store.getState().counter.count).toBe(3);
+  });
+
+  it("supports source subscriptions without cleanup and rolls back failed collections", () => {
+    const listener = createListenerMiddleware();
+    const store = configureStore({ reducer: { counter: counter.reducer } });
+    let stops = 0;
+    const definitions = task.subscribe((on) => ({
+      first: on(() => () => {
+        stops++;
+      }),
+      broken: on(() => {
+        throw new Error("Cannot subscribe");
+      }),
+    }));
+    expect(() => definitions.register(listener, store)).toThrow(
+      "Cannot subscribe",
+    );
+    expect(stops).toBe(1);
+    const withoutCleanup = task.subscribe((on) => ({
+      once: on((emit) => {
+        emit(fromCounter.added(1));
+      }),
+    }));
+    expect(() => withoutCleanup.register(listener)).toThrow("require a store");
+    const stop = withoutCleanup.register(listener, store);
+    expect(store.getState().counter.count).toBe(1);
+    expect(stop).not.toThrow();
+    expect(stop).not.toThrow();
   });
 
   it("composes state subscriptions without changing earlier definitions", () => {

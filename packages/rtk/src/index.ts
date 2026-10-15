@@ -18,6 +18,7 @@ export {
   type Task,
   type TaskBuilder,
   type TaskEffect,
+  type TaskSource,
   type Tasks,
 } from "./tasks.js";
 export { view, type View } from "./view.js";
