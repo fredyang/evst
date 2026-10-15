@@ -22,11 +22,17 @@ of(null).subscribe(() => {
 export const booksState = state("books", { titles: [] as string[] })
   .extraViews(({ titles }) => ({
     total: view(titles, (titles) => titles.length),
+    taskOnly: view(titles, (titles) => titles.length > 0),
     unused: view(titles, (titles) => titles.join(", ")),
   }))
   .stateOn((on) => ({
     loaded: on(fromBooksApi.loaded, (current, { titles }) => {
       current.titles = titles;
+    }),
+  }))
+  .taskOn((on, views) => ({
+    inspect: on(fromBooksApi.loaded, () => {
+      views.taskOnly.value();
     }),
   }));
 export const booksViews = booksState.views;

@@ -40,7 +40,13 @@ export default createRule<Options, MessageIds>({
     const declarations = findViewDeclarations(sourceFile, checker);
 
     for (const declaration of declarations) {
-      const usage = findUsages(program, checker, declaration.viewsSymbol);
+      const usages = declaration.viewsSymbols.map((symbol) =>
+        findUsages(program, checker, symbol),
+      );
+      const usage = {
+        dynamic: usages.some((usage) => usage.dynamic),
+        names: new Set(usages.flatMap((usage) => [...usage.names])),
+      };
       if (usage.dynamic) continue;
 
       for (const view of declaration.views) {
@@ -59,7 +65,7 @@ export default createRule<Options, MessageIds>({
 });
 
 interface ViewDeclaration {
-  viewsSymbol: ts.Symbol;
+  viewsSymbols: readonly ts.Symbol[];
   views: readonly { name: string; node: ts.PropertyName }[];
 }
 
@@ -99,10 +105,44 @@ function findViewDeclarations(
       const name = propertyName(property.name);
       return name ? [{ name, node: property.name }] : [];
     });
-    if (views.length) declarations.push({ viewsSymbol, views });
+    if (views.length)
+      declarations.push({
+        viewsSymbols: [
+          viewsSymbol,
+          ...taskViewSymbols(state!.initializer!, checker),
+        ],
+        views,
+      });
   }
 
   return declarations;
+}
+
+/** The fluent Task builder receives the same Views as the exported alias. */
+function taskViewSymbols(
+  node: ts.Expression,
+  checker: ts.TypeChecker,
+): ts.Symbol[] {
+  if (
+    !ts.isCallExpression(node) ||
+    !ts.isPropertyAccessExpression(node.expression)
+  )
+    return [];
+  const symbols = taskViewSymbols(node.expression.expression, checker);
+  if (node.expression.name.text === "taskOn") {
+    const callback = node.arguments[0];
+    if (
+      callback &&
+      (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback))
+    ) {
+      const parameter = callback.parameters[1];
+      if (parameter && ts.isIdentifier(parameter.name)) {
+        const symbol = checker.getSymbolAtLocation(parameter.name);
+        if (symbol) symbols.push(symbol);
+      }
+    }
+  }
+  return symbols;
 }
 
 function findExtraViewsCallback(node: ts.Node): ts.ArrowFunction | undefined {

@@ -17,3 +17,6 @@ authViews.loggedIn.signal();
 The rule is a suggestion. Dynamic property access, such as `authViews[name]`,
 suppresses reporting for that views object because static analysis cannot
 determine which views it uses.
+
+Views read through the second callback parameter of fluent `.taskOn((on, views) => ...)`
+count as usages in both NgRx and RTK, including when the parameter is renamed.

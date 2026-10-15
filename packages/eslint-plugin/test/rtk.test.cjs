@@ -56,7 +56,36 @@ describe("RTK preset", () => {
     });
   });
 
-  it("tracks hooks, task outcomes and nested conditional publications without counting the condition", async () => {
+  it("recognizes NgRx stateOn and both taskOn forms, including callback View usage", async () => {
+    const cwd = path.join(__dirname, "fixtures/rtk");
+    const eslint = new ESLint({
+      cwd,
+      overrideConfigFile: true,
+      overrideConfig: [
+        {
+          files: ["**/*.ts"],
+          languageOptions: {
+            parser,
+            parserOptions: { project: "./tsconfig.json", tsconfigRootDir: cwd },
+          },
+          plugins: { evst },
+          ...evst.configs["evst-ngrx"],
+        },
+      ],
+    });
+    const [result] = await eslint.lintFiles(["ngrx.ts"]);
+    assert.deepEqual(
+      result.messages.map(({ ruleId, message }) => ({ ruleId, message })),
+      [
+        {
+          ruleId: "evst/no-unused-views",
+          message: "View `unused` is not referenced and can be removed.",
+        },
+      ],
+    );
+  });
+
+  it("tracks RTK stateOn, standalone and fluent taskOn, callback Views, hooks and conditional publications", async () => {
     const cwd = path.join(__dirname, "fixtures/rtk");
     const eslint = new ESLint({
       cwd,
