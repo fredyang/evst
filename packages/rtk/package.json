@@ -1,6 +1,6 @@
 {
   "name": "@evst/rtk",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "description": "Event-first state management for React, built on Redux Toolkit.",
   "type": "module",
   "license": "MIT",
