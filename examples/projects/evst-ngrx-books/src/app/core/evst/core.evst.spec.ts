@@ -4,10 +4,10 @@ import { Actions } from "@ngrx/effects";
 import type { Action } from "@ngrx/store";
 import { Subject, type Observable } from "rxjs";
 import { vi } from "vitest";
-import { fromUser } from "./core.events";
-import { coreTasks } from "./core.tasks";
+import { coreBundle, fromLayout, fromUser } from "./core.evst";
+import { fromAuth } from "../../auth/evst/auth.evst";
 
-describe("coreTasks", () => {
+describe("coreBundle", () => {
   it("publishes an idle-timeout event after five minutes without activity", () => {
     vi.useFakeTimers();
     const document = new EventTarget();
@@ -21,7 +21,7 @@ describe("coreTasks", () => {
     try {
       const output: Action[] = [];
       injector.runInContext(() =>
-        (coreTasks.effects.idle as () => Observable<unknown>)().subscribe(
+        (coreBundle.effects.idle as () => Observable<unknown>)().subscribe(
           (event) => output.push(event as Action),
         ),
       );
@@ -33,5 +33,24 @@ describe("coreTasks", () => {
       injector.destroy();
       vi.useRealTimers();
     }
+  });
+});
+
+describe("coreBundle", () => {
+  const coreReducer = coreBundle.reducer;
+
+  it("opens and closes the sidenav in response to layout events", () => {
+    const opened = coreReducer(undefined, fromLayout.sidenavOpened());
+    const closed = coreReducer(opened, fromLayout.sidenavClosed());
+
+    expect(opened.showSidenav).toBe(true);
+    expect(closed.showSidenav).toBe(false);
+  });
+
+  it("closes the sidenav when logout confirmation begins", () => {
+    const opened = coreReducer(undefined, fromLayout.sidenavOpened());
+    const closed = coreReducer(opened, fromAuth.logoutConfirmation());
+
+    expect(closed.showSidenav).toBe(false);
   });
 });

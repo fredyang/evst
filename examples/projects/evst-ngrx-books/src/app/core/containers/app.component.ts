@@ -2,8 +2,7 @@ import { Component } from "@angular/core";
 
 import { fromAuth } from "@example-app/auth/evst/auth.evst";
 import { authViews } from "@example-app/auth/evst/auth.evst";
-import { fromLayout } from "@example-app/core/evst/core.events";
-import { coreViews } from "@example-app/core/evst/core.state";
+import { fromLayout, coreViews } from "@example-app/core/evst/core.evst";
 import { LayoutComponent } from "../components/layout.component";
 import { SidenavComponent } from "../components/sidenav.component";
 import { NgIf } from "@angular/common";

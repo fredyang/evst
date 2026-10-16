@@ -1,5 +1,4 @@
 import { events, props, emptyProps, state, view } from "@evst/rtk";
-import { fromUser } from "../../core/evst/core.events";
 
 export const fromLoginPage = events("Login Page", {
   login: props<{ credentials: { username: string; password: string } }>(),
@@ -66,7 +65,6 @@ export const authBundle = state("auth", {
       }
       return fromAuthApi.loginSuccess({ user: { name: "User" } });
     }),
-    logoutIdleUser: on(fromUser.idleTimeoutElapsed, () => fromAuth.logout()),
   }));
 
 export const authViews = authBundle.views;

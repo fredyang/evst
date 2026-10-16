@@ -25,8 +25,7 @@ import {
 import { authViews, fromAuth } from "../auth/evst/auth.evst";
 
 import { LoginPage } from "../auth/components/login-page";
-import { coreViews } from "../core/evst/core.state";
-import { fromLayout } from "../core/evst/core.events";
+import { coreViews, fromLayout } from "../core/evst/core.evst";
 import { NotFoundPage } from "../core/components/not-found-page";
 
 const BooksModule = lazy(() => import("../books/books-module"));

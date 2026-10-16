@@ -1,6 +1,7 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 export default defineConfig({
+  root: import.meta.dirname,
   resolve: {
     alias: {
       "@evst/rtk": path.resolve(
@@ -10,13 +11,13 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["examples/projects/evst-rtk-books/src/**/*.spec.ts"],
+    include: ["src/**/*.spec.ts"],
     coverage: {
       provider: "v8",
-      include: ["examples/projects/evst-rtk-books/src/**/*.{ts,tsx}"],
+      include: ["src/**/*.{ts,tsx}"],
       exclude: ["**/*.spec.ts"],
       reporter: ["text", "html", "json-summary"],
-      reportsDirectory: "examples/projects/evst-rtk-books/coverage",
+      reportsDirectory: "coverage",
     },
   },
 });

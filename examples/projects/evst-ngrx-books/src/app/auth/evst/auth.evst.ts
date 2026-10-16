@@ -8,7 +8,6 @@ import { catchError, exhaustMap, map, tap } from "rxjs/operators";
 import type { Credentials, User } from "../models/user";
 import { LogoutConfirmationDialogComponent } from "../components/logout-confirmation-dialog.component";
 import { AuthService } from "../services/auth.service";
-import { fromUser } from "../../core/evst/core.events";
 
 export const fromAuth = events("Auth", {
   logout: emptyProps(),
@@ -139,10 +138,6 @@ export const authBundle = state("auth", {
             result ? fromAuth.logout() : fromAuth.logoutConfirmationDismiss(),
           ),
         ),
-    ),
-
-    logoutIdleUser: on(fromUser.idleTimeoutElapsed, (pipe) =>
-      pipe(map(() => fromAuth.logout())),
     ),
   }));
 

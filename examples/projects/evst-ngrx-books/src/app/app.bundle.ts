@@ -1,6 +1,5 @@
 import { bundle } from "@evst/ngrx";
 import { authBundle } from "./auth/evst/auth.evst";
-import { coreState } from "./core/evst/core.state";
-import { coreTasks } from "./core/evst/core.tasks";
+import { coreBundle } from "./core/evst/core.evst";
 
-export const rootBundle = bundle(authBundle, coreState, coreTasks);
+export const rootBundle = bundle(authBundle, coreBundle);

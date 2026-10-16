@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
 import { clearEvstStore, createEvstStore, taskOn } from "@evst/rtk";
-import { coreTasks } from "./core.tasks";
-import { fromUser } from "./core.events";
+import { coreBundle, fromLayout, fromUser } from "./core.evst";
+import { fromAuth } from "../../auth/evst/auth.evst";
 
 afterEach(() => {
   clearEvstStore();
@@ -17,7 +17,7 @@ it("emits idle outcomes from browser activity and stops the watcher on cleanup",
       timeouts++;
     }),
   }));
-  createEvstStore({ tasks: [observer, coreTasks] });
+  createEvstStore({ bundles: [coreBundle], tasks: [observer] });
   vi.advanceTimersByTime(4 * 60 * 1000);
   document.dispatchEvent(new Event("click"));
   vi.advanceTimersByTime(4 * 60 * 1000);
@@ -30,4 +30,16 @@ it("emits idle outcomes from browser activity and stops the watcher on cleanup",
   expect(vi.getTimerCount()).toBe(0);
   document.dispatchEvent(new Event("click"));
   expect(vi.getTimerCount()).toBe(0);
+});
+
+it("opens navigation and closes it for menu dismissal and sign out", () => {
+  const opened = coreBundle.reducer(undefined, fromLayout.sidenavOpened());
+  expect(opened.showSidenav).toBe(true);
+  for (const event of [
+    fromLayout.sidenavClosed(),
+    fromAuth.logoutConfirmation(),
+    fromAuth.logout(),
+  ]) {
+    expect(coreBundle.reducer(opened, event).showSidenav).toBe(false);
+  }
 });

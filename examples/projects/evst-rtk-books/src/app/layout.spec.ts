@@ -7,7 +7,7 @@ import { clearEvstStore } from "@evst/rtk";
 import { evst } from "../evst";
 import { Provider } from "react-redux";
 import { AppLayout } from "./layout";
-import { fromUser } from "../core/evst/core.events";
+import { fromUser } from "../core/evst/core.evst";
 
 let root: Root;
 const store = evst;
