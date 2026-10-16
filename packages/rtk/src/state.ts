@@ -1,3 +1,5 @@
+import { definitionKind } from "./definition-kind.js";
+import { assertNewNames, assertUniqueEvents } from "./definition-validation.js";
 import {
   createReducer,
   type ActionCreatorWithPayload,
@@ -7,12 +9,7 @@ import {
 } from "@reduxjs/toolkit";
 import { view, type View } from "./view.js";
 
-import {
-  taskOn,
-  type NamedTasks,
-  type TaskBuilder,
-  type Tasks,
-} from "./tasks.js";
+import { task, type NamedTasks, type TaskBuilder } from "./tasks.js";
 
 type EventCreator = ActionCreatorWithPayload<any> | ActionCreatorWithoutPayload;
 type EventCaseReducer<State, Creator extends EventCreator> =
@@ -37,57 +34,58 @@ type BaseViews<Name extends string, State extends object> = {
 };
 type ExtraViewRecord<Root> = Record<string, View<Root, any>>;
 
-/** A terminal state-and-Tasks bundle registered through the bundles option. */
-export interface FeatureBundle<
+/**
+ * Immutable feature definition. Each composition call returns a new definition.
+ * Tasks retain the views available when their callback ran. Registration activates
+ * the final definition; it does not mutate earlier definitions.
+ */
+export type EvstDefinition<
   Name extends string,
   State extends object,
   ExtraViews extends ExtraViewRecord<Record<Name, State>> = {},
-  Effects extends NamedTasks = NamedTasks,
-> extends Tasks<Effects> {
-  readonly name: Name;
-  readonly reducer: Reducer<State>;
-  readonly views: BaseViews<Name, State> & ExtraViews;
-}
+  Effects extends NamedTasks | undefined = undefined,
+> = EvstBuilder<Name, State, ExtraViews, Effects> &
+  (Effects extends NamedTasks ? { readonly effects: Readonly<Effects> } : {});
 
-export interface FeatureStateDefinition<
+/** Composition methods shared by definitions with and without tasks. */
+export interface EvstBuilder<
   Name extends string,
   State extends object,
   ExtraViews extends ExtraViewRecord<Record<Name, State>> = {},
+  Effects extends NamedTasks | undefined = undefined,
 > {
+  readonly [definitionKind]: "feature";
   readonly name: Name;
   readonly reducer: Reducer<State>;
+  /** Generated field views, root, and all derived views declared so far. */
   readonly views: BaseViews<Name, State> & ExtraViews;
-  /**
-   * Declares event subscriptions through named state handlers.
-   * Returns a new definition retaining stateOn(), extraViews(), and taskOn().
-   * Registered through `createEvstStore()` or `evst.provide()`.
-   * Handler names label transitions; events passed to `on` select their inputs.
-   */
-  stateOn(
+  /** Adds named handlers. Duplicate labels or event types throw. */
+  state(
     build: (on: StateOn<State>) => NamedStateHandlers<State>,
-  ): FeatureStateDefinition<Name, State, ExtraViews>;
-  /**
-   * Finishes state composition with named Tasks and inferred current Views.
-   * @returns A bundle exposing name, views, reducer, effects, and register().
-   * Register through createEvstStore({ bundles: [bundle] }) or evst.provide().
-   * The original definition remains unchanged; the bundle has no composition methods.
-   */
-  taskOn<Effects extends NamedTasks>(
+  ): EvstDefinition<Name, State, ExtraViews, Effects>;
+  /** Adds derived views. Existing field, root, and derived names cannot be overwritten. */
+  view<Added extends ExtraViewRecord<Record<Name, State>>>(
+    build: (views: BaseViews<Name, State> & ExtraViews) => Added,
+  ): EvstDefinition<Name, State, ExtraViews & Added, Effects>;
+  /** Adds named tasks using all currently declared views. Duplicate labels throw. */
+  task<Added extends NamedTasks>(
     build: (
       on: TaskBuilder,
       views: BaseViews<Name, State> & ExtraViews,
-    ) => Effects,
-  ): FeatureBundle<Name, State, ExtraViews, Effects>;
-  extraViews<Added extends ExtraViewRecord<Record<Name, State>>>(
-    build: (views: BaseViews<Name, State> & ExtraViews) => Added,
-  ): FeatureStateDefinition<Name, State, ExtraViews & Added>;
+    ) => Added,
+  ): EvstDefinition<
+    Name,
+    State,
+    ExtraViews,
+    Effects extends NamedTasks ? Effects & Added : Added
+  >;
 }
 
-/** Defines a Redux Toolkit feature reducer and generated field views. */
-export function state<const Name extends string, State extends object>(
+/** Creates a feature with a reducer and automatic field and root views. */
+export function evst<const Name extends string, State extends object>(
   name: Name,
   initialState: State,
-): FeatureStateDefinition<Name, State> {
+): EvstDefinition<Name, State> {
   if (Object.hasOwn(initialState, "root"))
     throw new Error(
       'Feature state cannot contain the reserved view name "root".',
@@ -102,63 +100,71 @@ export function state<const Name extends string, State extends object>(
     ),
     { root },
   ) as BaseViews<Name, State>;
-  return chain(name, initialState, [], views);
+  return chain(name, initialState, {}, views, undefined);
 }
 
 function chain<
   Name extends string,
   State extends object,
   ExtraViews extends ExtraViewRecord<Record<Name, State>>,
+  Effects extends NamedTasks | undefined,
 >(
   name: Name,
   initialState: State,
-  handlers: readonly StateHandler<State>[],
+  handlers: NamedStateHandlers<State>,
   views: BaseViews<Name, State> & ExtraViews,
-): FeatureStateDefinition<Name, State, ExtraViews> {
-  const reducer = createReducer(initialState, (builder) => {
-    for (const { event, reducer } of handlers)
+  effects: Effects,
+  reducer = createReducer(initialState, (builder) => {
+    for (const { event, reducer } of Object.values(handlers))
       builder.addCase(event as any, (draft, action: any) =>
         reducer(draft, action.payload),
       );
-  });
-  return {
+  }),
+): EvstDefinition<Name, State, ExtraViews, Effects> {
+  const definition: EvstBuilder<Name, State, ExtraViews, Effects> = {
+    [definitionKind]: "feature",
     name,
     reducer,
     views,
-    taskOn: (build) => {
-      const tasks = taskOn((on) => build(on, views));
-      return {
-        name,
-        reducer,
-        views,
-        effects: tasks.effects,
-        register: tasks.register,
-      };
-    },
-    stateOn: (build: (on: StateOn<State>) => NamedStateHandlers<State>) => {
+    state: (build) => {
       const on: StateOn<State> = (event, reducer) => ({ event, reducer });
-      return chain(
-        name,
-        initialState,
-        [...handlers, ...Object.values(build(on))],
-        views,
+      const added = build(on);
+      assertNewNames(handlers, added, "State handler");
+      const combined = { ...handlers, ...added };
+      assertUniqueEvents(
+        Object.values(combined).map(({ event }) => event.type),
       );
+      return chain(name, initialState, combined, views, effects);
     },
-    extraViews: <Added extends ExtraViewRecord<Record<Name, State>>>(
-      build: (views: BaseViews<Name, State> & ExtraViews) => Added,
-    ) => {
+    view: (build) => {
       const added = build(views);
-      for (const key of Object.keys(added))
-        if (Object.hasOwn(views, key))
-          throw new Error(
-            `Extra view \"${key}\" conflicts with an existing view.`,
-          );
-      return chain<Name, State, ExtraViews & Added>(
+      assertNewNames(views, added, "View");
+      return chain<Name, State, ExtraViews & typeof added, Effects>(
         name,
         initialState,
         handlers,
-        { ...views, ...added } as BaseViews<Name, State> & ExtraViews & Added,
+        { ...views, ...added },
+        effects,
+        reducer,
       );
     },
+    task: <Added extends NamedTasks>(
+      build: (
+        on: TaskBuilder,
+        views: BaseViews<Name, State> & ExtraViews,
+      ) => Added,
+    ) => {
+      const added = task((on) => build(on, views));
+      assertNewNames(effects ?? {}, added.effects, "Task");
+      const combined = {
+        ...effects,
+        ...added.effects,
+      } as Effects extends NamedTasks ? Effects & Added : Added;
+      return chain(name, initialState, handlers, views, combined, reducer);
+    },
   };
+  return Object.assign(
+    definition,
+    effects === undefined ? {} : { effects },
+  ) as EvstDefinition<Name, State, ExtraViews, Effects>;
 }

@@ -1,7 +1,7 @@
 import { DOCUMENT } from "@angular/common";
 import { inject } from "@angular/core";
 import { emptyProps } from "@ngrx/store";
-import { events, state } from "@evst/ngrx";
+import { events, evst } from "@evst/ngrx";
 import { fromEvent, map, merge, switchMap, timer } from "rxjs";
 import { fromAuth } from "../../auth/evst/auth.evst";
 
@@ -12,8 +12,8 @@ export const fromLayout = events("Layout", {
   sidenavClosed: emptyProps(),
 });
 
-export const coreBundle = state("core", { showSidenav: false })
-  .stateOn((on) => ({
+export const coreBundle = evst("core", { showSidenav: false })
+  .state((on) => ({
     openSidenav: on(fromLayout.sidenavOpened, (state) => ({
       ...state,
       showSidenav: true,
@@ -27,7 +27,7 @@ export const coreBundle = state("core", { showSidenav: false })
       showSidenav: false,
     })),
   }))
-  .taskOn((on) => ({
+  .task((on) => ({
     logoutIdleUser: on(fromUser.idleTimeoutElapsed, (pipe) =>
       pipe(map(() => fromAuth.logout())),
     ),

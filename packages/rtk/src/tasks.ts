@@ -1,3 +1,4 @@
+import { definitionKind } from "./definition-kind.js";
 import type {
   EnhancedStore,
   ListenerMiddlewareInstance,
@@ -26,6 +27,7 @@ export type Task = {
 /** Tasks keyed by descriptive names. */
 export type NamedTasks = Record<string, Task>;
 export interface Tasks<Effects extends NamedTasks = NamedTasks> {
+  readonly [definitionKind]: "tasks";
   readonly effects: Readonly<Effects>;
   register(listener: ListenerMiddlewareInstance, store?: TaskStore): () => void;
 }
@@ -52,12 +54,12 @@ export interface TaskBuilder {
 }
 
 /**
- * Declares named Tasks. Registration through createEvstStore() or evst.provide()
+ * Declares named Tasks. Registration through createEvstStore() or store.provide()
  * activates their subscriptions. Effects are exposed by name for inspection.
  * @param build - Creates Tasks with the supplied event, View, or source builder.
  * @returns A collection exposing effects and register().
  */
-export function taskOn<Effects extends NamedTasks>(
+export function task<Effects extends NamedTasks>(
   build: (on: TaskBuilder) => Effects,
 ): Tasks<Effects> {
   const on: TaskBuilder = (...args: any[]): Task => {
@@ -121,6 +123,7 @@ export function taskOn<Effects extends NamedTasks>(
   };
   const namedTasks = build(on);
   return {
+    [definitionKind]: "tasks",
     effects: namedTasks,
     register: (listener, store) => {
       const stops: Array<() => void> = [];
@@ -136,6 +139,3 @@ export function taskOn<Effects extends NamedTasks>(
     },
   };
 }
-
-/** @deprecated Use taskOn(). */
-export const tasks = taskOn;

@@ -9,10 +9,10 @@ type MessageIds = typeof messageId;
 type Options = readonly [];
 
 /**
- * Reports statically unused properties declared through `state().extraViews()`.
+ * Reports statically unused properties declared through `evst().view()`.
  *
  * The check uses the TypeScript program, rather than import text, so renamed
- * imports and barrel re-exports still resolve to the original `*.views` export.
+ * imports and barrel re-exports still resolve to the original view declaration.
  */
 export default createRule<Options, MessageIds>({
   meta: {
@@ -39,25 +39,13 @@ export default createRule<Options, MessageIds>({
     const sourceFile = nodeMap.get(context.sourceCode.ast);
     const declarations = findViewDeclarations(sourceFile, checker);
 
+    const used = findUsages(program, checker);
     for (const declaration of declarations) {
-      const usages = declaration.viewsSymbols.map((symbol) =>
-        findUsages(program, checker, symbol),
-      );
-      const usage = {
-        dynamic: usages.some((usage) => usage.dynamic),
-        names: new Set(usages.flatMap((usage) => [...usage.names])),
-      };
-      if (usage.dynamic) continue;
-
-      for (const view of declaration.views) {
-        if (!usage.names.has(view.name)) {
-          const node = reverseNodeMap.get(view.node) as
-            TSESTree.Node | undefined;
-          if (node) {
-            context.report({ node, messageId, data: { view: view.name } });
-          }
-        }
-      }
+      if (used.has(declaration.node)) continue;
+      const node = reverseNodeMap.get(declaration.node) as
+        TSESTree.Node | undefined;
+      if (node)
+        context.report({ node, messageId, data: { view: declaration.name } });
     }
 
     return {};
@@ -65,107 +53,57 @@ export default createRule<Options, MessageIds>({
 });
 
 interface ViewDeclaration {
-  viewsSymbols: readonly ts.Symbol[];
-  views: readonly { name: string; node: ts.PropertyName }[];
+  name: string;
+  node: ts.PropertyName;
 }
 
 function findViewDeclarations(
   sourceFile: ts.SourceFile,
   checker: ts.TypeChecker,
 ): ViewDeclaration[] {
-  const variables = new Map<string, ts.VariableDeclaration>();
   const declarations: ViewDeclaration[] = [];
-
-  sourceFile.forEachChild(function visit(node): void {
-    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name)) {
-      variables.set(node.name.text, node);
+  function visit(node: ts.Node): void {
+    if (
+      ts.isCallExpression(node) &&
+      ts.isPropertyAccessExpression(node.expression) &&
+      node.expression.name.text === "view"
+    ) {
+      const receiver = checker.getTypeAtLocation(node.expression.expression);
+      const callback = node.arguments[0];
+      if (
+        receiver.getProperty("reducer") &&
+        receiver.getProperty("views") &&
+        callback &&
+        (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback))
+      ) {
+        const object = returnedObject(callback);
+        if (object)
+          for (const property of object.properties) {
+            if (
+              !ts.isPropertyAssignment(property) &&
+              !ts.isShorthandPropertyAssignment(property)
+            )
+              continue;
+            const name = propertyName(property.name);
+            if (name) declarations.push({ name, node: property.name });
+          }
+      }
     }
     ts.forEachChild(node, visit);
-  });
-
-  for (const variable of variables.values()) {
-    if (
-      !variable.initializer ||
-      !ts.isPropertyAccessExpression(variable.initializer) ||
-      variable.initializer.name.text !== "views" ||
-      !ts.isIdentifier(variable.initializer.expression)
-    ) {
-      continue;
-    }
-
-    const state = variables.get(variable.initializer.expression.text);
-    const callback =
-      state?.initializer && findExtraViewsCallback(state.initializer);
-    const object = callback && returnedObject(callback);
-    const viewsSymbol = checker.getSymbolAtLocation(variable.name);
-    if (!object || !viewsSymbol) continue;
-
-    const views = object.properties.flatMap((property) => {
-      if (!ts.isPropertyAssignment(property) || !property.name) return [];
-      const name = propertyName(property.name);
-      return name ? [{ name, node: property.name }] : [];
-    });
-    if (views.length)
-      declarations.push({
-        viewsSymbols: [
-          viewsSymbol,
-          ...taskViewSymbols(state!.initializer!, checker),
-        ],
-        views,
-      });
   }
-
+  visit(sourceFile);
   return declarations;
 }
 
-/** The fluent Task builder receives the same Views as the exported alias. */
-function taskViewSymbols(
-  node: ts.Expression,
-  checker: ts.TypeChecker,
-): ts.Symbol[] {
-  if (
-    !ts.isCallExpression(node) ||
-    !ts.isPropertyAccessExpression(node.expression)
-  )
-    return [];
-  const symbols = taskViewSymbols(node.expression.expression, checker);
-  if (node.expression.name.text === "taskOn") {
-    const callback = node.arguments[0];
-    if (
-      callback &&
-      (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback))
-    ) {
-      const parameter = callback.parameters[1];
-      if (parameter && ts.isIdentifier(parameter.name)) {
-        const symbol = checker.getSymbolAtLocation(parameter.name);
-        if (symbol) symbols.push(symbol);
-      }
-    }
-  }
-  return symbols;
-}
-
-function findExtraViewsCallback(node: ts.Node): ts.ArrowFunction | undefined {
-  if (
-    ts.isCallExpression(node) &&
-    ts.isPropertyAccessExpression(node.expression) &&
-    node.expression.name.text === "extraViews" &&
-    ts.isArrowFunction(node.arguments[0])
-  ) {
-    return node.arguments[0];
-  }
-  return ts.forEachChild(node, findExtraViewsCallback);
-}
-
 function returnedObject(
-  callback: ts.ArrowFunction,
+  callback: ts.ArrowFunction | ts.FunctionExpression,
 ): ts.ObjectLiteralExpression | undefined {
   const body = ts.isParenthesizedExpression(callback.body)
     ? callback.body.expression
     : callback.body;
   if (ts.isObjectLiteralExpression(body)) return body;
-  if (!ts.isBlock(callback.body)) return undefined;
-  const statement = callback.body.statements.find(ts.isReturnStatement);
+  if (!ts.isBlock(body)) return undefined;
+  const statement = body.statements.find(ts.isReturnStatement);
   return statement?.expression &&
     ts.isObjectLiteralExpression(statement.expression)
     ? statement.expression
@@ -180,47 +118,59 @@ function propertyName(name: ts.PropertyName): string | undefined {
     : undefined;
 }
 
+/** Tracks declaration identities through mapped types, intersections, aliases and imports. */
 function findUsages(
   program: ts.Program,
   checker: ts.TypeChecker,
-  viewsSymbol: ts.Symbol,
-): { names: Set<string>; dynamic: boolean } {
-  const names = new Set<string>();
-  let dynamic = false;
-
+): Set<ts.Node> {
+  const used = new Set<ts.Node>();
+  function mark(symbol: ts.Symbol | undefined): void {
+    if (!symbol) return;
+    for (const root of checker.getRootSymbols(symbol)) {
+      for (const declaration of root.declarations ?? []) {
+        if (
+          ts.isPropertyAssignment(declaration) ||
+          ts.isShorthandPropertyAssignment(declaration)
+        )
+          used.add(declaration.name);
+      }
+    }
+  }
+  function markProperty(expression: ts.Expression, name: string): void {
+    mark(
+      checker.getPropertyOfType(checker.getTypeAtLocation(expression), name),
+    );
+  }
   for (const file of program.getSourceFiles()) {
     if (file.isDeclarationFile) continue;
-    file.forEachChild(function visit(node): void {
-      if (
-        ts.isPropertyAccessExpression(node) &&
-        isViewsReference(node.expression, checker, viewsSymbol)
-      ) {
-        names.add(node.name.text);
+    function visit(node: ts.Node): void {
+      if (ts.isPropertyAccessExpression(node))
+        markProperty(node.expression, node.name.text);
+      if (ts.isElementAccessExpression(node)) {
+        if (ts.isStringLiteral(node.argumentExpression))
+          markProperty(node.expression, node.argumentExpression.text);
+        else
+          for (const property of checker
+            .getTypeAtLocation(node.expression)
+            .getProperties())
+            mark(property);
       }
-      if (
-        ts.isElementAccessExpression(node) &&
-        isViewsReference(node.expression, checker, viewsSymbol)
-      ) {
-        dynamic = true;
+      if (ts.isObjectBindingPattern(node)) {
+        const type = checker.getTypeAtLocation(node);
+        for (const element of node.elements) {
+          if (element.dotDotDotToken) {
+            for (const property of type.getProperties()) mark(property);
+          } else {
+            const name = propertyName(
+              element.propertyName ?? (element.name as ts.PropertyName),
+            );
+            if (name) mark(checker.getPropertyOfType(type, name));
+          }
+        }
       }
       ts.forEachChild(node, visit);
-    });
+    }
+    visit(file);
   }
-  return { names, dynamic };
-}
-
-function isViewsReference(
-  node: ts.Expression,
-  checker: ts.TypeChecker,
-  viewsSymbol: ts.Symbol,
-): boolean {
-  const symbol = checker.getSymbolAtLocation(node);
-  if (!symbol) return false;
-  return resolveAlias(symbol, checker) === resolveAlias(viewsSymbol, checker);
-}
-
-function resolveAlias(symbol: ts.Symbol, checker: ts.TypeChecker): ts.Symbol {
-  return symbol.flags & ts.SymbolFlags.Alias
-    ? checker.getAliasedSymbol(symbol)
-    : symbol;
+  return used;
 }

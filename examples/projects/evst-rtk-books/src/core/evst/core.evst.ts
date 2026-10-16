@@ -1,4 +1,4 @@
-import { events, emptyProps, state } from "@evst/rtk";
+import { events, emptyProps, evst } from "@evst/rtk";
 import { fromAuth } from "../../auth/evst/auth.evst";
 
 export const fromLayout = events("Layout", {
@@ -9,8 +9,8 @@ export const fromUser = events("User", {
   idleTimeoutElapsed: emptyProps(),
 });
 
-export const coreBundle = state("core", { showSidenav: false })
-  .stateOn((on) => ({
+export const coreBundle = evst("core", { showSidenav: false })
+  .state((on) => ({
     open: on(fromLayout.sidenavOpened, (current) => {
       current.showSidenav = true;
     }),
@@ -24,7 +24,7 @@ export const coreBundle = state("core", { showSidenav: false })
       current.showSidenav = false;
     }),
   }))
-  .taskOn((on) => ({
+  .task((on) => ({
     logoutIdleUser: on(fromUser.idleTimeoutElapsed, () => fromAuth.logout()),
     idle: on((emit) => {
       let timer: number;

@@ -1,4 +1,4 @@
-import { emptyProps, events, props, state, taskOn, view } from "@evst/rtk";
+import { emptyProps, events, props, evst, task, view } from "@evst/rtk";
 import { of } from "rxjs";
 
 export const fromBooksPage = events("Books Page", {
@@ -19,24 +19,24 @@ of(null).subscribe(() => {
   const on = (_event: unknown, _handler: () => void) => {};
   on(fromSelectionPage.checked, () => {});
 });
-export const booksState = state("books", { titles: [] as string[] })
-  .extraViews(({ titles }) => ({
+export const booksState = evst("books", { titles: [] as string[] })
+  .view(({ titles }) => ({
     total: view(titles, (titles) => titles.length),
     taskOnly: view(titles, (titles) => titles.length > 0),
     unused: view(titles, (titles) => titles.join(", ")),
   }))
-  .stateOn((on) => ({
+  .state((on) => ({
     loaded: on(fromBooksApi.loaded, (current, { titles }) => {
       current.titles = titles;
     }),
   }))
-  .taskOn((on, views) => ({
+  .task((on, views) => ({
     inspect: on(fromBooksApi.loaded, () => {
       views.taskOnly.snapshot;
     }),
   }));
 export const booksViews = booksState.views;
-export const booksTasks = taskOn((on) => ({
+export const booksTasks = task((on) => ({
   load: on(fromBooksPage.entered, async () => {
     return fromBooksApi.loaded({ titles: ["The Hobbit"] });
   }),

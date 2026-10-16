@@ -5,104 +5,188 @@ import {
   type ConfigureStoreOptions,
   type EnhancedStore,
   type Reducer,
+  type Middleware,
+  type Tuple,
+  type ThunkMiddleware,
+  type UnknownAction,
+  type StoreEnhancer,
+  type TSHelpersExtractDispatchExtensions,
 } from "@reduxjs/toolkit";
-import type { FeatureStateDefinition, FeatureBundle } from "./state.js";
-import type { Tasks } from "./tasks.js";
+import { definitionKind } from "./definition-kind.js";
+import type { Tasks, NamedTasks, Task } from "./tasks.js";
 
 let stopActiveTasks: (() => void) | undefined;
-
 let activeStore: Pick<EnhancedStore, "dispatch" | "getState"> | undefined;
 
-export type EvstStoreConfig = Omit<
-  ConfigureStoreOptions,
-  "reducer" | "middleware"
-> & {
-  states?: readonly FeatureStateDefinition<any, any>[];
-  tasks?: readonly Tasks[];
-  bundles?: readonly FeatureBundle<any, any>[];
+/** A feature definition or an independent task collection. */
+export type EvstRegistration =
+  | Tasks
+  | {
+      readonly [definitionKind]: "feature";
+      readonly name: string;
+      readonly reducer: Reducer<any>;
+      readonly effects?: Readonly<NamedTasks>;
+    };
+type UnionToIntersection<U> = (
+  U extends unknown ? (value: U) => void : never
+) extends (value: infer I) => void
+  ? I
+  : never;
+type FeatureState<D> = D extends {
+  name: infer N extends string;
+  reducer: Reducer<infer S>;
+}
+  ? Record<N, S>
+  : {};
+/** State inferred from all features passed at store creation. Lazy features are registered at runtime. */
+export type EvstRootState<D extends readonly EvstRegistration[]> = [
+  D[number],
+] extends [never]
+  ? {}
+  : UnionToIntersection<FeatureState<D[number]>>;
+type DefaultMiddleware<S> = Tuple<[ThunkMiddleware<S, UnknownAction>]>;
+type DefaultEnhancers<M extends Tuple<Middleware<any>[]>> = Tuple<
+  [StoreEnhancer<{ dispatch: TSHelpersExtractDispatchExtensions<M> }>]
+>;
+
+/** Redux Toolkit configuration; EVST supplies the reducer and retains its listener middleware. */
+export type EvstStoreConfig<
+  S = any,
+  M extends Tuple<Middleware<S>[]> = DefaultMiddleware<S>,
+  E extends Tuple<StoreEnhancer[]> = DefaultEnhancers<M>,
+  P = S,
+> = Omit<ConfigureStoreOptions<S, UnknownAction, M, E, P>, "reducer"> & {
+  reducer?: never;
 };
 
-export type Evst = EnhancedStore & {
-  /** Registers lazy states, Tasks, and bundles once for the store lifetime. */
-  provide(
-    registration: Pick<EvstStoreConfig, "states" | "tasks" | "bundles">,
-  ): void;
+/** A standard Redux Toolkit store with additional lazy registration. */
+export type Evst<
+  S = any,
+  E extends Tuple<StoreEnhancer[]> = DefaultEnhancers<DefaultMiddleware<S>>,
+> = EnhancedStore<S, UnknownAction, E> & {
+  /** Registers features and standalone tasks. State keys follow Redux reducer-map replacement behavior. */
+  provide(...definitions: EvstRegistration[]): void;
 };
 
-/** Creates the store, installs tasks, and enables event publishing and View snapshots. */
-export function createEvstStore(config: EvstStoreConfig = {}): Evst {
-  const listener = createListenerMiddleware();
-  const {
-    states: suppliedStates = [],
-    tasks,
-    bundles = [],
-    ...options
-  } = config;
-  const states = [...suppliedStates, ...bundles];
-  const registered = new Map<string, (typeof states)[number]>();
-  for (const definition of states) {
-    const existing = registered.get(definition.name);
-    if (existing && existing !== definition)
-      throw new Error(`EVST state "${definition.name}" is already registered.`);
-    registered.set(definition.name, definition);
-  }
-  const reducer = Object.fromEntries(
-    states.map((state) => [state.name, state.reducer]),
-  ) as Record<string, Reducer>;
-  const rootReducer: Reducer<any> = Object.keys(reducer).length
-    ? combineReducers(reducer)
-    : (state = {}) => state;
-  const store = configureStore({
-    ...options,
-    reducer: rootReducer,
-    middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().prepend(listener.middleware),
-  });
-  if (activeStore && activeStore !== store) {
+/**
+ * Creates a store from feature and task definitions. An optional final argument
+ * configures Redux Toolkit. User middleware is retained alongside EVST's listener.
+ * Standard Redux store methods remain available. Registering a different reducer
+ * under an existing feature name replaces that reducer and retains current state.
+ */
+export function createEvstStore<const D extends readonly EvstRegistration[]>(
+  ...definitions: D
+): Evst<EvstRootState<D>>;
+export function createEvstStore<
+  const D extends readonly EvstRegistration[],
+  M extends Tuple<Middleware<EvstRootState<D>>[]> = DefaultMiddleware<
+    EvstRootState<D>
+  >,
+  E extends Tuple<StoreEnhancer[]> = DefaultEnhancers<M>,
+  P extends Partial<EvstRootState<D>> = Partial<EvstRootState<D>>,
+>(
+  ...args: [...D, EvstStoreConfig<EvstRootState<D>, M, E, P>]
+): Evst<EvstRootState<D>, E>;
+export function createEvstStore(...args: any[]): Evst {
+  if (activeStore)
     throw new Error(
       "EVST already has an active Store. Call clearEvstStore() before configuring another store.",
     );
+  const last = args.at(-1);
+  const options = last && !isDefinition(last) ? args.pop() : {};
+  const definitions: EvstRegistration[] = args;
+  for (const definition of definitions) {
+    if (!isDefinition(definition))
+      throw new Error(
+        "Expected an EVST definition or task collection; store options must be last.",
+      );
   }
+  const listener = createListenerMiddleware();
+  const reducers: Record<string, Reducer> = Object.create(null);
+  for (const definition of definitions) {
+    if (definition[definitionKind] === "feature")
+      reducers[definition.name] = definition.reducer;
+  }
+  const rootReducer = () =>
+    Object.keys(reducers).length
+      ? combineReducers(reducers)
+      : (state: any = {}) => state;
+  const store = configureStore({
+    ...options,
+    reducer: rootReducer(),
+    middleware: (defaults) => {
+      const middleware = options.middleware
+        ? options.middleware(defaults)
+        : defaults();
+      return middleware.prepend(listener.middleware);
+    },
+  });
   activeStore = store;
-  const installedTasks = new Set<Tasks>();
+  // Preserve individual task identity across immutable feature branches.
+  const installedTasks = new Set<Task>();
   const taskStops: Array<() => void> = [];
+  const provide = (...entries: EvstRegistration[]) => {
+    for (const entry of entries) {
+      if (!isDefinition(entry))
+        throw new Error("Expected an EVST definition or task collection.");
+    }
+    let changed = false;
+    for (const entry of entries) {
+      if (
+        entry[definitionKind] === "feature" &&
+        reducers[entry.name] !== entry.reducer
+      ) {
+        reducers[entry.name] = entry.reducer;
+        changed = true;
+      }
+    }
+    if (changed) store.replaceReducer(rootReducer());
+    const installed: Array<{ task: Task; stop: () => void }> = [];
+    try {
+      for (const entry of entries) {
+        for (const effect of Object.values(entry.effects ?? {})) {
+          if (installedTasks.has(effect)) continue;
+          // Reserve before starting sources, which can synchronously dispatch.
+          installedTasks.add(effect);
+          try {
+            installed.push({
+              task: effect,
+              stop: effect.register(listener, store),
+            });
+          } catch (error) {
+            installedTasks.delete(effect);
+            throw error;
+          }
+        }
+      }
+    } catch (error) {
+      for (const { task, stop } of installed) {
+        stop();
+        installedTasks.delete(task);
+      }
+      throw error;
+    }
+    taskStops.push(...installed.map(({ stop }) => stop));
+  };
   stopActiveTasks = () => {
     taskStops.splice(0).forEach((stop) => stop());
   };
-  const provide = (
-    registration: Pick<EvstStoreConfig, "states" | "tasks" | "bundles">,
-  ) => {
-    const states = [
-      ...(registration.states ?? []),
-      ...(registration.bundles ?? []),
-    ];
-    const proposed = new Map(registered);
-    for (const state of states) {
-      const existing = proposed.get(state.name);
-      if (existing && existing !== state) {
-        throw new Error(`EVST state "${state.name}" is already registered.`);
-      }
-      proposed.set(state.name, state);
-    }
-    let changed = false;
-    for (const state of states) {
-      if (registered.has(state.name)) continue;
-      registered.set(state.name, state);
-      reducer[state.name] = state.reducer;
-      changed = true;
-    }
-    if (changed) store.replaceReducer(combineReducers(reducer));
-    for (const definition of [
-      ...(registration.tasks ?? []),
-      ...(registration.bundles ?? []),
-    ]) {
-      if (installedTasks.has(definition)) continue;
-      taskStops.push(definition.register(listener, store));
-      installedTasks.add(definition);
-    }
-  };
-  provide({ tasks, bundles });
+  try {
+    provide(...definitions);
+  } catch (error) {
+    clearEvstStore();
+    throw error;
+  }
   return Object.assign(store, { provide });
+}
+
+function isDefinition(value: unknown): value is EvstRegistration {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    definitionKind in value &&
+    (value[definitionKind] === "feature" || value[definitionKind] === "tasks")
+  );
 }
 
 /** Dispatches an event through the store initialized by `createEvstStore()`. */

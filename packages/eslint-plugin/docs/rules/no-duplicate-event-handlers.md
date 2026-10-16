@@ -5,7 +5,7 @@ same event make the resulting state transition harder to understand.
 
 ```ts
 // Reported
-const booksState = state("books", initialState).stateOn((on) => ({
+const booksState = evst("books", initialState).state((on) => ({
   finishLoading: on(BooksEvents.loaded, (state) => ({
     ...state,
     loading: false,
@@ -14,7 +14,7 @@ const booksState = state("books", initialState).stateOn((on) => ({
 }));
 
 // Accepted
-const booksState = state("books", initialState).stateOn((on) => ({
+const booksState = evst("books", initialState).state((on) => ({
   finishLoading: on(BooksEvents.loaded, (state) => ({
     ...state,
     loading: false,
@@ -23,5 +23,5 @@ const booksState = state("books", initialState).stateOn((on) => ({
 }));
 ```
 
-The rule checks fluent chains that begin with `state(...)`. It compares event
+The rule checks fluent chains that begin with `evst(...)`. It compares event
 expressions syntactically and does not require type information.

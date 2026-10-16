@@ -8,19 +8,23 @@ import { Actions, createEffect, ofType, provideEffects } from "@ngrx/effects";
 import { createAction, props, provideStore, Store } from "@ngrx/store";
 import { map } from "rxjs";
 import { expect, expectTypeOf, it, vi } from "vitest";
-import { state, view, type NamedStateHandlers } from "../src/index.js";
+import { evst, view, type NamedStateHandlers } from "../src/index.js";
 
 const add = createAction("[Counter] Add", props<{ amount: number }>());
 const other = createAction("[Counter] Other", props<{ amount: number }>());
 it("infers handlers and preserves independent branches", () => {
-  const base = state("counter", { count: 0 });
-  const plus = base.on(add, other, (state, event) => {
-    expectTypeOf(state).toEqualTypeOf<{ count: number }>();
-    expectTypeOf(event.amount).toEqualTypeOf<number>();
-    return { count: state.count + event.amount };
-  });
-  const minus = base.on(add, (state, { amount }) => ({
-    count: state.count - amount,
+  const base = evst("counter", { count: 0 });
+  const plus = base.state((on) => ({
+    handler1: on(add, other, (state, event) => {
+      expectTypeOf(state).toEqualTypeOf<{ count: number }>();
+      expectTypeOf(event.amount).toEqualTypeOf<number>();
+      return { count: state.count + event.amount };
+    }),
+  }));
+  const minus = base.state((on) => ({
+    handler2: on(add, (state, { amount }) => ({
+      count: state.count - amount,
+    })),
   }));
   expect(base.reducer(undefined, add({ amount: 3 })).count).toBe(0);
   expect(plus.reducer(undefined, other({ amount: 3 })).count).toBe(3);
@@ -28,7 +32,7 @@ it("infers handlers and preserves independent branches", () => {
   expect(plus.views.count).toBe(base.views.count);
 });
 it("creates reducers from named handlers", () => {
-  const counter = state("namedCounter", { count: 0 }).stateOn((on) => ({
+  const counter = evst("namedCounter", { count: 0 }).state((on) => ({
     addAmount: on(add, (current, { amount }) => {
       expectTypeOf(current).toEqualTypeOf<{ count: number }>();
       expectTypeOf(amount).toEqualTypeOf<number>();
@@ -44,8 +48,8 @@ it("creates reducers from named handlers", () => {
   });
 });
 it("composes subscriptions without changing earlier definitions or views", () => {
-  const base = state("counter", { count: 0 });
-  const first = base.stateOn(
+  const base = evst("counter", { count: 0 });
+  const first = base.state(
     (on) =>
       ({
         add: on(add, (current, { amount }) => ({
@@ -53,7 +57,7 @@ it("composes subscriptions without changing earlier definitions or views", () =>
         })),
       }) satisfies NamedStateHandlers<{ count: number }>,
   );
-  const second = first.stateOn((on) => ({
+  const second = first.state((on) => ({
     subtract: on(other, (current, { amount }) => ({
       count: current.count - amount,
     })),
@@ -71,16 +75,18 @@ it("composes subscriptions without changing earlier definitions or views", () =>
 });
 it("composes successive extra views once and retains their types and caches", () => {
   const build = vi.fn();
-  const base = state("counter", { count: 0 });
-  const first = base.extraViews(({ count }) => {
+  const base = evst("counter", { count: 0 });
+  const first = base.view(({ count }) => {
     build();
     return { doubled: view(count, (n) => n * 2) };
   });
   const next = first
-    .extraViews(({ doubled }) => ({
+    .view(({ doubled }) => ({
       text: view(doubled, (n) => String(n)),
     }))
-    .on(add, (s, { amount }) => ({ count: s.count + amount }));
+    .state((on) => ({
+      handler3: on(add, (s, { amount }) => ({ count: s.count + amount })),
+    }));
   expect(build).toHaveBeenCalledOnce();
   expect(base.views).not.toHaveProperty("doubled");
   expect(first.views).not.toHaveProperty("text");
@@ -95,13 +101,9 @@ it("composes successive extra views once and retains their types and caches", ()
   expectTypeOf(next.views.text.observable).returns.toEqualTypeOf<
     import("rxjs").Observable<string>
   >();
-  expect(() => first.extraViews(({ count }) => ({ count }))).toThrow(
-    "conflicts",
-  );
-  expect(() => first.extraViews(({ doubled }) => ({ doubled }))).toThrow(
-    "conflicts",
-  );
-  expect(() => state("bad", { root: 0 })).toThrow("reserved");
+  expect(() => first.view(({ count }) => ({ count }))).toThrow("conflicts");
+  expect(() => first.view(({ doubled }) => ({ doubled }))).toThrow("conflicts");
+  expect(() => evst("bad", { root: 0 })).toThrow("reserved");
 });
 it("registers state and effects independently", () => {
   const trigger = createAction("[Counter] Trigger");
@@ -114,8 +116,10 @@ it("registers state and effects independently", () => {
         ),
       { functional: true },
     );
-  const base = state("counter", { count: 0 }).on(add, (s, { amount }) => ({
-    count: s.count + amount,
+  const base = evst("counter", { count: 0 }).state((on) => ({
+    handler4: on(add, (s, { amount }) => ({
+      count: s.count + amount,
+    })),
   }));
   const definition = base;
   const injector = createEnvironmentInjector(

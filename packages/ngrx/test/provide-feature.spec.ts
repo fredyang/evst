@@ -15,7 +15,7 @@ import {
 } from "@ngrx/store";
 import { map } from "rxjs";
 import { expect, it } from "vitest";
-import { state } from "../src/index.js";
+import { evst } from "../src/index.js";
 import { provideFeature } from "../src/provide-feature.js";
 
 const clicked = createAction("[Counter] Clicked");
@@ -68,8 +68,10 @@ it("registers state without effects", () => {
 });
 
 it("registers a state definition and effects independently", () => {
-  const feature = state("arrayCounter", { count: 0 }).on(counted, (state) => ({
-    count: state.count + 1,
+  const feature = evst("arrayCounter", { count: 0 }).state((on) => ({
+    handler1: on(counted, (state) => ({
+      count: state.count + 1,
+    })),
   }));
   const injector = createEnvironmentInjector(
     [

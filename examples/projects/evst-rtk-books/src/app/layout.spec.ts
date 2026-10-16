@@ -49,6 +49,7 @@ it("guards Books, loads its feature after login, and supports navigation and sig
   await act(async () => {
     await vi.waitFor(() => expect(store.getState()).toHaveProperty("books"));
   });
+  const { booksViews } = await import("../books/evst/books.state");
   expect(host.textContent).toContain("My Collection");
 
   const clickButton = async (label: string) => {
@@ -82,7 +83,7 @@ it("guards Books, loads its feature after login, and supports navigation and sig
   await clickButton("Sign Out");
   expect(host.textContent).toContain("Login");
   expect(store.getState().auth.user).toBeNull();
-  expect(store.getState().books.collection.loaded).toBe(false);
+  expect(booksViews.collection.snapshot.loaded).toBe(false);
   await act(async () => {
     host
       .querySelector("form")!
@@ -90,11 +91,11 @@ it("guards Books, loads its feature after login, and supports navigation and sig
   });
   await act(async () => {
     await vi.waitFor(() =>
-      expect(store.getState().books.collection.loaded).toBe(true),
+      expect(booksViews.collection.snapshot.loaded).toBe(true),
     );
   });
   expect(host.textContent).toContain("My Collection");
-  expect(store.getState().books.books.ids).toEqual([]);
+  expect(booksViews.books.snapshot.ids).toEqual([]);
   await act(async () => fromUser.idleTimeoutElapsed.publish());
   expect(host.textContent).toContain("Login");
   expect(store.getState().auth.user).toBeNull();

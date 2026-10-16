@@ -29,7 +29,7 @@ export type EvstConfig = RootStoreConfig<object> & {
  * Provides an empty NgRx root Store, development Redux DevTools, and EVST's
  * event publishing registration.
  *
- * Feature state belongs in `state(...).provide()` or NgRx's `provideState()`.
+ * Feature state belongs in `evst(...).provide()` or NgRx's `provideState()`.
  * The empty root reducer map means no reducer is registered directly at the
  * root; registered feature keys still form the Store's runtime state object.
  * Redux DevTools is registered only when Angular development mode is enabled,

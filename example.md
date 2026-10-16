@@ -105,8 +105,8 @@ Provider code is grouped by intent:
 - The [bundle](examples/projects/evst-ngrx-books/src/app/books/evst/books.bundle.ts)
   registers the State and Tasks together.
 
-NgRx State declares handlers with `.stateOn((on) => ({ ... }))`. Bundled Tasks
-use `.taskOn((on, views) => ({ ... }))`; standalone Tasks use `taskOn()`.
+NgRx State declares handlers with `.state((on) => ({ ... }))`. Bundled Tasks
+use `.task((on, views) => ({ ... }))`; standalone Tasks use `task()`.
 The named entries are state handlers for pure transitions or Tasks for side
 effects. Events passed to `on()` determine their inputs; registration activates
 the declared subscriptions.

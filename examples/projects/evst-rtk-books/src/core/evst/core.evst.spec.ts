@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from "vitest";
-import { clearEvstStore, createEvstStore, taskOn } from "@evst/rtk";
+import { clearEvstStore, createEvstStore, task } from "@evst/rtk";
 import { coreBundle, fromLayout, fromUser } from "./core.evst";
 import { fromAuth } from "../../auth/evst/auth.evst";
 
@@ -12,12 +12,12 @@ afterEach(() => {
 it("emits idle outcomes from browser activity and stops the watcher on cleanup", () => {
   vi.useFakeTimers();
   let timeouts = 0;
-  const observer = taskOn((on) => ({
+  const observer = task((on) => ({
     idle: on(fromUser.idleTimeoutElapsed, () => {
       timeouts++;
     }),
   }));
-  createEvstStore({ bundles: [coreBundle], tasks: [observer] });
+  createEvstStore(coreBundle, observer);
   vi.advanceTimersByTime(4 * 60 * 1000);
   document.dispatchEvent(new Event("click"));
   vi.advanceTimersByTime(4 * 60 * 1000);

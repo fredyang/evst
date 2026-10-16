@@ -9,7 +9,7 @@ import {
 import { Store, emptyProps, props } from "@ngrx/store";
 import { INITIAL_OPTIONS } from "@ngrx/store-devtools";
 import { afterEach, expect, expectTypeOf, it, vi } from "vitest";
-import { events, state, provideEvstStore } from "../src/index.js";
+import { events, evst, provideEvstStore } from "../src/index.js";
 
 const page = events("Page", {
   entered: emptyProps(),
@@ -80,10 +80,9 @@ it("provides and captures an empty root Store", () => {
 });
 
 it("publishes through a registered feature and forwards root configuration", () => {
-  const feature = state("selection", { id: "" }).on(
-    page.selected,
-    (_state, { id }) => ({ id }),
-  );
+  const feature = evst("selection", { id: "" }).state((on) => ({
+    handler1: on(page.selected, (_state, { id }) => ({ id })),
+  }));
   const observed = vi.fn();
   const injector = createEnvironmentInjector(
     [

@@ -74,7 +74,7 @@
     <rect x="498" y="178" width="113" height="29" fill="#e8edf1" />
     <text x="500" y="201">.publish()</text>
     <rect x="49" y="377" width="245" height="29" fill="#ecf4e4" />
-    <text x="51" y="400">exposes / .extraViews()</text>
+    <text x="51" y="400">exposes / .view()</text>
     <rect x="311" y="334" width="130" height="29" fill="#ecf4e4" />
     <text x="313" y="357">.subscribe()</text>
     <rect x="425" y="378" width="130" height="29" fill="#ecf4e4" />

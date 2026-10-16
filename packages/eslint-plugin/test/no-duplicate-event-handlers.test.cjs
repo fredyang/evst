@@ -14,27 +14,27 @@ new RuleTester({ languageOptions: { parser } }).run(
   rule,
   {
     valid: [
-      `const booksState = state("books", {}).on(BooksEvents.loaded, state => state).on(BooksEvents.refreshed, state => state);`,
-      `const booksState = state("books", {}).on(BooksEvents.loaded, BooksEvents.refreshed, state => state);`,
+      `const booksState = evst("books", {}).state(on => ({ handle: on(BooksEvents.loaded, state => state) })).state(on => ({ refresh: on(BooksEvents.refreshed, state => state) }));`,
+      `const booksState = evst("books", {}).state(on => ({ handle: on(BooksEvents.loaded, BooksEvents.refreshed, state => state) }));`,
       `const task = on(BooksEvents.loaded, () => {});`,
-      `const next = booksState.on(BooksEvents.loaded, state => state);`,
-      `const booksState = state("books", {}).stateOn(on => ({ first: on(BooksEvents.loaded, state => state), second: on(BooksEvents.refreshed, state => state) }));`,
+      `const next = booksState.state(on => ({ handle: on(BooksEvents.loaded, state => state) }));`,
+      `const booksState = evst("books", {}).state(on => ({ first: on(BooksEvents.loaded, state => state), second: on(BooksEvents.refreshed, state => state) }));`,
     ],
     invalid: [
       {
-        code: `const booksState = state("books", {}).on(BooksEvents.loaded, state => state).on(BooksEvents.loaded, state => state);`,
+        code: `const booksState = evst("books", {}).state(on => ({ handle: on(BooksEvents.loaded, state => state) })).state(on => ({ other: on(BooksEvents.loaded, state => state) }));`,
         errors: [{ messageId, data: { event: "BooksEvents.loaded" } }],
       },
       {
-        code: `const booksState = state("books", {}).on(BooksEvents.loaded, state => state).extraViews(() => ({})).on(BooksEvents.loaded, state => state);`,
+        code: `const booksState = evst("books", {}).state(on => ({ handle: on(BooksEvents.loaded, state => state) })).view(() => ({})).state(on => ({ other: on(BooksEvents.loaded, state => state) }));`,
         errors: [{ messageId, data: { event: "BooksEvents.loaded" } }],
       },
       {
-        code: `const booksState = state("books", {}).on(BooksEvents.loaded, BooksEvents.loaded, state => state);`,
+        code: `const booksState = evst("books", {}).state(on => ({ handle: on(BooksEvents.loaded, BooksEvents.loaded, state => state) }));`,
         errors: [{ messageId, data: { event: "BooksEvents.loaded" } }],
       },
       {
-        code: `const booksState = state("books", {}).stateOn(on => ({ first: on(BooksEvents.loaded, state => state), second: on(BooksEvents.loaded, state => state) }));`,
+        code: `const booksState = evst("books", {}).state(on => ({ first: on(BooksEvents.loaded, state => state), second: on(BooksEvents.loaded, state => state) }));`,
         errors: [{ messageId, data: { event: "BooksEvents.loaded" } }],
       },
     ],

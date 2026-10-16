@@ -65,15 +65,15 @@ reducers, listener middleware, DevTools, and direct `store.dispatch(...)`.
 
 ### Implementing State and Views
 
-`state()` infers feature state from its initial-state object and creates a typed
-View for every top-level field. `.extraViews()` composes derived Views and
-`.stateOn()` declares event subscriptions through named state handlers.
+`evst()` infers feature state from its initial-state object and creates a typed
+View for every top-level field. `.view()` composes derived Views and
+`.state()` declares event subscriptions through named state handlers.
 `NamedStateHandlers<State>` is a record of `StateHandler<State>` values returned
 by the supplied `on` builder. Each call returns a new state definition;
-registration through `createEvstStore()` or `evst.provide()` activates its subscriptions.
+registration through `createEvstStore()` or `store.provide()` activates its subscriptions.
 
 ```ts
-import { state, view } from "@evst/rtk";
+import { evst, view } from "@evst/rtk";
 import { fromBooksApi, fromBooksPage, type Book } from "./books.events";
 
 const initialState = {
@@ -83,15 +83,15 @@ const initialState = {
   error: null as string | null,
 };
 
-export const booksState = state("books", initialState)
-  .extraViews(({ books, selectedId }) => ({
+export const booksState = evst("books", initialState)
+  .view(({ books, selectedId }) => ({
     selectedBook: view(
       books,
       selectedId,
       (books, id) => books.find((book) => book.id === id) ?? null,
     ),
   }))
-  .stateOn((on) => ({
+  .state((on) => ({
     beginLoading: on(fromBooksPage.entered, (current) => {
       current.loading = true;
       current.error = null;
@@ -117,21 +117,21 @@ Immer-powered mutations and returned immutable updates are both supported.
 
 ### Implementing Tasks
 
-Standalone Tasks use `taskOn((on) => ({ ... }))`; State handlers use `.stateOn()`. The callback
+Standalone Tasks use `task((on) => ({ ... }))`; State handlers use `.state()`. The callback
 declares `NamedTasks`, a record of `Task` values created with `on()`. Each Task
 can respond to an event, changes in one or more Views, or an external source.
 Event and View effects return optional outcome events; external sources emit
 outcome events through a callback. Outcomes are dispatched through the RTK store.
 
-`taskOn()` returns a task collection. Listeners start when the collection
-is registered through `createEvstStore()` or `evst.provide()`.
+`task()` returns a task collection. Listeners start when the collection
+is registered through `createEvstStore()` or `store.provide()`.
 
 ```ts
-import { taskOn } from "@evst/rtk";
+import { task } from "@evst/rtk";
 import { fromBooksApi, fromBooksPage } from "./books.events";
 import { booksApi } from "./books-api";
 
-export const booksTasks = taskOn((on) => ({
+export const booksTasks = task((on) => ({
   load: on(fromBooksPage.entered, async () => {
     try {
       const books = await booksApi.load();
@@ -170,7 +170,7 @@ after an `await` can therefore return a newer value than a read before it.
 Tasks can also use a View as their source, without an event trigger:
 
 ```ts
-const selectionTasks = taskOn((on) => ({
+const selectionTasks = task((on) => ({
   selectionChanged: on(booksViews.selectedId, (id) => {
     if (id === null) return;
     return fromBooksPage.bookSelected({ id });
@@ -209,7 +209,7 @@ External sources such as DOM events, timers, and subscription APIs can use
 return a cleanup function:
 
 ```ts
-const browserTasks = taskOn((on) => ({
+const browserTasks = task((on) => ({
   activity: on((emit) => {
     const clicked = () => emit(fromUser.activityDetected());
     document.addEventListener("click", clicked);
@@ -228,38 +228,80 @@ work delivers its outcomes through `emit`.
 
 ### Bundling Tasks with State
 
-`.stateOn()` returns a new composable state definition. `.taskOn((on, views) =>
-({ ... }))` finishes the chain with a bundle containing `name`, `views`, `reducer`,
-`effects`, and `register()`. Generated and derived Views retain their inferred
-types. The original state definition remains unchanged.
+Every `.state()`, `.view()`, and `.task()` call returns a new composable
+`EvstDefinition`. Calls may be repeated in any order. A Task callback receives
+all generated and derived Views available at that point, with their inferred
+types. Later calls retain earlier Tasks and do not rerun their callbacks.
+`effects` exists only on definitions that have passed through `.task()`.
 
 ```ts
-const booksBundle = state("books", { books: [] as Book[] })
-  .stateOn((on) => ({
+const booksBundle = evst("books", { books: [] as Book[] })
+  .state((on) => ({
     loaded: on(fromBooksApi.loaded, (current, { books }) => {
       current.books = books;
     }),
   }))
-  .taskOn((on, views) => ({
+  .task((on, views) => ({
     load: on(fromBooksPage.entered, async () => {
       if (views.books.snapshot.length) return;
       return fromBooksApi.loaded({ books: await booksApi.load() });
     }),
   }));
 
-const evst = createEvstStore({ bundles: [booksBundle] });
+const store = createEvstStore(booksBundle);
 // Alternatively, register with an existing store:
-// evst.provide({ bundles: [booksBundle] });
+// store.provide(booksBundle);
 ```
 
-Bundle registration installs its state before starting its Tasks. Repeated
+Feature registration installs its state before starting its Tasks. Repeated
 registration of the same bundle preserves state and avoids duplicate listeners;
-a different definition using the same state name is rejected. Clearing the
+a different reducer using the same state name replaces the registered reducer. Clearing the
 store stops bundled Tasks, including external source cleanup.
 
 The [Auth example](../../examples/projects/evst-rtk-books/src/auth/evst/auth.evst.ts)
 combines Events, Views, State, and Tasks in one file. Larger features can retain
-separate definitions with `.stateOn()` and standalone `taskOn()`.
+separate definitions with `.state()` and standalone `task()`.
+
+### Extending feature definitions
+
+Composition can be split across files. Each step imports its predecessor and
+exports the extended definition; registration uses the final result:
+
+```ts
+// books.base.ts
+export const booksBase = evst("books", { count: 0 });
+
+// books.views.ts
+export const booksWithViews = booksBase.view(({ count }) => ({
+  doubled: view(count, (count) => count * 2),
+}));
+
+// books.evst.ts
+export const booksEvst = booksWithViews
+  .task((on, views) => ({/* tasks using doubled */}))
+  .view(({ doubled }) => ({ text: view(doubled, String) }))
+  .task((on, views) => ({/* tasks using doubled and text */}));
+```
+
+Earlier definitions remain unchanged. Discarding a method's return value also
+discards that extension. Existing views and task objects retain their identities.
+
+Duplicate derived View names, state-handler labels, and Task labels throw during
+composition. View names cannot replace generated field views or `root`. A feature
+can handle each event type only once in State, even across separate `.state()`
+calls. Multiple differently named Tasks can respond to that event. Different
+features can independently handle the same event. State and Task labels have
+separate namespaces.
+
+Standalone `view()` composes Views from different features:
+
+```ts
+const canEditBook = view(
+  authEvst.views.loggedIn,
+  booksEvst.views.selectedBook,
+  (loggedIn, book) => loggedIn && Boolean(book),
+);
+```
 
 ## Writing consumer code
 
@@ -318,24 +360,33 @@ import { booksState } from "./books.state";
 import { booksTasks } from "./books.tasks";
 import { BooksPage } from "./books-page";
 
-export const evst = createEvstStore({
-  states: [booksState],
-  tasks: [booksTasks],
-});
+export const store = createEvstStore(booksState, booksTasks);
 
 export function AppRoot() {
   return (
-    <Provider store={evst}>
+    <Provider store={store}>
       <BooksPage />
     </Provider>
   );
 }
 ```
 
-`evst.dispatch`, `evst.getState`, `evst.subscribe`, and `evst.replaceReducer`
-remain the standard RTK store methods. `createEvstStore()` accepts RTK store options
-other than `reducer` and `middleware`, plus EVST `states`, `tasks`, and `bundles`; EVST configures those to install its
-state definitions and listener middleware.
+`store.dispatch`, `store.getState`, `store.subscribe`, and `store.replaceReducer`
+remain standard Redux store methods. The optional final argument configures
+Redux Toolkit, including preloaded state, DevTools, middleware, and enhancers:
+
+```ts
+const store = createEvstStore(booksState, booksTasks, {
+  devTools: false,
+  middleware: (defaults) => defaults().concat(logger),
+});
+```
+
+EVST supplies the reducer, so `reducer` is excluded from the options. Custom
+middleware is composed with the required EVST listener middleware. Enhancers
+that remove the middleware enhancer also disable Task delivery, as with any RTK
+listener middleware. State, dispatch, and enhancer extensions retain inferred
+types. Lazy `.provide()` calls do not change the original store's static state type.
 
 Events' `.publish()` and Views' `.snapshot` use the active store configured by
 `createEvstStore()`. One active EVST store is supported per loaded package. Server
@@ -351,17 +402,15 @@ route module registers its state definitions and tasks before rendering the
 feature.
 
 ```ts
-const evst = createEvstStore({ states: [authState] });
+const store = createEvstStore(authState);
 
-evst.provide({
-  states: [booksState],
-  tasks: [booksTasks],
-});
+store.provide(booksState, booksTasks);
 ```
 
 Repeated registration of the same definitions does not reset state or duplicate
-task listeners. Registering a different state definition with an existing name
-throws. Registered state and tasks remain installed for the store lifetime.
+task listeners. Registering a different reducer with an existing name replaces
+that reducer, following Redux reducer-map semantics; current state is retained.
+Previously registered Tasks remain active until store cleanup. Registered state and tasks remain installed for the store lifetime.
 
 ## Enforcing event conventions
 
@@ -448,9 +497,8 @@ listeners through `createListenerMiddleware`; `createEvstStore()` uses
 `configureStore` with default middleware plus the task listener middleware.
 
 The returned store works directly with React Redux and Redux DevTools.
-Entity adapters can be used within feature reducers. Custom reducer maps and
-middleware configuration are not accepted by `createEvstStore()`; its configuration
-owns those two options.
+Entity adapters can be used within feature reducers. The feature definitions supply the reducer map. Other Redux Toolkit options
+belong in the optional final argument to `createEvstStore()`.
 
 ## Exploring the Books examples
 

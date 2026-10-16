@@ -9,19 +9,19 @@ generate the full JSDoc API reference with `npm run docs:api`.
 - Define events with `events(source, definitions)`. Group variables follow the
   `fromSource` convention, such as `fromBooksPage`; event keys are camelCase,
   such as `bookSelected`.
-- Model feature state with `state(name, initialState)`. Initial-state fields
-  automatically provide Views. Use `.extraViews()` for derived Views and
-  `.subscribe((on) => ({ ... }))` for pure state transitions.
-- Define side effects with `task.subscribe((on) => ({ ... }))`. Task source functions
+- Model feature state with `evst(name, initialState)`. Initial-state fields
+  automatically provide Views. Use `.view()` for derived Views and
+  `.state((on) => ({ ... }))` for pure state transitions.
+- Define side effects with `task((on) => ({ ... }))`. Task source functions
   receive event-filtered observable pipelines and return outcome events.
-- `subscribe()` declares named state handlers (`NamedStateHandlers<State>`) or
+- `.state()` and `.task()` declare named state handlers (`NamedStateHandlers<State>`) or
   Tasks (`NamedTasks`); application registration activates the subscriptions.
 - Consumer code reads `state.views` through `.signal()` by default. Use
   `.observable()` for RxJS composition or Angular `AsyncPipe` templates.
 - Consumer code publishes events through `.publish(...)`. Do not introduce raw
   `store.select(...)` or `store.dispatch(...)` when a View or event expresses
   the feature interaction.
-- Register the root once with `provideEvst()`, then register State and Task
+- Register the root once with `provideEvstStore()`, then register State and Task
   definitions through `.provide()` or `bundle(...).provide()`.
 
 ## Preserving the event-driven model

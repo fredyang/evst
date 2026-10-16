@@ -65,20 +65,26 @@ Events are grouped by their source, using names such as `fromBooksPage` and
 independently define their responses.
 
 Views provide the read-only interface for consumer code. State exposes Views
-for its top-level fields, and `.extraViews()` and `view()` compose derived
+for its top-level fields, and `.view()` and `view()` compose derived
 Views. Components consume them through `.signal()` in NgRx or `.use()` in RTK.
 
 Events are published; both adapters declare state handlers with
-`.stateOn((on) => ({ ... }))` and optional bundled Tasks with
-`.taskOn((on, views) => ({ ... }))`. Standalone Tasks use `taskOn()`.
+`.state((on) => ({ ... }))` and optional feature Tasks with
+`.task((on, views) => ({ ... }))`. Standalone Tasks use `task()`.
 State handlers perform pure transitions; Tasks perform side effects and can
 return outcome events.
 
-These methods declare responses before registration. `.stateOn()` returns a
-composable state definition, standalone `taskOn()` returns a task collection,
-and fluent `.taskOn()` returns a state-and-Tasks bundle. Registration activates
-the subscriptions through NgRx environment providers or RTK's `createEvstStore()`
-and `evst.provide()`. Subscription lifetimes follow that registration.
+`evst(name, initialState)` creates an immutable feature definition. Every
+`.view()`, `.state()`, and `.task()` call returns a new composable definition;
+all three may be repeated. Tasks receive the Views declared before their callback.
+Standalone `task()` defines independent tasks, while standalone `view()` can
+compose Views from different features. Duplicate view names, handler labels,
+and state-event subscriptions within one feature throw during composition.
+
+Registration activates subscriptions through NgRx environment providers or
+RTK's positional `createEvstStore(booksEvst, authEvst, otherTasks, options?)`
+and `store.provide(...definitions)`. Underlying store registration semantics are
+preserved. Subscription lifetimes follow that registration.
 
 ## Enforcing event-driven programming
 
@@ -154,6 +160,27 @@ The following table summarizes how each implementation integrates with its frame
 The [NgRx guide](packages/ngrx/README.md) and
 [RTK guide](packages/rtk/README.md) each walk through a Books feature,
 including setup, consumer code, registration, linting, and tests.
+
+## Migrating existing definitions
+
+This API replaces the previous names immediately; compatibility aliases are not
+retained.
+
+| Previous API                               | Current API                                      |
+| ------------------------------------------ | ------------------------------------------------ |
+| `state(name, initialState)`                | `evst(name, initialState)`                       |
+| `.extraViews(...)`                         | `.view(...)`                                     |
+| `.stateOn(...)`                            | `.state(...)`                                    |
+| `.taskOn(...)`                             | `.task(...)`, with further composition supported |
+| Standalone `taskOn(...)` or `tasks(...)`   | `task(...)`                                      |
+| Angular feature `.on(event, handler)`      | `.state(on => ({ label: on(event, handler) }))`  |
+| `FeatureStateDefinition` / `FeatureBundle` | `EvstDefinition`                                 |
+
+RTK registration takes positional definitions and an optional final options
+object: `createEvstStore(booksEvst, otherTasks, { devTools: false })`.
+Lazy registration uses `store.provide(booksEvst, otherTasks)`. NgRx registration
+continues to use environment providers. Standalone `view()` remains available
+for composing Views across features.
 
 ## Exploring the Books examples
 

@@ -1,4 +1,4 @@
-import { events, props, emptyProps, state, view } from "@evst/rtk";
+import { events, props, emptyProps, evst, view } from "@evst/rtk";
 
 export const fromLoginPage = events("Login Page", {
   login: props<{ credentials: { username: string; password: string } }>(),
@@ -15,13 +15,13 @@ export const fromAuth = events("Auth", {
   logoutConfirmationDismiss: emptyProps(),
 });
 
-export const authBundle = state("auth", {
+export const authBundle = evst("auth", {
   user: null as { name: string } | null,
   pending: false,
   error: "",
   confirmingLogout: false,
 })
-  .stateOn((on) => ({
+  .state((on) => ({
     beginLogin: on(fromLoginPage.login, (current) => {
       current.pending = true;
       current.error = "";
@@ -52,10 +52,10 @@ export const authBundle = state("auth", {
       current.confirmingLogout = false;
     }),
   }))
-  .extraViews(({ user }) => ({
+  .view(({ user }) => ({
     loggedIn: view(user, (currentUser) => Boolean(currentUser)),
   }))
-  .taskOn((on) => ({
+  .task((on) => ({
     login: on(fromLoginPage.login, ({ credentials }) => {
       // Matches the Angular example's demo authentication; no backend session.
       if (!["ngrx", "test"].includes(credentials.username)) {

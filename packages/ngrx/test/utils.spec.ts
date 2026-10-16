@@ -9,7 +9,7 @@ import {
 import { Store } from "@ngrx/store";
 import { of, type Observable } from "rxjs";
 import { afterEach, expect, expectTypeOf, it, vi } from "vitest";
-import { state as createState, view } from "../src/index.js";
+import { evst as createState, view } from "../src/index.js";
 import { provideEvstStore } from "../src/provide-evst.js";
 
 const injectors: ReturnType<typeof createEnvironmentInjector>[] = [];
@@ -49,9 +49,9 @@ it("requires EVST Store registration before reading views", () => {
 
 it("reads generated and derived views with inferred signal types and equality options", () => {
   const { mock, selected } = createViewContext();
-  const feature = createState("counter", { count: 0 }).extraViews(
-    ({ count }) => ({ doubled: view(count, (count) => count * 2) }),
-  );
+  const feature = createState("counter", { count: 0 }).view(({ count }) => ({
+    doubled: view(count, (count) => count * 2),
+  }));
   const countView = feature.views.count;
   const options = { equal: (a: number, b: number) => a === b };
   const value = countView.signal(options);
@@ -74,9 +74,9 @@ it("reads generated and derived views with inferred signal types and equality op
 
 it("creates observable views without an injection context", () => {
   const { mock } = createViewContext();
-  const feature = createState("counter", { count: 0 }).extraViews(
-    ({ count }) => ({ doubled: view(count, (count) => count * 2) }),
-  );
+  const feature = createState("counter", { count: 0 }).view(({ count }) => ({
+    doubled: view(count, (count) => count * 2),
+  }));
   const countView = feature.views.count;
   const value$ = countView.observable();
   const next = vi.fn();
@@ -89,11 +89,9 @@ it("creates observable views without an injection context", () => {
 });
 
 it("attaches typed injection methods to root, field, and derived views", () => {
-  const feature = createState("counter", { count: 0 }).extraViews(
-    ({ count }) => ({
-      doubled: view(count, (value) => value * 2),
-    }),
-  );
+  const feature = createState("counter", { count: 0 }).view(({ count }) => ({
+    doubled: view(count, (value) => value * 2),
+  }));
   expectTypeOf<ReturnType<typeof feature.views.root.signal>>().toEqualTypeOf<
     import("@angular/core").Signal<{ count: number }>
   >();

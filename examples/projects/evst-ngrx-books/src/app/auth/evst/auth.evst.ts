@@ -2,7 +2,7 @@ import { inject } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { emptyProps, props } from "@ngrx/store";
-import { events, state, view } from "@evst/ngrx";
+import { events, evst, view } from "@evst/ngrx";
 import { of } from "rxjs";
 import { catchError, exhaustMap, map, tap } from "rxjs/operators";
 import type { Credentials, User } from "../models/user";
@@ -46,11 +46,20 @@ export const initialLoginPageState: LoginPageState = {
   pending: false,
 };
 
-export const authBundle = state("auth", {
+export const authBundle = evst("auth", {
   status: initialStatusState,
   loginPage: initialLoginPageState,
 })
-  .stateOn((on) => ({
+  .view(({ status, loginPage }) => ({
+    user: view(status, (value) => value.user),
+
+    loggedIn: view(status, (value) => Boolean(value.user)),
+
+    loginPageError: view(loginPage, (value) => value.error),
+
+    loginPagePending: view(loginPage, (value) => value.pending),
+  }))
+  .state((on) => ({
     beginLogin: on(fromLoginPage.login, (current) => ({
       ...current,
       loginPage: {
@@ -87,16 +96,7 @@ export const authBundle = state("auth", {
       status: initialStatusState,
     })),
   }))
-  .extraViews(({ status, loginPage }) => ({
-    user: view(status, (value) => value.user),
-
-    loggedIn: view(status, (value) => Boolean(value.user)),
-
-    loginPageError: view(loginPage, (value) => value.error),
-
-    loginPagePending: view(loginPage, (value) => value.pending),
-  }))
-  .taskOn((on) => ({
+  .task((on) => ({
     login: on(fromLoginPage.login, (pipe, service = inject(AuthService)) =>
       pipe(
         exhaustMap(({ credentials }) =>

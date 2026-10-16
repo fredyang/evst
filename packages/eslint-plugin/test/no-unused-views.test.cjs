@@ -10,7 +10,7 @@ const project = path.resolve(
 const file = path.join(project, "src/app/auth/evst/auth.evst.ts");
 
 describe("no-unused-views", () => {
-  it("reports the unreferenced auth user view", async () => {
+  it("recognizes direct feature view usage as well as exported aliases", async () => {
     const eslint = new ESLint({
       cwd: project,
       overrideConfigFile: path.join(project, "eslint.config.mjs"),
@@ -21,7 +21,7 @@ describe("no-unused-views", () => {
       result.messages
         .filter((message) => message.ruleId === "evst/no-unused-views")
         .map((message) => message.message),
-      ["View `user` is not referenced and can be removed."],
+      [],
     );
   });
 });

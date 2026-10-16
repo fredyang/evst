@@ -8,7 +8,7 @@ import { fromCollectionPage } from "./evst/books.events";
 import { BookPage, CollectionPage, SearchPage } from "./components";
 import { NotFoundPage } from "../core/components/not-found-page";
 
-evst.provide({ states: [booksState], tasks: [booksTasks] });
+evst.provide(booksState, booksTasks);
 
 export default function BooksModule() {
   const collection = booksViews.collection.use();

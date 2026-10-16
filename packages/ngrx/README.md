@@ -66,18 +66,18 @@ effects, and DevTools.
 
 ### Implementing State and Views
 
-`state()` infers the feature-state shape from its initial-state object and
+`evst()` infers the feature-state shape from its initial-state object and
 automatically exposes a typed View for each top-level field. Optionally,
-`.extraViews()` composes derived Views from those default Views. `.stateOn()`
+`.view()` composes derived Views from those default Views. `.state()`
 declares event subscriptions through named, pure state handlers. Names document
 each state transition. `NamedStateHandlers<State>` is a record of `StateHandler<State>`
 values returned by the supplied `on` builder.
 
-`stateOn()` returns a new state definition. Event subscriptions take effect
+`.state()` returns a new feature definition. Event subscriptions take effect
 when that definition's providers are registered with the application.
 
 ```ts
-import { state, view } from "@evst/ngrx";
+import { evst, view } from "@evst/ngrx";
 import { fromBooksApi, fromBooksPage, type Book } from "./books.events";
 
 const initialState = {
@@ -87,10 +87,10 @@ const initialState = {
   error: null as string | null,
 };
 
-export const booksState = state("books", initialState)
+export const booksState = evst("books", initialState)
   // Generated Views: books, selectedId, loading, and error.
   // Additional Views can compose these generated Views.
-  .extraViews(({ books, selectedId }) => ({
+  .view(({ books, selectedId }) => ({
     selectedBook: view(
       books,
       selectedId,
@@ -98,7 +98,7 @@ export const booksState = state("books", initialState)
     ),
   }))
   // Named event handlers define pure state transitions.
-  .stateOn((on) => ({
+  .state((on) => ({
     beginLoading: on(fromBooksPage.entered, (current) => ({
       ...current,
       loading: true,
@@ -126,7 +126,7 @@ export const booksViews = booksState.views;
 
 ### Implementing Tasks
 
-State and Task share the `subscribe((on) => ({ ... }))` shape. State declares
+State and Task use `.state((on) => ({ ... }))` and `.task((on) => ({ ... }))`. State declares
 named state handlers; Task declares named Tasks. In both, `on()` associates
 one or more events with a response. State handlers return the next immutable
 state. Task source functions receive an event-filtered pipeline and return
@@ -137,18 +137,18 @@ A `Task` is a callable functional NgRx Effect with a `.provide()` method.
 to `on()` determine each Task's inputs. Task keys are also exposed under
 `.effects`, preserving each source function's type.
 
-`taskOn()` returns a task collection. Its effects start listening when
+`task()` returns a task collection. Its effects start listening when
 the collection's providers are registered with the application. Angular manages
 their lifetime through the injector.
 
 ```ts
 import { HttpClient } from "@angular/common/http";
 import { inject } from "@angular/core";
-import { taskOn } from "@evst/ngrx";
+import { task } from "@evst/ngrx";
 import { catchError, exhaustMap, map, of } from "rxjs";
 import { fromBooksApi, fromBooksPage, type Book } from "./books.events";
 
-export const booksTasks = taskOn((on) => ({
+export const booksTasks = task((on) => ({
   load: on(fromBooksPage.entered, (pipe, http = inject(HttpClient)) => {
     return pipe(
       exhaustMap(() =>
@@ -232,26 +232,26 @@ use a documented ESLint suppression with automatic teardown.
 
 ### Bundling Tasks with State
 
-`.taskOn((on, views) => ({ ... }))` combines a state definition with named
+`.task((on, views) => ({ ... }))` combines a state definition with named
 Tasks. The callback receives the Task builder and all generated and extra Views,
 with their inferred types:
 
 ```ts
-import { events, state, view } from "@evst/ngrx";
+import { events, evst, view } from "@evst/ngrx";
 import { emptyProps } from "@ngrx/store";
 import { map, withLatestFrom } from "rxjs";
 
 const fromCounterPage = events("Counter Page", { clicked: emptyProps() });
 const fromCounterTask = events("Counter Task", { counted: emptyProps() });
 
-export const counter = state("counter", { count: 0 })
-  .extraViews(({ count }) => ({ doubled: view(count, (count) => count * 2) }))
-  .stateOn((on) => ({
+export const counter = evst("counter", { count: 0 })
+  .view(({ count }) => ({ doubled: view(count, (count) => count * 2) }))
+  .state((on) => ({
     increment: on(fromCounterTask.counted, (current) => ({
       count: current.count + 1,
     })),
   }))
-  .taskOn((on, views) => ({
+  .task((on, views) => ({
     count: on(fromCounterPage.clicked, (pipe) =>
       pipe(
         withLatestFrom(views.doubled.observable()),
@@ -261,11 +261,13 @@ export const counter = state("counter", { count: 0 })
   }));
 ```
 
-The returned bundle exposes `views`, `reducer`, `effects`, and `provide()`.
+The returned definition exposes `views`, `reducer`, `effects`, and `provide()`.
 `counter.provide()` registers both State and Tasks. `effects` exposes named
-functional effects for testing. `.taskOn()` finishes the chain; state
-handlers and extra Views are defined before it. The original state definition
-is unchanged, and omitting `.taskOn()` retains the existing state API.
+functional effects for testing. Every `.view()`, `.state()`, and `.task()` call
+returns a new composable `EvstDefinition`; none ends the chain. Calls may be
+repeated in any order. Each Task callback receives all Views declared before it.
+Later composition retains existing effects without rerunning earlier callbacks.
+Definitions without `.task()` have no `effects` property.
 
 Events, Views, State, and Tasks can be defined in one file. The
 [Auth example](../../examples/projects/evst-ngrx-books/src/app/auth/evst/auth.evst.ts)
@@ -273,10 +275,53 @@ demonstrates this approach for a small feature. Events shared across
 features can remain in separate modules to avoid circular imports. Independently
 defined Tasks and `bundle(stateDefinition, taskCollection)` remain supported.
 
+### Extending feature definitions
+
+Composition can be split across files. Each step imports its predecessor and
+exports the extended definition; registration uses the final result:
+
+```ts
+// books.base.ts
+export const booksBase = evst("books", { count: 0 });
+
+// books.views.ts
+export const booksWithViews = booksBase.view(({ count }) => ({
+  doubled: view(count, (count) => count * 2),
+}));
+
+// books.evst.ts
+export const booksEvst = booksWithViews
+  .task((on, views) => ({/* tasks using doubled */}))
+  .view(({ doubled }) => ({ text: view(doubled, String) }))
+  .task((on, views) => ({/* tasks using doubled and text */}));
+```
+
+Earlier definitions remain unchanged. Discarding a method's return value also
+discards that extension. Existing views and task objects retain their identities.
+
+Duplicate derived View names, state-handler labels, and Task labels throw during
+composition. View names cannot replace generated field views or `root`. A feature
+can handle each event type only once in State, even across separate `.state()`
+calls. Multiple differently named Tasks can respond to that event. Different
+features can independently handle the same event. State and Task labels have
+separate namespaces.
+
+Standalone `view()` composes Views from different features:
+
+```ts
+const canEditBook = view(
+  authEvst.views.loggedIn,
+  booksEvst.views.selectedBook,
+  (loggedIn, book) => loggedIn && Boolean(book),
+);
+```
+
 ## Registering EVST
 
 `provideEvstStore()` registers the root NgRx Store and EVST publishing support once.
-State and Tasks can be registered separately or as one `bundle()`.
+State and Tasks can be registered separately, through a composed feature, or as
+one `bundle()`. Feature-key replacement and provider lifetimes follow NgRx; EVST
+does not introduce a duplicate-registration error.
 
 ```ts
 import { type ApplicationConfig } from "@angular/core";

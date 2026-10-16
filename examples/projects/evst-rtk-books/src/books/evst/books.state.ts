@@ -1,5 +1,5 @@
 import { createEntityAdapter } from "@reduxjs/toolkit";
-import { state, view } from "@evst/rtk";
+import { evst, view } from "@evst/rtk";
 import type { Book } from "../model/book";
 import { fromAuth } from "../../auth/evst/auth.evst";
 import {
@@ -28,8 +28,8 @@ export const initialState = {
 
 export type BooksRoot = { books: typeof initialState };
 
-export const booksState = state("books", initialState)
-  .stateOn((on) => ({
+export const booksState = evst("books", initialState)
+  .state((on) => ({
     resetState: on(fromAuth.logout, () => initialState),
 
     beginSearch: on(fromFindBookPage.searchQueryChanged, (s, { query }) => {
@@ -130,7 +130,7 @@ export const booksState = state("books", initialState)
       s.collection.error = p.error;
     }),
   }))
-  .extraViews(({ books, search, detail, collection }) => ({
+  .view(({ books, search, detail, collection }) => ({
     results: view(books, search, (books, search) =>
       search.ids
         .map((id) => books.entities[id])

@@ -6,7 +6,7 @@ and error handling less visible.
 
 ```ts
 // Reported
-const appTasks = taskOn((on) => ({
+const appTasks = task((on) => ({
   connection: on(() => socket.connected$),
 }));
 ```
@@ -15,12 +15,12 @@ An eventless task can be used when that lifecycle is intentional. The
 suppression must state why it is appropriate.
 
 ```ts
-const booksTasks = taskOn((on) => ({
+const booksTasks = task((on) => ({
   // eslint-disable-next-line evst/require-task-event -- Validates the required storage capability when the Books feature initializes.
   checkStorageSupport: on(() => storage.supported(), { dispatch: false }),
 }));
 ```
 
 `require-task-event-suppression-reason` enforces the required text after `--`.
-The rule recognizes source overloads within `taskOn((on) => ...)` and
-`.taskOn((on, views) => ...)`; it does not require type information.
+The rule recognizes source overloads within `task((on) => ...)` and
+`.task((on, views) => ...)`; it does not require type information.

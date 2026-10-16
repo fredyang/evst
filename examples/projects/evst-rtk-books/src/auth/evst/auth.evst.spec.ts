@@ -17,9 +17,7 @@ afterEach(() => {
 });
 
 it("handles invalid login, valid login, logout confirmation and dismissal", () => {
-  const store = createEvstStore({
-    bundles: [authBundle, coreBundle],
-  });
+  const store = createEvstStore(authBundle, coreBundle);
   expect(Object.keys(store.getState()).sort()).toEqual(["auth", "core"]);
   fromLoginPage.login.publish({
     credentials: { username: "wrong", password: "x" },

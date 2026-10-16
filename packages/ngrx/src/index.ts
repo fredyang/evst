@@ -1,15 +1,14 @@
 export { events } from "./events.js";
 export { bundle, type Bundle } from "./bundle.js";
 export {
-  state,
-  type FeatureStateDefinition,
-  type FeatureBundle,
+  evst,
+  type EvstDefinition,
+  type EvstBuilder,
   type NamedStateHandlers,
   type StateHandler,
 } from "./state.js";
 export {
-  taskOn,
-  tasks,
+  task,
   type NamedTasks,
   type Task,
   type TaskBuilder,

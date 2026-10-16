@@ -12,11 +12,11 @@ const BooksEvents = events("Books", {
 State handlers and event-driven EVST tasks are subscriptions.
 
 ```ts
-const booksState = state("books", initialState).stateOn((on) => ({
+const booksState = evst("books", initialState).state((on) => ({
   retainLoadedState: on(BooksEvents.loaded, (current) => current),
 }));
 
-const booksTasks = taskOn((on) => ({
+const booksTasks = task((on) => ({
   refresh: on(BooksEvents.loaded, (pipe) =>
     pipe(map(() => RefreshEvents.run())),
   ),

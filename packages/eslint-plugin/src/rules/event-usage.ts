@@ -107,12 +107,6 @@ export function isSubscription(
   if (!ts.isCallExpression(parent) || !parent.arguments.includes(node)) {
     return false;
   }
-  if (
-    ts.isPropertyAccessExpression(parent.expression) &&
-    parent.expression.name.text === "on"
-  ) {
-    return true;
-  }
   return (
     ts.isIdentifier(parent.expression) &&
     parent.expression.text === "on" &&
@@ -128,20 +122,20 @@ export function declarationNode(
 }
 
 function isWithinTask(node: ts.Node): boolean {
+  let child: ts.Node = node;
   let current: ts.Node | undefined = node.parent;
   while (current) {
     if (
       ts.isCallExpression(current) &&
+      current.arguments.some((argument) => argument === child) &&
       ((ts.isIdentifier(current.expression) &&
-        ["tasks", "taskOn"].includes(current.expression.text)) ||
+        current.expression.text === "task") ||
         (ts.isPropertyAccessExpression(current.expression) &&
-          (current.expression.name.text === "taskOn" ||
-            (ts.isIdentifier(current.expression.expression) &&
-              current.expression.expression.text === "task" &&
-              current.expression.name.text === "subscribe"))))
+          current.expression.name.text === "task"))
     ) {
       return true;
     }
+    child = current;
     current = current.parent;
   }
   return false;
@@ -151,18 +145,21 @@ function isWithinStateSubscription(
   node: ts.Node,
   checker: ts.TypeChecker,
 ): boolean {
+  let child: ts.Node = node;
   let current: ts.Node | undefined = node.parent;
   while (current) {
     if (
       ts.isCallExpression(current) &&
+      current.arguments.some((argument) => argument === child) &&
       ts.isPropertyAccessExpression(current.expression) &&
-      ["subscribe", "stateOn"].includes(current.expression.name.text)
+      current.expression.name.text === "state"
     ) {
       const receiver = checker.getTypeAtLocation(current.expression.expression);
       if (receiver.getProperty("reducer") && receiver.getProperty("views")) {
         return true;
       }
     }
+    child = current;
     current = current.parent;
   }
   return false;

@@ -39,17 +39,13 @@ export default createRule<Options, MessageIds>({
       if (!collectHandlers(expression.callee.object, handledEvents))
         return false;
 
-      if (["subscribe", "stateOn"].includes(expression.callee.property.name)) {
+      if (expression.callee.property.name === "state") {
         const [build] = expression.arguments;
         if (build?.type === "ArrowFunctionExpression") {
           collectNamedHandlers(build.body, handledEvents);
         }
         return true;
       }
-      if (expression.callee.property.name !== "on") return true;
-
-      addEvents(expression.arguments.slice(0, -1), handledEvents);
-
       return true;
     }
 
@@ -106,7 +102,7 @@ function isStateCall(node: TSESTree.Expression): boolean {
   return (
     node.type === "CallExpression" &&
     node.callee.type === "Identifier" &&
-    node.callee.name === "state"
+    node.callee.name === "evst"
   );
 }
 

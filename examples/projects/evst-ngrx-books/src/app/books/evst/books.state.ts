@@ -1,5 +1,5 @@
 import { createEntityAdapter, type EntityState } from "@ngrx/entity";
-import { state, view } from "@evst/ngrx";
+import { evst, view } from "@evst/ngrx";
 import type { Book } from "../models/book";
 import {
   fromBookExistsGuard,
@@ -32,8 +32,8 @@ const initialState: BooksState = {
   collection: { loaded: false, loading: false, ids: [] },
 };
 
-export const booksState = state("books", initialState)
-  .extraViews(({ books, search, collection }) => ({
+export const booksState = evst("books", initialState)
+  .view(({ books, search, collection }) => ({
     selectedBookId: view(books, (x) => x.selectedBookId),
 
     bookEntities: view(books, (x) => x.entities),
@@ -70,7 +70,7 @@ export const booksState = state("books", initialState)
       (b, c) => !!b.selectedBookId && c.ids.includes(b.selectedBookId),
     ),
   }))
-  .stateOn((on) => ({
+  .state((on) => ({
     resetState: on(fromAuth.logout, () => initialState),
 
     applySearchResults: on(

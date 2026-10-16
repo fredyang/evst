@@ -8,15 +8,17 @@ import { Actions, ofType } from "@ngrx/effects";
 import { createAction, provideStore, Store } from "@ngrx/store";
 import { map, withLatestFrom } from "rxjs";
 import { expect, expectTypeOf, it } from "vitest";
-import { bundle, state, tasks, view, provideEvstStore } from "../src/index.js";
+import { bundle, evst, task, view, provideEvstStore } from "../src/index.js";
 
 it("registers bundled state and tasks", () => {
   const clicked = createAction("[Counter] Clicked");
   const counted = createAction("[Counter] Counted");
-  const counter = state("counter", { count: 0 }).on(counted, (current) => ({
-    count: current.count + 1,
+  const counter = evst("counter", { count: 0 }).state((on) => ({
+    handler1: on(counted, (current) => ({
+      count: current.count + 1,
+    })),
   }));
-  const counterTasks = tasks((on) => ({
+  const counterTasks = task((on) => ({
     count: on((actions = inject(Actions)) =>
       actions.pipe(ofType(clicked), map(counted)),
     ),
@@ -43,13 +45,13 @@ it("registers bundled state and tasks", () => {
 it("bundles typed Tasks with current Views without changing the state definition", () => {
   const clicked = createAction("[Bundle] Clicked");
   const counted = createAction("[Bundle] Counted");
-  const base = state("bundled", { count: 0 })
-    .extraViews(({ count }) => ({ doubled: view(count, (value) => value * 2) }))
-    .stateOn((on) => ({
+  const base = evst("bundled", { count: 0 })
+    .view(({ count }) => ({ doubled: view(count, (value) => value * 2) }))
+    .state((on) => ({
       count: on(counted, (current) => ({ count: current.count + 1 })),
     }));
   const observed: number[] = [];
-  const combined = base.taskOn((on, views) => ({
+  const combined = base.task((on, views) => ({
     count: on(clicked, (pipe) =>
       pipe(
         withLatestFrom(views.doubled.observable()),
@@ -91,9 +93,9 @@ it("bundles typed Tasks with current Views without changing the state definition
 });
 
 it("bundles an empty task collection and validates task definitions", () => {
-  const base = state("emptyBundle", { value: 0 });
-  expect(base.taskOn(() => ({})).effects).toEqual({});
-  expect(() => base.taskOn(() => ({ invalid: {} as never }))).toThrow(
+  const base = evst("emptyBundle", { value: 0 });
+  expect(base.task(() => ({})).effects).toEqual({});
+  expect(() => base.task(() => ({ invalid: {} as never }))).toThrow(
     'Task "invalid" must be created with the supplied on function.',
   );
 });

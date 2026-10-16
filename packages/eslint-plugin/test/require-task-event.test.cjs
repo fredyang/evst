@@ -14,9 +14,9 @@ RuleTester.describe = describe;
 RuleTester.it = it;
 
 const taskWithEvent = `
-  const tasks = (build) => build((...args) => args);
+  const task = (build) => build((...args) => args);
   const event = () => ({});
-  tasks((on) => ({ load: on(event, () => source$) }));
+  task((on) => ({ load: on(event, () => source$) }));
 `;
 
 new RuleTester({ languageOptions: { parser } }).run(
@@ -25,37 +25,28 @@ new RuleTester({ languageOptions: { parser } }).run(
   {
     valid: [
       taskWithEvent,
-      `taskOn((on) => ({ load: on(event, (pipe) => pipe()) }));`,
-      `state("books", {}).taskOn((on, views) => ({ load: on(event, (pipe) => pipe()) }));`,
+      `task((on) => ({ load: on(event, (pipe) => pipe()) }));`,
+      `evst("books", {}).task((on, views) => ({ load: on(event, (pipe) => pipe()) }));`,
       `on(() => source$);`,
-      `tasks((on) => ({ load: on(event, () => source$, { dispatch: false }) }));`,
-      `task.subscribe((on) => ({ load: on(event, (pipe) => pipe()) }));`,
-      `task.subscribe((on) => ({ load: on(event, (pipe) => pipe(), { dispatch: false }) }));`,
+      `task((on) => ({ load: on(event, () => source$, { dispatch: false }) }));`,
+      `task((on) => ({ load: on(event, (pipe) => pipe(), { dispatch: false }) }));`,
       `source$.subscribe(() => on(() => source$));`,
     ],
     invalid: [
       {
-        code: `taskOn((on) => ({ startup: on(() => source$) }));`,
+        code: `task((on) => ({ startup: on(() => source$) }));`,
         errors: [{ messageId }],
       },
       {
-        code: `state("books", {}).taskOn((on, views) => ({ startup: on(() => source$) }));`,
+        code: `evst("books", {}).task((on, views) => ({ startup: on(() => source$) }));`,
         errors: [{ messageId }],
       },
       {
-        code: `task.subscribe((on) => ({ startup: on(() => source$) }));`,
+        code: `task((on) => ({ startup: on(() => source$, { dispatch: false }) }));`,
         errors: [{ messageId }],
       },
       {
-        code: `task.subscribe((on) => ({ startup: on(() => source$, { dispatch: false }) }));`,
-        errors: [{ messageId }],
-      },
-      {
-        code: `tasks((on) => ({ startup: on(() => source$) }));`,
-        errors: [{ messageId }],
-      },
-      {
-        code: `tasks((on) => ({ startup: on(source$, { dispatch: false }) }));`,
+        code: `task((on) => ({ startup: on(source$, { dispatch: false }) }));`,
         errors: [{ messageId }],
       },
     ],
@@ -67,12 +58,12 @@ new RuleTester({
   plugins: { evst: { rules: { "require-task-event": rule } } },
 }).run("require-task-event-suppression-reason", suppressionReasonRule, {
   valid: [
-    `// eslint-disable-next-line evst/require-task-event -- Subscribes to an external socket for the application lifetime.\ntasks((on) => ({ startup: on(() => source$) }));`,
+    `// eslint-disable-next-line evst/require-task-event -- Subscribes to an external socket for the application lifetime.\ntask((on) => ({ startup: on(() => source$) }));`,
     `// eslint-disable-next-line no-console\nconsole.log("allowed");`,
   ],
   invalid: [
     {
-      code: `// eslint-disable-next-line evst/require-task-event\ntasks((on) => ({ startup: on(() => source$) }));`,
+      code: `// eslint-disable-next-line evst/require-task-event\ntask((on) => ({ startup: on(() => source$) }));`,
       errors: [{ messageId: suppressionReasonMessageId }],
     },
   ],

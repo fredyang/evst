@@ -17,11 +17,11 @@ export function view<RootState, A, Result>(
   first: Selector<RootState, A>,
   projector: (first: A) => Result,
 ): View<RootState, Result>;
-export function view<RootState, A, B, Result>(
-  first: Selector<RootState, A>,
-  second: Selector<RootState, B>,
+export function view<FirstRoot, SecondRoot, A, B, Result>(
+  first: Selector<FirstRoot, A>,
+  second: Selector<SecondRoot, B>,
   projector: (first: A, second: B) => Result,
-): View<RootState, Result>;
+): View<FirstRoot & SecondRoot, Result>;
 export function view(...args: any[]): View<any, any> {
   const selector =
     args.length === 1 ? args[0] : (createSelector as any)(...args);

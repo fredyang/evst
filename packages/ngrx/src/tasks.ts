@@ -24,16 +24,16 @@ type EventPipe<Creators extends readonly ActionCreator[]> = Observable<
 >["pipe"];
 
 /**
- * Creates a Task for a `taskOn()` collection.
+ * Creates a Task for a `task()` collection.
  *
- * The builder is supplied as `on` to the callback passed to `taskOn`.
+ * The builder is supplied as `on` to the callback passed to `task`.
  * Tasks can be defined from an observable source, or scoped to one or more events.
  * Event-scoped tasks receive a `pipe` function whose source emits only the
  * selected event types.
  *
  * @example
  * ```ts
- * const booksTasks = taskOn((on) => ({
+ * const booksTasks = task((on) => ({
  *   load: on(fromBooksPage.entered, (pipe) =>
  *     pipe(
  *       exhaustMap(() => booksApi.getAll()),
@@ -49,7 +49,7 @@ export interface TaskBuilder {
    *
    * @param source - Function that returns the task source observable.
    * @param options - NgRx effect configuration.
-   * @returns A Task for a `taskOn()` collection.
+   * @returns A Task for a `task()` collection.
    */
   <Source extends () => Observable<unknown>>(
     source: Source,
@@ -109,12 +109,12 @@ class TasksCollection<Effects extends NamedTasks> implements Tasks<Effects> {
  *
  * @example
  * ```ts
- * const booksTasks = taskOn((on) => ({
+ * const booksTasks = task((on) => ({
  *   load: on(fromBooksPage.entered, (pipe) => pipe(exhaustMap(loadBooks))),
  * }));
  * ```
  */
-export function taskOn<Subscriptions extends NamedTasks>(
+export function task<Subscriptions extends NamedTasks>(
   build: (on: TaskBuilder) => Subscriptions,
 ): Tasks<Subscriptions> {
   const namedTasks = build(createTask);
@@ -128,11 +128,6 @@ export function taskOn<Subscriptions extends NamedTasks>(
   }
   return new TasksCollection(namedTasks);
 }
-
-/**
- * @deprecated Use `taskOn()` for standalone Task definitions.
- */
-export const tasks = taskOn;
 
 const createTask: TaskBuilder = ((...args: any[]): Task => {
   const [first] = args;

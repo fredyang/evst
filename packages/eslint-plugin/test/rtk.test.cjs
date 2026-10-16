@@ -56,7 +56,7 @@ describe("RTK preset", () => {
     });
   });
 
-  it("recognizes NgRx stateOn and both taskOn forms, including callback View usage", async () => {
+  it("recognizes NgRx state and both task forms, including callback View usage", async () => {
     const cwd = path.join(__dirname, "fixtures/rtk");
     const eslint = new ESLint({
       cwd,
@@ -85,7 +85,7 @@ describe("RTK preset", () => {
     );
   });
 
-  it("tracks RTK stateOn, standalone and fluent taskOn, callback Views, hooks and conditional publications", async () => {
+  it("tracks RTK state, standalone and fluent task, callback Views, hooks and conditional publications", async () => {
     const cwd = path.join(__dirname, "fixtures/rtk");
     const eslint = new ESLint({
       cwd,
