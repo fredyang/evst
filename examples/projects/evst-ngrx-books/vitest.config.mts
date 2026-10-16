@@ -1,5 +1,5 @@
 import { defineProject, mergeConfig } from "vitest/config";
-import { baseConfig } from "../../vitest.config.mts";
+import { baseConfig } from "../../vitest.config.mjs";
 
 export default defineProject((config) =>
   mergeConfig(baseConfig, {
