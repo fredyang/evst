@@ -70,7 +70,7 @@ tests so test publications do not count as application publishers:
 }
 ```
 
-For `@evst/ngrx`, the same configuration can use `evst.configs["evst-ngrx"]`.
+For `@evst/ngrx-store`, the same configuration can use `evst.configs["evst-ngrx"]`.
 The RTK preset excludes Angular Observable-subscription guidance and NgRx
 eventless Task rules. RTK Tasks already require an event argument.
 

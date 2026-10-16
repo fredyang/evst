@@ -1,4 +1,4 @@
-import { events, evst, task, view } from "@evst/ngrx";
+import { events, evst, task, view } from "@evst/ngrx-store";
 import { emptyProps } from "@ngrx/store";
 import { map } from "rxjs";
 

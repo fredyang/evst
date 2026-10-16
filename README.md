@@ -7,7 +7,7 @@ pattern, with implementations for Angular/NgRx and React/Redux Toolkit.
 
 | Package               | Integration                              | Guide                                            |
 | --------------------- | ---------------------------------------- | ------------------------------------------------ |
-| `@evst/ngrx`          | Angular, NgRx Store and Effects          | [NgRx README](packages/ngrx/README.md)           |
+| `@evst/ngrx-store`    | Angular, NgRx Store and Effects          | [NgRx README](packages/ngrx/README.md)           |
 | `@evst/rtk`           | React, Redux Toolkit and React Redux     | [RTK README](packages/rtk/README.md)             |
 | `@evst/eslint-plugin` | Shared conventions and framework presets | [ESLint guide](packages/eslint-plugin/README.md) |
 
@@ -149,7 +149,7 @@ RxJS Observables, and React hooks.
 
 The following table summarizes how each implementation integrates with its framework:
 
-| Concern           | `@evst/ngrx`                                | `@evst/rtk`                                               |
+| Concern           | `@evst/ngrx-store`                          | `@evst/rtk`                                               |
 | ----------------- | ------------------------------------------- | --------------------------------------------------------- |
 | Component Views   | Angular Signals; Observables also available | React Redux hooks                                         |
 | State transitions | Immutable NgRx reducers                     | RTK reducers with Immer support                           |
@@ -206,7 +206,7 @@ npm test
 Individual packages can be checked independently:
 
 ```sh
-npm test --workspace @evst/ngrx
+npm test --workspace @evst/ngrx-store
 npm test --workspace @evst/rtk
 npm test --workspace @evst/eslint-plugin
 npm run lint:evst-ngrx-books

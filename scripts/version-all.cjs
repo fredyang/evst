@@ -30,7 +30,7 @@ run("npm", [
   "version",
   version,
   "--workspace",
-  "@evst/ngrx",
+  "@evst/ngrx-store",
   "--workspace",
   "@evst/eslint-plugin",
   "--workspace",

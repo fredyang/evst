@@ -13,7 +13,7 @@ import {
 import { BookStorageService } from "../../core/services/book-storage.service";
 import { GoogleBooksService } from "../../core/services/google-books.service";
 
-import { task } from "@evst/ngrx";
+import { task } from "@evst/ngrx-store";
 import {
   fromBooksApi,
   fromCollectionApi,

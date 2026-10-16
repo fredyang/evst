@@ -1,6 +1,6 @@
-# @evst/ngrx
+# @evst/ngrx-store
 
-`@evst/ngrx` connects Event, View, State, and Task to Angular and NgRx Store.
+`@evst/ngrx-store` connects Event, View, State, and Task to Angular and NgRx Store.
 Components read Views and publish events; State and Task define the responses.
 The [shared programming model](https://github.com/fredyang/evst#understanding-the-programming-model)
 explains the rationale and conventions. This guide covers the NgRx implementation
@@ -24,8 +24,12 @@ with a Books feature.
 An Angular application with compatible NgRx 22 dependencies requires:
 
 ```sh
-npm install @evst/ngrx @ngrx/store@^22 @ngrx/effects@^22 @ngrx/store-devtools@^22
+npm install @evst/ngrx-store @ngrx/store@^22 @ngrx/effects@^22 @ngrx/store-devtools@^22
 ```
+
+The package was previously named `@evst/ngrx`. Existing applications require
+replacing that dependency with `@evst/ngrx-store` and updating import specifiers.
+The package rename does not change the exported API.
 
 ## Writing provider code
 
@@ -39,7 +43,7 @@ convention and discourages command-oriented names.
 
 ```ts
 import { emptyProps, props } from "@ngrx/store";
-import { events } from "@evst/ngrx";
+import { events } from "@evst/ngrx-store";
 
 export interface Book {
   id: string;
@@ -77,7 +81,7 @@ values returned by the supplied `on` builder.
 when that definition's providers are registered with the application.
 
 ```ts
-import { evst, view } from "@evst/ngrx";
+import { evst, view } from "@evst/ngrx-store";
 import { fromBooksApi, fromBooksPage, type Book } from "./books.events";
 
 const initialState = {
@@ -144,7 +148,7 @@ their lifetime through the injector.
 ```ts
 import { HttpClient } from "@angular/common/http";
 import { inject } from "@angular/core";
-import { task } from "@evst/ngrx";
+import { task } from "@evst/ngrx-store";
 import { catchError, exhaustMap, map, of } from "rxjs";
 import { fromBooksApi, fromBooksPage, type Book } from "./books.events";
 
@@ -237,7 +241,7 @@ Tasks. The callback receives the Task builder and all generated and extra Views,
 with their inferred types:
 
 ```ts
-import { events, evst, view } from "@evst/ngrx";
+import { events, evst, view } from "@evst/ngrx-store";
 import { emptyProps } from "@ngrx/store";
 import { map, withLatestFrom } from "rxjs";
 
@@ -328,7 +332,7 @@ import { type ApplicationConfig } from "@angular/core";
 import { provideHttpClient } from "@angular/common/http";
 import { booksState } from "./books.state";
 import { booksTasks } from "./books.tasks";
-import { provideEvstStore } from "@evst/ngrx";
+import { provideEvstStore } from "@evst/ngrx-store";
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -343,7 +347,7 @@ export const appConfig: ApplicationConfig = {
 ```ts
 import { type ApplicationConfig } from "@angular/core";
 import { provideHttpClient } from "@angular/common/http";
-import { bundle, provideEvstStore } from "@evst/ngrx";
+import { bundle, provideEvstStore } from "@evst/ngrx-store";
 import { booksState } from "./books.state";
 import { booksTasks } from "./books.tasks";
 
@@ -365,7 +369,7 @@ at the root, and the feature route registers its own definitions.
 import { type ApplicationConfig } from "@angular/core";
 import { provideHttpClient } from "@angular/common/http";
 import { provideRouter, type Routes } from "@angular/router";
-import { provideEvstStore } from "@evst/ngrx";
+import { provideEvstStore } from "@evst/ngrx-store";
 
 const routes: Routes = [
   {
@@ -501,8 +505,8 @@ From the repository root:
 
 ```sh
 npm install
-npm test --workspace @evst/ngrx
-npm pack --workspace @evst/ngrx
+npm test --workspace @evst/ngrx-store
+npm pack --workspace @evst/ngrx-store
 ```
 
 The package requires compatible Angular and NgRx 22 dependencies, including

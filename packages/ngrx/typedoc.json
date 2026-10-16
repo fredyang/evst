@@ -1,6 +1,6 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "name": "@evst/ngrx API",
+  "name": "@evst/ngrx-store API",
   "entryPoints": ["src/index.ts"],
   "tsconfig": "tsconfig.json",
   "out": "docs/api",

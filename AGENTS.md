@@ -44,7 +44,7 @@ and update their tests and documentation when changing rule behavior.
 Run the narrowest relevant checks:
 
 ```sh
-npm test --workspace @evst/ngrx
+npm test --workspace @evst/ngrx-store
 npm test --workspace @evst/eslint-plugin
 npm run lint:evst-ngrx-books
 npm run docs:api

@@ -125,7 +125,7 @@ export interface ViewBuilder {
  *
  * @example Combining views from two features
  * ```ts
- * import { view } from '@evst/ngrx';
+ * import { view } from '@evst/ngrx-store';
  * import { ordersState } from './orders.state';
  * import { usersState } from './users.state';
  *

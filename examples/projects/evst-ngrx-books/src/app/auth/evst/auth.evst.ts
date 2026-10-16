@@ -2,7 +2,7 @@ import { inject } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { emptyProps, props } from "@ngrx/store";
-import { events, evst, view } from "@evst/ngrx";
+import { events, evst, view } from "@evst/ngrx-store";
 import { of } from "rxjs";
 import { catchError, exhaustMap, map, tap } from "rxjs/operators";
 import type { Credentials, User } from "../models/user";

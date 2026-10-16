@@ -1,7 +1,7 @@
 import { DOCUMENT } from "@angular/common";
 import { inject } from "@angular/core";
 import { emptyProps } from "@ngrx/store";
-import { events, evst } from "@evst/ngrx";
+import { events, evst } from "@evst/ngrx-store";
 import { fromEvent, map, merge, switchMap, timer } from "rxjs";
 import { fromAuth } from "../../auth/evst/auth.evst";
 
