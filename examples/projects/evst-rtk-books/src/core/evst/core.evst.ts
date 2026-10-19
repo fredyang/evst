@@ -26,20 +26,24 @@ export const coreBundle = evst("core", { showSidenav: false })
   }))
   .task((on) => ({
     logoutIdleUser: on(fromUser.idleTimeoutElapsed, () => fromAuth.logout()),
-    idle: on((emit) => {
+    idle: on(() => {
       let timer: number;
-      const reset = () => {
+      const monitorIdleTimeout = () => {
         window.clearTimeout(timer);
         timer = window.setTimeout(
-          () => emit(fromUser.idleTimeoutElapsed()),
+          () => fromUser.idleTimeoutElapsed.publish(),
           5 * 60 * 1000,
         );
       };
       const events = ["click", "keydown", "mousemove", "touchstart", "scroll"];
-      events.forEach((event) => document.addEventListener(event, reset));
+      events.forEach((event) =>
+        document.addEventListener(event, monitorIdleTimeout),
+      );
       return () => {
         window.clearTimeout(timer);
-        events.forEach((event) => document.removeEventListener(event, reset));
+        events.forEach((event) =>
+          document.removeEventListener(event, monitorIdleTimeout),
+        );
       };
     }),
   }));

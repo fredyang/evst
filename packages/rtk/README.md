@@ -120,8 +120,8 @@ Immer-powered mutations and returned immutable updates are both supported.
 Standalone Tasks use `task((on) => ({ ... }))`; State handlers use `.state()`. The callback
 declares `NamedTasks`, a record of `Task` values created with `on()`. Each Task
 can respond to an event, changes in one or more Views, or an external source.
-Event and View effects return optional outcome events; external sources emit
-outcome events through a callback. Outcomes are dispatched through the RTK store.
+All effects can return an event, a cleanup function, or nothing, either directly
+or through a Promise. Effects can also publish events with `event.publish()`.
 
 `task()` returns a task collection. Listeners start when the collection
 is registered through `createEvstStore()` or `store.provide()`.
@@ -151,7 +151,47 @@ Tasks support three subscription forms:
 
 - `on(event, effect)` runs when the event is published.
 - `on(view1, view2, ..., effect)` runs when any selected View value changes.
-- `on(source)` starts an external subscription that emits outcome events.
+- `on(effect)` runs once on registration, typically to start an external subscription.
+
+All three forms accept the same effect return values:
+
+| Return value                      | Behavior                          |
+| --------------------------------- | --------------------------------- |
+| Event object with a string `type` | Dispatch the event                |
+| Function                          | Save it as cleanup                |
+| `undefined`                       | Do nothing                        |
+| Promise of any of these           | Await it and apply the same rules |
+
+Effects can also publish events directly with `event.publish()`. Other return
+values are rejected by TypeScript and ignored at runtime. No `dispatch: false`
+option is needed.
+
+For event and View Tasks, previous cleanup runs before the next invocation.
+The final cleanup runs when the Task stops. If an older asynchronous invocation
+returns cleanup after a newer invocation starts, that older cleanup runs
+immediately. Cleanup returned after stopping also runs immediately; returned
+events are ignored after stopping. Overlapping asynchronous effects are not
+automatically cancelled, and their returned events can arrive out of order.
+Rejected startup Promises are reported to the console while the Task is active;
+synchronous startup errors propagate to the registration caller.
+
+```ts
+const browserTasks = task((on) => ({
+  // Returns an event for automatic dispatch.
+  started: on(() => fromUser.activityDetected()),
+  // Replaces the listener when the selected book changes.
+  activity: on(booksViews.selectedId, (id) => {
+    if (id === null) return;
+    const clicked = () => fromUser.activityDetected.publish();
+    document.addEventListener("click", clicked);
+    return () => document.removeEventListener("click", clicked);
+  }),
+  // Returns nothing; no dispatch or cleanup is needed.
+  log: on(() => {
+    console.info("Tasks started");
+  }),
+}));
+```
 
 Event-triggered Tasks read current View values directly with `.snapshot`; no
 additional Task option is needed:
@@ -199,32 +239,36 @@ that did not change.
 A View Task starts listening when registered and runs only when its selected
 value changes according to `Object.is`. Registration does not emit the initial
 value. The effect receives the new value after state transitions and can return
-a synchronous or asynchronous outcome event. Unrelated state changes do not
+an event, cleanup function, or nothing, synchronously or asynchronously. Unrelated state changes do not
 trigger it. As with event Tasks, stopping the collection cancels pending outcome
 dispatches. Outcome events that change the source View can trigger the Task
 again, so such feedback requires a terminating condition.
 
 External sources such as DOM events, timers, and subscription APIs can use
-`on(source)`. The source receives an `emit` callback for outcome events and can
-return a cleanup function:
+`on(effect)`. The effect takes no arguments and follows the same return-value rules.
+For subscriptions, callbacks publish events with `event.publish()` and the
+effect returns cleanup:
 
 ```ts
 const browserTasks = task((on) => ({
-  activity: on((emit) => {
-    const clicked = () => emit(fromUser.activityDetected());
+  activity: on(() => {
+    const clicked = () => fromUser.activityDetected.publish();
     document.addEventListener("click", clicked);
     return () => document.removeEventListener("click", clicked);
   }),
 }));
 ```
 
-The source starts on registration, rather than declaration. Each `emit` call
-dispatches through the registering store, including synchronous emissions during
-setup. Cleanup runs when the collection is stopped or `clearEvstStore()` is
-called; emissions after cleanup are ignored. A source can bridge an observable
-without making RxJS a dependency: subscribe with `emit` and return a function
-that unsubscribes. Source functions themselves are synchronous; asynchronous
-work delivers its outcomes through `emit`.
+The effect runs on registration, rather than declaration. Events can be
+published synchronously during setup or later from callbacks. Cleanup runs when
+the collection is stopped or `clearEvstStore()` is called. Cleanup should remove
+listeners, clear timers, and unsubscribe from subscriptions so they no longer
+publish events. Pending asynchronous work should be cancelled or guarded by the
+effect if it can finish after cleanup.
+
+A source can bridge an observable without making RxJS a dependency: subscribe
+with a callback that calls `event.publish()` and return a function that
+unsubscribes. Effects can also return Promises of events, cleanup functions, or `undefined`.
 
 ### Bundling Tasks with State
 

@@ -164,14 +164,12 @@ describe("@evst/rtk", () => {
     const target = new EventTarget();
     let starts = 0;
     let stops = 0;
-    let emitLate!: () => void;
     const definitions = task((on) => ({
-      clicks: on((emit) => {
+      clicks: on(() => {
         starts++;
-        const click = () => emit(fromCounter.added(1));
-        emitLate = click;
+        const click = () => fromCounter.added.publish(1);
         target.addEventListener("click", click);
-        emit(fromCounter.added(2));
+        fromCounter.added.publish(2);
         return () => {
           stops++;
           target.removeEventListener("click", click);
@@ -189,7 +187,6 @@ describe("@evst/rtk", () => {
     clearEvstStore();
     expect(stops).toBe(1);
     target.dispatchEvent(new Event("click"));
-    emitLate();
     expect(store.getState().counter.count).toBe(3);
   });
 
@@ -210,13 +207,13 @@ describe("@evst/rtk", () => {
     );
     expect(stops).toBe(1);
     const withoutCleanup = task((on) => ({
-      once: on((emit) => {
-        emit(fromCounter.added(1));
+      once: on(() => {
+        fromCounter.added.publish(1);
       }),
     }));
-    expect(() => withoutCleanup.register(listener)).toThrow("require a store");
-    const stop = withoutCleanup.register(listener, store);
-    expect(store.getState().counter.count).toBe(1);
+    const activeStore = createEvstStore(counter);
+    const stop = withoutCleanup.register(listener, activeStore);
+    expect(activeStore.getState().counter.count).toBe(1);
     expect(stop).not.toThrow();
     expect(stop).not.toThrow();
   });
@@ -260,10 +257,10 @@ describe("@evst/rtk", () => {
         }),
       }))
       .task((on, views) => ({
-        start: on((emit) => {
+        start: on(() => {
           starts++;
           expect(views.count.snapshot).toBe(0);
-          emit(fromCounter.added(2));
+          fromCounter.added.publish(2);
           return () => {
             stops++;
           };

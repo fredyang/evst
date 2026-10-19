@@ -8,16 +8,14 @@ import type { View } from "./view.js";
 type EventCreator = ((...args: any[]) => { type: string; payload: any }) & {
   type: string;
 };
-type Outcome = { type: string } | void;
+type Outcome = { type: string } | (() => void) | void;
 
 export type TaskEffect<Payload = void> = (
   payload: Payload,
 ) => Outcome | Promise<Outcome>;
 
-/** Starts an external subscription and optionally returns its cleanup function. */
-export type TaskSource = (
-  emit: (outcome: Exclude<Outcome, void>) => void,
-) => void | (() => void);
+/** Runs on registration and can return an event, cleanup, or nothing, synchronously or asynchronously. */
+export type TaskSource = () => Outcome | Promise<Outcome>;
 type TaskStore = Pick<EnhancedStore, "dispatch">;
 
 /** Side effect activated when its task collection is registered. */
@@ -38,8 +36,8 @@ type ViewValues<Views extends readonly ViewSelector[]> = {
 
 /** Creates event-triggered, View-triggered, or external-source Tasks. */
 export interface TaskBuilder {
-  /** Starts an external source on registration; emitted outcomes are dispatched until stopped. */
-  (source: TaskSource): Task;
+  /** Runs once on registration; returned events are dispatched and returned functions become cleanup. */
+  (effect: TaskSource): Task;
   /** Runs once when any selected View changes, without an initial emission. */
   <Views extends [View<any, any>, ...View<any, any>[]]>(
     ...args: [
@@ -63,38 +61,73 @@ export function task<Effects extends NamedTasks>(
   build: (on: TaskBuilder) => Effects,
 ): Tasks<Effects> {
   const on: TaskBuilder = (...args: any[]): Task => {
-    if (args.length === 1) {
-      const source = args[0] as TaskSource;
-      return {
-        register: (_listener, store) => {
-          if (!store)
-            throw new Error("Source Tasks require a store when registered.");
-          let active = true;
-          let cleanup: void | (() => void);
-          try {
-            cleanup = source((outcome) => {
-              if (active) store.dispatch(outcome);
-            });
-          } catch (error) {
-            active = false;
-            throw error;
-          }
-          return () => {
-            if (!active) return;
-            active = false;
-            cleanup?.();
-          };
-        },
-      };
-    }
+    const startup = args.length === 1;
     const source = args[0] as EventCreator | View<any, any>;
-    const event = "type" in source ? (source as EventCreator) : undefined;
-    const selectedViews = event ? [] : (args.slice(0, -1) as View<any, any>[]);
+    const event =
+      !startup && "type" in source ? (source as EventCreator) : undefined;
+    const selectedViews =
+      startup || event ? [] : (args.slice(0, -1) as View<any, any>[]);
     const effect = args.at(-1) as (
       ...values: any[]
     ) => Outcome | Promise<Outcome>;
     return {
-      register: (listener) => {
+      register: (listener, store) => {
+        let active = true;
+        let generation = 0;
+        let cleanup: (() => void) | undefined;
+        const clean = () => {
+          const previous = cleanup;
+          cleanup = undefined;
+          previous?.();
+        };
+        const run = (dispatch: TaskStore["dispatch"], values: any[]) => {
+          const invocation = ++generation;
+          clean();
+          if (!active || invocation !== generation) return;
+          const accept = (outcome: unknown) => {
+            if (typeof outcome === "function") {
+              if (active && invocation === generation)
+                cleanup = outcome as () => void;
+              else (outcome as () => void)();
+            } else if (
+              active &&
+              outcome !== null &&
+              typeof outcome === "object" &&
+              "type" in outcome &&
+              typeof outcome.type === "string"
+            ) {
+              dispatch(outcome as { type: string });
+            }
+          };
+          const result = effect(...values);
+          // Keep synchronous outcomes synchronous for optimistic updates.
+          if (
+            result &&
+            typeof (result as Promise<Outcome>).then === "function"
+          ) {
+            return Promise.resolve(result).then(accept);
+          }
+          accept(result);
+        };
+        const dispose = () => {
+          if (!active) return;
+          active = false;
+          clean();
+        };
+        if (startup) {
+          if (!store)
+            throw new Error("Startup Tasks require a store when registered.");
+          try {
+            const pending = run(store.dispatch, []);
+            pending?.catch((error) => {
+              if (active) console.error("EVST startup Task failed", error);
+            });
+          } catch (error) {
+            dispose();
+            throw error;
+          }
+          return dispose;
+        }
         const stop = listener.startListening({
           predicate: (action, currentState, previousState) =>
             event
@@ -105,19 +138,21 @@ export function task<Effects extends NamedTasks>(
           effect: async (action, api) => {
             try {
               const currentState = api.getState();
-              const result = event
-                ? effect(action.payload)
-                : effect(...selectedViews.map((view) => view(currentState)));
-              // Preserve synchronous outcomes for optimistic updates.
-              const outcome =
-                result && "then" in result ? await result : result;
-              if (!api.signal.aborted && outcome) api.dispatch(outcome);
+              await run(
+                api.dispatch,
+                event
+                  ? [action.payload]
+                  : selectedViews.map((view) => view(currentState)),
+              );
             } catch (error) {
               if (!api.signal.aborted) throw error;
             }
           },
         });
-        return () => stop({ cancelActive: true });
+        return () => {
+          stop({ cancelActive: true });
+          dispose();
+        };
       },
     };
   };
