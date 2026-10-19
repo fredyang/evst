@@ -36,7 +36,9 @@ describe("@evst/rtk", () => {
     expectTypeOf(counter.views.doubled.snapshot).toEqualTypeOf<number>();
     fromCounter.added.publish(2);
     expect(fromCounter.added(3)).toEqual({
+      name: "Added",
       type: "[Counter] Added",
+      source: "Counter",
       payload: 3,
     });
     expect(store.getState()).toEqual({ counter: { count: 2 } });

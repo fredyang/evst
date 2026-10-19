@@ -16,18 +16,65 @@ describe("events", () => {
       "loginRedirect",
     ]);
     expect(actions.loginSuccess({ user: "Ada" })).toEqual({
+      source: "Auth/API",
+      name: "Login Success",
       type: "[Auth/API] Login Success",
       user: "Ada",
     });
     expect(actions.loginFailure({ error: "Invalid credentials" })).toEqual({
+      source: "Auth/API",
+      name: "Login Failure",
       type: "[Auth/API] Login Failure",
       error: "Invalid credentials",
     });
     expect(actions.loginSuccess.type).toBe("[Auth/API] Login Success");
   });
 
+  it("retains readonly literal sources for every creator form", () => {
+    const event = actions.loginSuccess({ user: "Ada" });
+    expectTypeOf(event.source).toEqualTypeOf<"Auth/API">();
+    expectTypeOf(event.name).toEqualTypeOf<"Login Success">();
+    expectTypeOf(
+      actions.loginRedirect().name,
+    ).toEqualTypeOf<"Login Redirect">();
+    expectTypeOf(actions.loginRedirect().source).toEqualTypeOf<"Auth/API">();
+    const custom = events("Custom", {
+      changed: (value: number) => ({ value }),
+    });
+    expectTypeOf(custom.changed(1).source).toEqualTypeOf<"Custom">();
+    expectTypeOf(custom.changed(1).name).toEqualTypeOf<"Changed">();
+    expect(custom.changed(1).source).toBe("Custom");
+    expect(() => Object.assign(event, { source: "Other" })).toThrow();
+    expect(() => Object.assign(event, { name: "Other" })).toThrow();
+    function invalid() {
+      // @ts-expect-error Event source metadata is readonly.
+      event.source = "Auth/API";
+      // @ts-expect-error Event name metadata is readonly.
+      event.name = "Login Success";
+      events("Test", {
+        // @ts-expect-error name is reserved for event metadata.
+        changed: props<{ name: string }>(),
+      });
+      events("Test", {
+        // @ts-expect-error Creator results cannot override name metadata.
+        changed: () => ({ name: "Other" }),
+      });
+      events("Test", {
+        // @ts-expect-error source is reserved for event metadata.
+        changed: props<{ source: string }>(),
+      });
+      events("Test", {
+        // @ts-expect-error Creator results cannot override source metadata.
+        changed: () => ({ source: "Other" }),
+      });
+    }
+    expectTypeOf(invalid).toBeFunction();
+  });
+
   it("supports empty props", () => {
     expect(actions.loginRedirect()).toEqual({
+      source: "Auth/API",
+      name: "Login Redirect",
       type: "[Auth/API] Login Redirect",
     });
   });
@@ -55,6 +102,8 @@ describe("events compatibility", () => {
     });
     const error = new Error("Invalid credentials");
     expect(actions.loginFailed(error)).toEqual({
+      source: "Auth/API",
+      name: "Login Failed",
       type: "[Auth/API] Login Failed",
       error,
       attempt: 1,
@@ -89,6 +138,7 @@ describe("events compatibility", () => {
     };
     for (const key of Object.keys(actions) as (keyof typeof actions)[]) {
       expect(actions[key]().type).toBe(expected[key]);
+      expect(actions[key]().name).toBe(expected[key].replace("[Test] ", ""));
     }
   });
 
@@ -99,8 +149,16 @@ describe("events compatibility", () => {
       toString: emptyProps(),
     });
     expect(Object.hasOwn(actions, "constructor")).toBe(true);
-    expect(actions.constructor()).toEqual({ type: "[Test] Constructor" });
-    expect(actions.toString()).toEqual({ type: "[Test] To String" });
+    expect(actions.constructor()).toEqual({
+      source: "Test",
+      name: "Constructor",
+      type: "[Test] Constructor",
+    });
+    expect(actions.toString()).toEqual({
+      source: "Test",
+      name: "To String",
+      type: "[Test] To String",
+    });
   });
 
   it.each([

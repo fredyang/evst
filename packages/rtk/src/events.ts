@@ -18,10 +18,38 @@ export function props<Payload>(): Props<Payload> {
 }
 
 type EventConfig = EmptyProps | Props<unknown>;
-type EventCreator<Config extends EventConfig, Type extends string> =
+type SourcedAction<
+  Payload,
+  Type extends string,
+  Source extends string,
+  Name extends string,
+> = {
+  type: Type;
+  payload: Payload;
+  readonly source: Source;
+  readonly name: Name;
+};
+type EventCreator<
+  Config extends EventConfig,
+  Type extends string,
+  Source extends string,
+  Name extends string,
+> =
   Config extends Props<infer Payload>
-    ? PayloadActionCreator<Payload, Type> & { publish(payload: Payload): void }
-    : PayloadActionCreator<void, Type> & { publish(): void };
+    ? Omit<PayloadActionCreator<Payload, Type>, "match"> & {
+        (payload: Payload): SourcedAction<Payload, Type, Source, Name>;
+        match(
+          action: unknown,
+        ): action is SourcedAction<Payload, Type, Source, Name>;
+        publish(payload: Payload): void;
+      }
+    : Omit<PayloadActionCreator<void, Type>, "match"> & {
+        (): SourcedAction<undefined, Type, Source, Name>;
+        match(
+          action: unknown,
+        ): action is SourcedAction<undefined, Type, Source, Name>;
+        publish(): void;
+      };
 
 type EventGroup<
   Source extends string,
@@ -29,7 +57,9 @@ type EventGroup<
 > = {
   [Key in keyof Definitions]: EventCreator<
     Definitions[Key],
-    `[${Source}] ${EventLabel<Key & string>}`
+    `[${Source}] ${EventLabel<Key & string>}`,
+    Source,
+    EventLabel<Key & string>
   >;
 };
 
@@ -49,6 +79,7 @@ type EventLabel<Key extends string> = Capitalize<Words<Key>>;
 
 /**
  * Creates typed Redux Toolkit action creators grouped by the event source.
+ * Created events include readonly source and name properties retaining their literal types.
  * Calling `.publish()` dispatches through the store configured by `createEvstStore()`.
  */
 export function events<
@@ -65,8 +96,38 @@ export function events<
           `Invalid event key \"${key}\": expected camelCase ASCII letters and digits.`,
         );
       }
-      const type = `[${source}] ${toEventLabel(key)}`;
-      const creator = (createAction as any)(type);
+      const name = toEventLabel(key);
+      const type = `[${source}] ${name}`;
+      const actionCreator = createAction(type);
+      const creator = Object.assign(
+        (payload?: unknown) => {
+          const event = { type, payload };
+          return Object.defineProperties(event, {
+            source: {
+              value: source,
+              enumerable: true,
+              writable: false,
+              configurable: false,
+            },
+            name: {
+              value: name,
+              enumerable: true,
+              writable: false,
+              configurable: false,
+            },
+          });
+        },
+        {
+          type,
+          toString: () => type,
+          match: (action: unknown) =>
+            actionCreator.match(action) &&
+            "source" in action &&
+            action.source === source &&
+            "name" in action &&
+            action.name === name,
+        },
+      );
       return [
         key,
         Object.assign(creator, {

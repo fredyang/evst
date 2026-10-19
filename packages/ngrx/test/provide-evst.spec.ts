@@ -115,7 +115,11 @@ it("publishes through a registered feature and forwards root configuration", () 
 });
 
 it("requires initialization and keeps created events plain", () => {
-  expect(page.entered()).toEqual({ type: "[Page] Entered" });
+  expect(page.entered()).toEqual({
+    source: "Page",
+    name: "Entered",
+    type: "[Page] Entered",
+  });
   expect(page.entered()).not.toHaveProperty("publish");
   expect(() => page.entered.publish()).toThrow("provideEvstStore");
   const app = context();

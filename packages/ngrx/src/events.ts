@@ -85,30 +85,48 @@ type Words<
 
 type EventLabel<Key extends string> = Capitalize<Words<Key>>;
 
+type SourceCheck<Payload> =
+  Extract<"source" | "name", keyof Payload> extends never
+    ? unknown
+    : "source and name are reserved for event metadata";
+
 type EventPropsCheck<Config extends EventConfig> =
   Config extends ActionCreatorProps<infer Payload>
     ? Payload extends void
       ? unknown
-      : NotAllowedCheck<Payload & object>
+      : NotAllowedCheck<Payload & object> & SourceCheck<Payload>
     : Config extends Creator<any, infer Result>
-      ? NotAllowedCheck<Result>
+      ? NotAllowedCheck<Result> & SourceCheck<Result>
       : unknown;
 
 /** Infers a creator's arguments and payload while retaining its event type literal. */
-type EventCreator<Config extends EventConfig, Type extends string> =
+type EventCreator<
+  Config extends EventConfig,
+  Type extends string,
+  Source extends string,
+  Name extends string,
+> =
   Config extends ActionCreatorProps<infer Payload>
     ? void extends Payload
-      ? ActionCreator<Type, () => Action<Type>>
+      ? ActionCreator<
+          Type,
+          () => Action<Type> & { readonly source: Source; readonly name: Name }
+        >
       : ActionCreator<
           Type,
           (
             props: Payload & NotAllowedCheck<Payload & object>,
-          ) => Payload & Action<Type>
+          ) => Payload &
+            Action<Type> & { readonly source: Source; readonly name: Name }
         >
     : Config extends Creator<infer Args, infer Result>
       ? ActionCreator<
           Type,
-          (...args: Args) => Result & NotAllowedCheck<Result> & Action<Type>
+          (
+            ...args: Args
+          ) => Result &
+            NotAllowedCheck<Result> &
+            Action<Type> & { readonly source: Source; readonly name: Name }
         >
       : never;
 
@@ -130,7 +148,12 @@ type EventGroup<
   Events extends Record<string, EventConfig>,
 > = {
   [Key in keyof Events]: Publishable<
-    EventCreator<Events[Key], `[${Source}] ${EventLabel<Key & string>}`>
+    EventCreator<
+      Events[Key],
+      `[${Source}] ${EventLabel<Key & string>}`,
+      Source,
+      EventLabel<Key & string>
+    >
   >;
 };
 
@@ -141,7 +164,8 @@ type EventGroup<
  * Acronyms are preserved: loadHTTPError becomes "Load HTTP Error".
  * Supports props(), emptyProps(), and payload creator functions, like NgRx.
  * Creator parameters require explicit types, including parameters with default values.
- * Calling a creator returns a plain NgRx Action without publishing it.
+ * Calling a creator returns a plain NgRx Action with a readonly literal source and name
+ * properties, without publishing it. The source and name payload fields are reserved.
  * Its `.publish(...args)` method accepts the same arguments and dispatches the
  * created event after provideEvstStore() initializes. Publishing can run
  * outside an injection context; event creation requires no store registration.
@@ -165,13 +189,13 @@ type EventGroup<
  * });
  *
  * booksPageEvents.entered();
- * // { type: '[Books Page] Entered' }
+ * // { source: 'Books Page', name: 'Entered', type: '[Books Page] Entered' }
  *
  * booksPageEvents.bookSelected({ id: '42' });
- * // { type: '[Books Page] Book Selected', id: '42' }
+ * // { source: 'Books Page', name: 'Book Selected', type: '[Books Page] Book Selected', id: '42' }
  *
  * booksPageEvents.queryChanged(' Angular ');
- * // { type: '[Books Page] Query Changed', query: 'Angular' }
+ * // { source: 'Books Page', name: 'Query Changed', type: '[Books Page] Query Changed', query: 'Angular' }
  *
  * booksPageEvents.bookSelected.type;
  * // '[Books Page] Book Selected'
@@ -208,12 +232,34 @@ function createEvent(
   eventConfig: EventConfig,
 ) {
   validateEventKey(eventKey);
-  const type = `[${source}] ${toEventLabel(eventKey)}`;
+  const name = toEventLabel(eventKey);
+  const type = `[${source}] ${name}`;
 
-  const creator = createAction(type, eventConfig as any) as ActionCreator<
+  const actionCreator = createAction(type, eventConfig as any) as ActionCreator<
     string,
     (...args: any[]) => Action
   >;
+  const creator = Object.defineProperty(
+    (...args: any[]) => {
+      const event = actionCreator(...args);
+      return Object.defineProperties(event, {
+        source: {
+          value: source,
+          enumerable: true,
+          writable: false,
+          configurable: false,
+        },
+        name: {
+          value: name,
+          enumerable: true,
+          writable: false,
+          configurable: false,
+        },
+      });
+    },
+    "type",
+    { value: type, enumerable: true },
+  );
   return Object.assign(creator, {
     publish: (...args: any[]): void => publishEvent(creator(...args)),
   });

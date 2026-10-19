@@ -63,6 +63,38 @@ readable RTK action type - `[Books Page] Book Selected` - and each event creator
 remains a standard Redux action creator. Events therefore work with RTK
 reducers, listener middleware, DevTools, and direct `store.dispatch(...)`.
 
+Every created event also includes readonly `source` and `name` properties with literal types.
+`source` is the group source; `name` is the readable event label, such as
+`"Book Selected"` for `bookSelected`. Calling a creator creates the event; `.publish()` dispatches
+an event with the same metadata.
+
+```ts
+const event = fromBooksPage.entered();
+event.source; // "Books Page" (literal type)
+event.name; // "Entered" (literal type)
+```
+
+The metadata lives alongside `type` and `payload`; a payload can still contain
+its own `source` and `name` fields. Middleware can filter logging by event source:
+
+```ts
+import { type Middleware } from "@reduxjs/toolkit";
+
+const logBooksPage: Middleware = () => (next) => (event) => {
+  if (
+    typeof event === "object" &&
+    event !== null &&
+    "source" in event &&
+    event.source === "Books Page"
+  ) {
+    console.log(event);
+  }
+  return next(event);
+};
+```
+
+Events from Redux internals or other libraries may not have `source`.
+
 ### Implementing State and Views
 
 `evst()` infers feature state from its initial-state object and creates a typed

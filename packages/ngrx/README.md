@@ -68,6 +68,40 @@ discoverable through standard IDE navigation and Find References. Each event cre
 produces a standard NgRx Action, so events work with existing NgRx reducers,
 effects, and DevTools.
 
+Every created event also includes readonly `source` and `name` properties with literal types.
+`source` is the group source; `name` is the readable event label, such as
+`"Book Selected"` for `bookSelected`. Calling a creator creates the event; `.publish()` dispatches
+an event with the same metadata.
+
+```ts
+const event = fromBooksPage.entered();
+event.source; // "Books Page" (literal type)
+event.name; // "Entered" (literal type)
+```
+
+NgRx payloads use top-level properties, so `source` and `name` are reserved and cannot be
+declared in `props()` or returned by a payload creator. A meta-reducer can filter
+state updates by source:
+
+```ts
+import { type MetaReducer } from "@ngrx/store";
+import { provideEvstStore } from "@evst/ngrx-store";
+
+function ignoreSource<State>(source: string): MetaReducer<State> {
+  return (reducer) => (state, event) => {
+    if (state !== undefined && "source" in event && event.source === source) {
+      return state;
+    }
+    return reducer(state, event);
+  };
+}
+
+provideEvstStore({ metaReducers: [ignoreSource("Books Page")] });
+```
+
+This skips state updates for the matching source; Effects still receive the event.
+Actions from NgRx internals or other libraries may not have `source`.
+
 ### Implementing State and Views
 
 `evst()` infers the feature-state shape from its initial-state object and
