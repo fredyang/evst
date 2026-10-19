@@ -2,6 +2,12 @@ import { createSelector, type Selector } from "@reduxjs/toolkit";
 import { useSelector } from "react-redux";
 import { readView } from "./store.js";
 
+/**
+ * A read-only projection of underlying state, exposing stored or derived data.
+ * A View is a data view, not a UI component or template. Components, Tasks,
+ * and other application logic can consume it without changing state.
+ * State changes belong in event-driven state handlers.
+ */
 export type View<RootState, Result> = Selector<RootState, Result> & {
   /** Reads this view using React Redux's current Provider. */
   use(): Result;
@@ -9,7 +15,10 @@ export type View<RootState, Result> = Selector<RootState, Result> & {
   readonly snapshot: Result;
 };
 
-/** Creates a View with a reactive React hook and an imperative snapshot reader. */
+/**
+ * Creates a read-only projection of state with a React hook and snapshot reader.
+ * Views describe data access, not UI rendering, and can also be called as selectors.
+ */
 export function view<RootState, Result>(
   selector: Selector<RootState, Result>,
 ): View<RootState, Result>;

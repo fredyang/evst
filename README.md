@@ -52,7 +52,7 @@ resulting state. Components do not need to know which handlers respond.
 | Object    | Role                                                                        |
 | --------- | --------------------------------------------------------------------------- |
 | **Event** | Describes something that happened and belongs to its source.                |
-| **View**  | Exposes read-only state to consumer code.                                   |
+| **View**  | Exposes a read-only projection of state to consumer code.                   |
 | **State** | Subscribes to events through pure state handlers and exposes Views.         |
 | **Task**  | Subscribes to events, performs side effects, and can return outcome events. |
 
@@ -64,7 +64,13 @@ Events are grouped by their source, using names such as `fromBooksPage` and
 `bookSelected`, or `loaded`. The source owns publication; States and Tasks
 independently define their responses.
 
-Views provide the read-only interface for consumer code. State exposes Views
+A **View** is a read-only projection of underlying state: it exposes a stored
+value or derives a value from other Views. The term refers to a data view, not
+a UI component, template, or screen. Views describe how state is read, not how
+it is displayed. Components, Tasks, and other application logic can consume Views;
+state changes belong in event-driven state handlers.
+
+State exposes Views
 for its top-level fields, and `.view()` and `view()` compose derived
 Views. Components consume them through `.signal()` in NgRx or `.use()` in RTK.
 

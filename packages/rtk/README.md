@@ -97,6 +97,13 @@ Events from Redux internals or other libraries may not have `source`.
 
 ### Implementing State and Views
 
+A **View** is a read-only projection of underlying state. It exposes a stored
+value or derives a value from other Views without changing state. The term
+refers to a data view, not a UI component, template, or screen. Views describe
+how state is read, not how it is displayed; Components, Tasks, and other
+application logic can consume them. State changes belong in event-driven state
+handlers.
+
 `evst()` infers feature state from its initial-state object and creates a typed
 View for every top-level field. `.view()` composes derived Views and
 `.state()` declares event subscriptions through named state handlers.

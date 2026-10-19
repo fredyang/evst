@@ -57,13 +57,19 @@ export interface EvstBuilder<
   readonly [definitionKind]: "feature";
   readonly name: Name;
   readonly reducer: Reducer<State>;
-  /** Generated field views, root, and all derived views declared so far. */
+  /**
+   * Read-only data projections for fields, root state, and derived values.
+   * Views are independent of UI rendering and can be consumed by Tasks or components.
+   */
   readonly views: BaseViews<Name, State> & ExtraViews;
   /** Adds named handlers. Duplicate labels or event types throw. */
   state(
     build: (on: StateOn<State>) => NamedStateHandlers<State>,
   ): EvstDefinition<Name, State, ExtraViews, Effects>;
-  /** Adds derived views. Existing field, root, and derived names cannot be overwritten. */
+  /**
+   * Adds derived, read-only data projections, independent of UI rendering.
+   * Existing field, root, and derived names cannot be overwritten.
+   */
   view<Added extends ExtraViewRecord<Record<Name, State>>>(
     build: (views: BaseViews<Name, State> & ExtraViews) => Added,
   ): EvstDefinition<Name, State, ExtraViews & Added, Effects>;

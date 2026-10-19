@@ -68,7 +68,10 @@ export interface EvstBuilder<
 > {
   readonly name: string;
   readonly reducer: ActionReducer<State, Action>;
-  /** Generated field views, root, and all derived views declared so far. */
+  /**
+   * Read-only data projections for fields, root state, and derived values.
+   * Views are independent of UI rendering and can be consumed by Tasks or components.
+   */
   readonly views: StateViews<State> & InjectableViews<ExtraViews>;
   /** Registers the reducer and all accumulated tasks using NgRx providers. */
   provide(): EnvironmentProviders;
@@ -76,7 +79,10 @@ export interface EvstBuilder<
   state(
     build: (on: StateOn<State>) => NamedStateHandlers<State>,
   ): EvstDefinition<State, ExtraViews, Effects>;
-  /** Adds derived views. Existing field, root, and derived names cannot be overwritten. */
+  /**
+   * Adds derived, read-only data projections, independent of UI rendering.
+   * Existing field, root, and derived names cannot be overwritten.
+   */
   view<Added extends Record<string, MemoizedSelector<object, any>>>(
     build: (views: StateViews<State> & InjectableViews<ExtraViews>) => Added,
   ): EvstDefinition<State, ExtraViews & Added, Effects>;

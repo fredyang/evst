@@ -9,7 +9,11 @@ import {
 } from "@ngrx/store";
 import { cachedStore } from "./provide-evst.js";
 
-/** Injection helpers attached to a memoized view. */
+/**
+ * Readers attached to a memoized, read-only projection of state.
+ * A View is a data view, not a UI component or template; Tasks and other
+ * application logic can consume it as well as components.
+ */
 export type ViewMethods<Result> = {
   /**
    * Reads this view as a signal from the registered EVST Store.
@@ -56,7 +60,8 @@ export function attachViewMethods<
 }
 
 /**
- * Creates memoized NgRx selectors with EVST signal and observable readers.
+ * Creates read-only projections of state as memoized NgRx selectors with
+ * EVST signal and observable readers. Views describe data access, not UI rendering.
  *
  * `view()` supports one or more input selectors followed by a projector.
  */
@@ -116,7 +121,11 @@ export interface ViewBuilder {
 }
 
 /**
- * Creates a standalone EVST view.
+ * Creates a standalone EVST View: a read-only projection of underlying state.
+ *
+ * A View exposes or derives data without changing state. It is not a UI
+ * component or template; components, Tasks, and other application logic can
+ * consume it. State changes belong in event-driven state handlers.
  *
  * The result is also a standard NgRx memoized selector, so it can compose
  * feature views or be used with NgRx Store APIs.

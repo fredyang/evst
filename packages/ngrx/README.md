@@ -104,6 +104,13 @@ Actions from NgRx internals or other libraries may not have `source`.
 
 ### Implementing State and Views
 
+A **View** is a read-only projection of underlying state. It exposes a stored
+value or derives a value from other Views without changing state. The term
+refers to a data view, not a UI component, template, or screen. Views describe
+how state is read, not how it is displayed; Components, Tasks, and other
+application logic can consume them. State changes belong in event-driven state
+handlers.
+
 `evst()` infers the feature-state shape from its initial-state object and
 automatically exposes a typed View for each top-level field. Optionally,
 `.view()` composes derived Views from those default Views. `.state()`
