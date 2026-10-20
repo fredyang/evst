@@ -11,50 +11,35 @@ import {
 afterEach(clearEvstStore);
 const fromPage = events("Books Page", {
   entered: emptyProps(),
-  selected: props<{ source: string; id: number }>(),
+  selected: props<{ source: string; name: string; id: number }>(),
 });
+const payload = { source: "recommendation", name: "Book", id: 1 };
 
-it("retains readonly literal sources without changing payloads", () => {
-  const event = fromPage.selected({ source: "payload", id: 1 });
-  expectTypeOf(event.source).toEqualTypeOf<"Books Page">();
-  expectTypeOf(event.name).toEqualTypeOf<"Selected">();
-  expectTypeOf(fromPage.entered().source).toEqualTypeOf<"Books Page">();
-  expectTypeOf(fromPage.entered().name).toEqualTypeOf<"Entered">();
-  expect(event).toEqual({
-    name: "Selected",
-    type: "[Books Page] Selected",
-    source: "Books Page",
-    payload: { source: "payload", id: 1 },
+it("preserves native RTK action shapes and business data", () => {
+  const event = fromPage.selected(payload);
+  expect(event).toEqual({ type: "[Books Page] Selected", payload });
+  expect(fromPage.entered()).toEqual({
+    type: "[Books Page] Entered",
+    payload: undefined,
   });
-  expect(() => Object.assign(event, { source: "Other" })).toThrow();
-  expect(() => Object.assign(event, { name: "Other" })).toThrow();
-  function invalid() {
-    // @ts-expect-error Event source metadata is readonly.
-    event.source = "Books Page";
-    // @ts-expect-error Event name metadata is readonly.
-    event.name = "Selected";
-  }
-  expectTypeOf(invalid).toBeFunction();
+  expectTypeOf(event.payload).toEqualTypeOf<typeof payload>();
+  expectTypeOf(event.type).toEqualTypeOf<"[Books Page] Selected">();
 });
 
-it("preserves creator metadata and source-aware match narrowing", () => {
+it("preserves creator metadata and standard type-based match narrowing", () => {
   expect(fromPage.entered.type).toBe("[Books Page] Entered");
   expect(String(fromPage.entered)).toBe(fromPage.entered.type);
-  const event: unknown = fromPage.selected({ source: "payload", id: 1 });
+  const event: unknown = { type: fromPage.selected.type, payload };
   expect(fromPage.selected.match(event)).toBe(true);
   if (fromPage.selected.match(event)) {
-    expectTypeOf(event.source).toEqualTypeOf<"Books Page">();
-    expectTypeOf(event.name).toEqualTypeOf<"Selected">();
     expectTypeOf(event.payload.id).toEqualTypeOf<number>();
+    expectTypeOf(event.payload.source).toEqualTypeOf<string>();
   }
   expect(fromPage.selected.match(null)).toBe(false);
   expect(fromPage.selected.match(fromPage.entered())).toBe(false);
-  expect(
-    fromPage.selected.match({ type: fromPage.selected.type, source: "Other" }),
-  ).toBe(false);
 });
 
-it("includes source metadata when publishing", () => {
+it("publishes native RTK actions without metadata fields", () => {
   const observed: unknown[] = [];
   const capture: Middleware = () => (next) => (event) => {
     observed.push(event);
@@ -62,21 +47,39 @@ it("includes source metadata when publishing", () => {
   };
   createEvstStore({ middleware: (defaults) => defaults().concat(capture) });
   fromPage.entered.publish();
-  fromPage.selected.publish({ source: "payload", id: 1 });
+  fromPage.selected.publish(payload);
   expect(observed).toEqual([
-    fromPage.entered(),
-    fromPage.selected({ source: "payload", id: 1 }),
+    { type: "[Books Page] Entered", payload: undefined },
+    { type: "[Books Page] Selected", payload },
   ]);
 });
 
-it("preserves payload names and infers readable event labels", () => {
-  const group = events("Test", {
-    bookSelected: props<{ name: string }>(),
+it("exposes readonly literal metadata only on event creators", () => {
+  const group = events("Books Page", {
+    bookSelected: props<{ source: string; name: string }>(),
     entered: emptyProps(),
   });
-  const event = group.bookSelected({ name: "Book title" });
-  expectTypeOf(event.name).toEqualTypeOf<"Book Selected">();
-  expect(event.name).toBe("Book Selected");
-  expect(event.payload.name).toBe("Book title");
-  expect(group.bookSelected.match({ ...event, name: "Other" })).toBe(false);
+  expect(group.bookSelected.eventSource).toBe("Books Page");
+  expect(group.bookSelected.eventName).toBe("Book Selected");
+  expectTypeOf(group.bookSelected.eventSource).toEqualTypeOf<"Books Page">();
+  expectTypeOf(group.bookSelected.eventName).toEqualTypeOf<"Book Selected">();
+  expectTypeOf(group.entered.eventName).toEqualTypeOf<"Entered">();
+  expect(() =>
+    Object.assign(group.bookSelected, { eventSource: "Other" }),
+  ).toThrow();
+  expect(() =>
+    Object.assign(group.bookSelected, { eventName: "Other" }),
+  ).toThrow();
+  expect(group.entered()).not.toHaveProperty("eventSource");
+  expect(group.entered()).not.toHaveProperty("eventName");
+  const event = group.bookSelected({ source: "recommendation", name: "Title" });
+  expect(event).not.toHaveProperty("eventSource");
+  expect(event).not.toHaveProperty("eventName");
+  function invalid() {
+    // @ts-expect-error Creator metadata is readonly.
+    group.bookSelected.eventSource = "Books Page";
+    // @ts-expect-error Creator metadata is readonly.
+    group.bookSelected.eventName = "Book Selected";
+  }
+  expectTypeOf(invalid).toBeFunction();
 });

@@ -116,8 +116,6 @@ it("publishes through a registered feature and forwards root configuration", () 
 
 it("requires initialization and keeps created events plain", () => {
   expect(page.entered()).toEqual({
-    source: "Page",
-    name: "Entered",
     type: "[Page] Entered",
   });
   expect(page.entered()).not.toHaveProperty("publish");
