@@ -110,3 +110,8 @@ The consuming project needs ESLint 9 and `typescript-eslint`. Rule behavior and 
 ## Developing
 
 `npm run build` compiles TypeScript and emits declarations. `npm test` builds the plugin and runs the migrated rule cases with ESLint's RuleTester.
+
+The NgRx EVST presets include
+[`require-task-dispatch-false`](docs/rules/require-task-dispatch-false.md), which
+uses TypeScript output types to report Tasks emitting non-event values without
+`{ dispatch: false }`. This check requires a TypeScript project.

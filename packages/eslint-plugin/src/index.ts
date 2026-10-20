@@ -7,6 +7,7 @@ import noUnsubscribedEvents from "./rules/no-unsubscribed-events";
 import noUnusedViews from "./rules/no-unused-views";
 import noViewSubscription from "./rules/no-view-subscription";
 import noViewSubscriptionSuppressionReason from "./rules/no-view-subscription-suppression-reason";
+import requireTaskDispatchFalse from "./rules/require-task-dispatch-false";
 import requireTaskEvent from "./rules/require-task-event";
 import requireTaskEventSuppressionReason from "./rules/require-task-event-suppression-reason";
 
@@ -38,6 +39,7 @@ const plugin = {
     "no-view-subscription": noViewSubscription,
     "no-view-subscription-suppression-reason":
       noViewSubscriptionSuppressionReason,
+    "require-task-dispatch-false": requireTaskDispatchFalse,
     "require-task-event": requireTaskEvent,
     "require-task-event-suppression-reason": requireTaskEventSuppressionReason,
   },
@@ -49,6 +51,7 @@ const plugin = {
         ...core.rules,
         "evst/no-view-subscription": "warn",
         "evst/no-view-subscription-suppression-reason": "error",
+        "evst/require-task-dispatch-false": "error",
         "evst/require-task-event": "warn",
         "evst/require-task-event-suppression-reason": "error",
       },
@@ -70,6 +73,7 @@ const plugin = {
         "evst/no-unused-views": "warn",
         "evst/no-view-subscription": "warn",
         "evst/no-view-subscription-suppression-reason": "error",
+        "evst/require-task-dispatch-false": "error",
         "evst/require-task-event": "warn",
         "evst/require-task-event-suppression-reason": "error",
       },
