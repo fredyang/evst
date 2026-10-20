@@ -25,6 +25,7 @@ new RuleTester({ languageOptions: { parser } }).run(
   {
     valid: [
       taskWithEvent,
+      `task((on) => ({ track: on(fromBooksPage, (pipe) => pipe(), { dispatch: false }) }));`,
       `task((on) => ({ load: on(event, (pipe) => pipe()) }));`,
       `evst("books", {}).task((on, views) => ({ load: on(event, (pipe) => pipe()) }));`,
       `on(() => source$);`,

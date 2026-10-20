@@ -46,3 +46,50 @@ describe("event usage", () => {
     );
   });
 });
+
+it("recognizes imported groups as Task subscriptions without treating state groups as supported", () => {
+  const fs = require("node:fs");
+  const os = require("node:os");
+  const ts = require("typescript");
+  const {
+    findEventDeclarations,
+    isGroupSubscription,
+  } = require("../dist/rules/event-usage");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "evst-group-"));
+  try {
+    const definitions = path.join(dir, "events.ts");
+    const consumer = path.join(dir, "tasks.ts");
+    fs.writeFileSync(
+      definitions,
+      `declare function events(source: string, config: any): any;
+      export const fromPage = events("Page", { entered: {}, changed: {} });`,
+    );
+    fs.writeFileSync(
+      consumer,
+      `import { fromPage as page } from "./events";
+      declare const task: any; declare const state: any;
+      task((on) => ({ track: on(page, () => {}, { dispatch: false }) }));
+      state.state((on) => ({ invalid: on(page, () => {}) }));`,
+    );
+    const program = ts.createProgram([definitions, consumer], { noLib: true });
+    const checker = program.getTypeChecker();
+    const [declaration] = findEventDeclarations(
+      program.getSourceFile(definitions),
+      checker,
+    );
+    const matches = [];
+    program.getSourceFile(consumer).forEachChild(function visit(node) {
+      if (
+        ts.isIdentifier(node) &&
+        node.text === "page" &&
+        ts.isCallExpression(node.parent)
+      ) {
+        matches.push(isGroupSubscription(node, checker, declaration));
+      }
+      ts.forEachChild(node, visit);
+    });
+    assert.deepEqual(matches, [true, false]);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});

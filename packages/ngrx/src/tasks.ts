@@ -19,8 +19,15 @@ export type Task<Source extends TaskSource = () => Observable<unknown>> =
   };
 /** Tasks keyed by descriptive names, also exposed under `.effects`. */
 export type NamedTasks = Record<string, Task>;
-type EventPipe<Creators extends readonly ActionCreator[]> = Observable<
-  ReturnType<Creators[number]>
+type EventGroup = Record<string, ActionCreator>;
+type EventInput = ActionCreator | EventGroup;
+type InputCreator<Input extends EventInput> = Input extends ActionCreator
+  ? Input
+  : Input extends EventGroup
+    ? Input[keyof Input]
+    : never;
+type EventPipe<Inputs extends readonly EventInput[]> = Observable<
+  ReturnType<InputCreator<Inputs[number]>>
 >["pipe"];
 
 /**
@@ -55,14 +62,14 @@ export interface TaskBuilder {
     source: Source,
     options?: EffectConfig,
   ): Task<Source>;
-  /** Creates a task that runs for one or more event types. */
-  <Creators extends readonly ActionCreator[]>(
+  /** Creates a task that runs for event creators or every event in a group. */
+  <Creators extends readonly EventInput[]>(
     ...args: [
       ...Creators,
       source: (pipe: EventPipe<Creators>) => Observable<unknown>,
     ]
   ): Task;
-  <Creators extends readonly ActionCreator[]>(
+  <Creators extends readonly EventInput[]>(
     ...args: [
       ...Creators,
       source: (pipe: EventPipe<Creators>) => Observable<unknown>,
@@ -131,7 +138,7 @@ export function task<Subscriptions extends NamedTasks>(
 
 const createTask: TaskBuilder = ((...args: any[]): Task => {
   const [first] = args;
-  const eventDriven = isActionCreator(first);
+  const eventDriven = isActionCreator(first) || isEventGroup(first);
   const options = eventDriven
     ? ((typeof args.at(-1) === "function" ? {} : args.at(-1)) ?? {})
     : (args[1] ?? {});
@@ -139,7 +146,13 @@ const createTask: TaskBuilder = ((...args: any[]): Task => {
     ? () => {
         const sourceIndex =
           typeof args.at(-1) === "function" ? args.length - 1 : args.length - 2;
-        const eventCreators = args.slice(0, sourceIndex) as ActionCreator[];
+        const eventCreators = args.slice(0, sourceIndex).flatMap((input) => {
+          if (isActionCreator(input)) return [input];
+          if (isEventGroup(input)) return Object.values(input);
+          throw new Error(
+            "Task event inputs must be event creators or event groups.",
+          );
+        }) as ActionCreator[];
         const compose = args[sourceIndex] as (
           pipe: EventPipe<any>,
         ) => Observable<unknown>;
@@ -172,5 +185,13 @@ function isActionCreator(value: unknown): value is ActionCreator {
   return (
     typeof value === "function" &&
     typeof (value as ActionCreator).type === "string"
+  );
+}
+
+function isEventGroup(value: unknown): value is EventGroup {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    Object.values(value).every(isActionCreator)
   );
 }

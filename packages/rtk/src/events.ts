@@ -30,12 +30,7 @@ type EventGroup<
   [Key in keyof Definitions]: EventCreator<
     Definitions[Key],
     `[${Source}] ${EventLabel<Key & string>}`
-  > & {
-    /** The source supplied to events(). */
-    readonly eventSource: Source;
-    /** The readable label derived from the event key. */
-    readonly eventName: EventLabel<Key & string>;
-  };
+  >;
 };
 
 type Words<
@@ -54,7 +49,6 @@ type EventLabel<Key extends string> = Capitalize<Words<Key>>;
 
 /**
  * Creates typed Redux Toolkit action creators grouped by the event source.
- * Creators expose readonly eventSource and eventName metadata with literal types.
  * Created events preserve the standard RTK type and payload shape.
  * Calling `.publish()` dispatches through the store configured by `createEvstStore()`.
  */
@@ -75,10 +69,7 @@ export function events<
       const name = toEventLabel(key);
       const type = `[${source}] ${name}`;
       const actionCreator = createAction<unknown, typeof type>(type);
-      const creator = Object.defineProperties(actionCreator, {
-        eventSource: { value: source, enumerable: true },
-        eventName: { value: name, enumerable: true },
-      });
+      const creator = actionCreator;
       return [
         key,
         Object.assign(creator, {

@@ -131,12 +131,7 @@ type EventGroup<
 > = {
   [Key in keyof Events]: Publishable<
     EventCreator<Events[Key], `[${Source}] ${EventLabel<Key & string>}`>
-  > & {
-    /** The source supplied to events(). */
-    readonly eventSource: Source;
-    /** The readable label derived from the event key. */
-    readonly eventName: EventLabel<Key & string>;
-  };
+  >;
 };
 
 /**
@@ -146,7 +141,6 @@ type EventGroup<
  * Acronyms are preserved: loadHTTPError becomes "Load HTTP Error".
  * Supports props(), emptyProps(), and payload creator functions, like NgRx.
  * Creator parameters require explicit types, including parameters with default values.
- * Creators expose readonly eventSource and eventName metadata with literal types.
  * Calling a creator returns a plain NgRx Action without publishing it.
  * Payload properties are preserved without adding source or name metadata.
  * Its `.publish(...args)` method accepts the same arguments and dispatches the
@@ -222,10 +216,7 @@ function createEvent(
     string,
     (...args: any[]) => Action
   >;
-  const creator = Object.defineProperties(actionCreator, {
-    eventSource: { value: source, enumerable: true },
-    eventName: { value: name, enumerable: true },
-  });
+  const creator = actionCreator;
   return Object.assign(creator, {
     publish: (...args: any[]): void => publishEvent(creator(...args)),
   });

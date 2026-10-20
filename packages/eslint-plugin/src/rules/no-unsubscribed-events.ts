@@ -5,6 +5,7 @@ import {
   eventReference,
   findEventDeclarations,
   isSubscription,
+  isGroupSubscription,
 } from "./event-usage";
 
 const createRule = ESLintUtils.RuleCreator.withoutDocs;
@@ -56,6 +57,9 @@ function findSubscribedEvents(
     if (file.isDeclarationFile || program.isSourceFileFromExternalLibrary(file))
       continue;
     file.forEachChild(function visit(node): void {
+      if (isGroupSubscription(node, checker, declaration)) {
+        declaration.events.forEach((event) => subscribed.add(event.name));
+      }
       const event = eventReference(node, checker, declaration);
       if (
         event &&

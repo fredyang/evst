@@ -66,15 +66,6 @@ reducers, listener middleware, DevTools, and direct `store.dispatch(...)`.
 Events preserve the native RTK action shape: `type` and `payload`.
 EVST does not add `source` or `name` metadata fields.
 
-Event creators expose readonly `eventSource` and `eventName` properties with literal
-types. These properties belong to the creator, not to emitted events.
-
-```ts
-fromBooksPage.entered.eventSource; // "Books Page"
-fromBooksPage.entered.eventName; // "Entered"
-fromBooksPage.entered.type; // "[Books Page] Entered"
-```
-
 ### Implementing State and Views
 
 A **View** is a read-only projection of underlying state. It exposes a stored
@@ -135,6 +126,22 @@ State handlers receive event data directly as their second argument. RTK's
 Immer-powered mutations and returned immutable updates are both supported.
 
 ### Implementing Tasks
+
+A Task can subscribe to an entire event group:
+
+```ts
+const trackingTasks = task((on) => ({
+  trackBooksPage: on(fromBooksPage, (payload) => {
+    console.log(payload);
+  }),
+}));
+```
+
+The callback receives the union of the group's payload types, following the
+same payload-only convention as single-event Tasks. Matching uses the group's
+creator types; a separate group with the same source label is not automatically
+included. Empty groups match no events. A callback returning nothing does not
+dispatch an outcome event.
 
 Standalone Tasks use `task((on) => ({ ... }))`; State handlers use `.state()`. The callback
 declares `NamedTasks`, a record of `Task` values created with `on()`. Each Task

@@ -9,7 +9,8 @@ const BooksEvents = events("Books", {
 });
 ```
 
-State handlers and event-driven EVST tasks are subscriptions.
+State handlers and event-driven EVST tasks are subscriptions. A Task using
+`on(BooksEvents, ...)` subscribes to every event in that group.
 
 ```ts
 const booksState = evst("books", initialState).state((on) => ({

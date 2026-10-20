@@ -427,3 +427,26 @@ describe("@evst/rtk", () => {
     expect(counter.views.count.snapshot).toBe(5);
   });
 });
+
+it("subscribes to whole groups with inferred payloads and cleanup", () => {
+  const group = events("Group", {
+    added: props<number>(),
+    named: props<string>(),
+  });
+  const other = events("Other", { added: props<number>() });
+  const received: Array<number | string> = [];
+  const tasks = task((on) => ({
+    track: on(group, (payload) => {
+      expectTypeOf(payload).toEqualTypeOf<number | string>();
+      received.push(payload);
+    }),
+    empty: on({}, () => {
+      throw new Error("Empty groups must not run");
+    }),
+  }));
+  const store = createEvstStore(tasks);
+  group.added.publish(2);
+  group.named.publish("book");
+  other.added.publish(4);
+  expect(received).toEqual([2, "book"]);
+});

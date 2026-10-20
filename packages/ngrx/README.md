@@ -71,15 +71,6 @@ effects, and DevTools.
 Events preserve the native NgRx action shape: `type` plus the declared props.
 Business fields named `source` and `name` are allowed; EVST does not add metadata fields.
 
-Event creators expose readonly `eventSource` and `eventName` properties with literal
-types. These properties belong to the creator, not to emitted events.
-
-```ts
-fromBooksPage.entered.eventSource; // "Books Page"
-fromBooksPage.entered.eventName; // "Entered"
-fromBooksPage.entered.type; // "[Books Page] Entered"
-```
-
 ### Implementing State and Views
 
 A **View** is a read-only projection of underlying state. It exposes a stored
@@ -148,6 +139,25 @@ export const booksViews = booksState.views;
 ```
 
 ### Implementing Tasks
+
+A Task can subscribe to an entire event group. It matches the types of that
+group's creators, including events added later, rather than parsing a source
+prefix. Separate groups with the same source label are not automatically included.
+Empty groups match no events.
+
+```ts
+const trackingTasks = task((on) => ({
+  trackBooksPage: on(
+    fromBooksPage,
+    (pipe) => pipe(tap((event) => console.log(event.type))),
+    { dispatch: false },
+  ),
+}));
+```
+
+The pipeline receives the union of the group's events. Specific props require
+narrowing by `event.type` when they are not shared by every member. Groups and
+individual creators can be combined: `on(fromBooksPage, fromBooksApi.loaded, ...)`.
 
 State and Task use `.state((on) => ({ ... }))` and `.task((on) => ({ ... }))`. State declares
 named state handlers; Task declares named Tasks. In both, `on()` associates

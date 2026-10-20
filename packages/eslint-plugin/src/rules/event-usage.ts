@@ -61,6 +61,28 @@ export function eventReference(
     : undefined;
 }
 
+/** Recognizes a whole event group passed to a Task's on() builder. */
+export function isGroupSubscription(
+  node: ts.Node,
+  checker: ts.TypeChecker,
+  declaration: EventDeclaration,
+): boolean {
+  if (!ts.isIdentifier(node) && !ts.isPropertyAccessExpression(node))
+    return false;
+  const symbol = checker.getSymbolAtLocation(node);
+  const parent = node.parent;
+  return (
+    !!symbol &&
+    resolveAlias(symbol, checker) ===
+      resolveAlias(declaration.groupSymbol, checker) &&
+    ts.isCallExpression(parent) &&
+    parent.arguments.slice(0, -1).includes(node as ts.Expression) &&
+    ts.isIdentifier(parent.expression) &&
+    parent.expression.text === "on" &&
+    isWithinTask(parent)
+  );
+}
+
 export function isPublication(node: ts.PropertyAccessExpression): boolean {
   let target: ts.Expression = node;
   while (true) {

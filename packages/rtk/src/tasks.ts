@@ -8,6 +8,7 @@ import type { View } from "./view.js";
 type EventCreator = ((...args: any[]) => { type: string; payload: any }) & {
   type: string;
 };
+type EventGroup = Record<string, EventCreator>;
 type Outcome = { type: string } | (() => void) | void;
 
 export type TaskEffect<Payload = void> = (
@@ -45,6 +46,11 @@ export interface TaskBuilder {
       effect: (...values: ViewValues<Views>) => Outcome | Promise<Outcome>,
     ]
   ): Task;
+  /** Runs for every event in the group, receiving the union of their payloads. */
+  <Group extends EventGroup>(
+    group: Group,
+    effect: TaskEffect<ReturnType<Group[keyof Group]>["payload"]>,
+  ): Task;
   <Creator extends EventCreator>(
     event: Creator,
     effect: TaskEffect<ReturnType<Creator>["payload"]>,
@@ -63,10 +69,24 @@ export function task<Effects extends NamedTasks>(
   const on: TaskBuilder = (...args: any[]): Task => {
     const startup = args.length === 1;
     const source = args[0] as EventCreator | View<any, any>;
+    const group =
+      !startup &&
+      typeof source === "object" &&
+      source !== null &&
+      Object.values(source).every(
+        (creator) =>
+          typeof creator === "function" &&
+          "type" in creator &&
+          typeof creator.type === "string",
+      )
+        ? (source as unknown as EventGroup)
+        : undefined;
     const event =
-      !startup && "type" in source ? (source as EventCreator) : undefined;
+      !startup && typeof source === "function" && "type" in source
+        ? (source as EventCreator)
+        : undefined;
     const selectedViews =
-      startup || event ? [] : (args.slice(0, -1) as View<any, any>[]);
+      startup || event || group ? [] : (args.slice(0, -1) as View<any, any>[]);
     const effect = args.at(-1) as (
       ...values: any[]
     ) => Outcome | Promise<Outcome>;
@@ -132,15 +152,20 @@ export function task<Effects extends NamedTasks>(
           predicate: (action, currentState, previousState) =>
             event
               ? action.type === event.type
-              : selectedViews.some(
-                  (view) => !Object.is(view(currentState), view(previousState)),
-                ),
+              : group
+                ? Object.values(group).some(
+                    (creator) => creator.type === action.type,
+                  )
+                : selectedViews.some(
+                    (view) =>
+                      !Object.is(view(currentState), view(previousState)),
+                  ),
           effect: async (action, api) => {
             try {
               const currentState = api.getState();
               await run(
                 api.dispatch,
-                event
+                event || group
                   ? [action.payload]
                   : selectedViews.map((view) => view(currentState)),
               );

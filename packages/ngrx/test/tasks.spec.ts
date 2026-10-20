@@ -1,10 +1,12 @@
+import { Actions } from "@ngrx/effects";
 import {
   createEnvironmentInjector,
   ErrorHandler,
+  runInInjectionContext,
   ɵINJECTOR_SCOPE,
 } from "@angular/core";
 import { createAction, provideStore, Store } from "@ngrx/store";
-import { finalize, map, of, type Observable } from "rxjs";
+import { finalize, map, of, Subject, tap, type Observable } from "rxjs";
 import { expect, expectTypeOf, it, vi } from "vitest";
 import { evst, task, type NamedTasks, type Task } from "../src/index.js";
 
@@ -172,4 +174,61 @@ it("rejects values not created by the supplied builder", () => {
   expect(() => task(() => ({ invalid: (() => of(1)) as any }))).toThrow(
     "must be created",
   );
+});
+
+it("filters whole groups and mixed creators with inferred event unions", () => {
+  const group = { clicked, doubleClicked };
+  const input = new Subject<
+    | ReturnType<typeof clicked>
+    | ReturnType<typeof doubleClicked>
+    | ReturnType<typeof tripleClicked>
+  >();
+  const received: unknown[] = [];
+  const registry = task((on) => ({
+    grouped: on(
+      group,
+      (pipe) =>
+        pipe(
+          tap((event) => {
+            expectTypeOf(event).toEqualTypeOf<
+              ReturnType<typeof clicked> | ReturnType<typeof doubleClicked>
+            >();
+            received.push(event);
+          }),
+        ),
+      { dispatch: false },
+    ),
+    mixed: on(
+      group,
+      tripleClicked,
+      (pipe) =>
+        pipe(
+          tap((event) => {
+            expectTypeOf(event).toEqualTypeOf<
+              | ReturnType<typeof clicked>
+              | ReturnType<typeof doubleClicked>
+              | ReturnType<typeof tripleClicked>
+            >();
+          }),
+        ),
+      { dispatch: false },
+    ),
+    empty: on({}, (pipe) => pipe(), { dispatch: false }),
+  }));
+  const injector = createEnvironmentInjector(
+    [{ provide: Actions, useValue: input }],
+    null!,
+  );
+  const subscription = runInInjectionContext(injector, () =>
+    registry.effects.grouped(),
+  ).subscribe();
+  try {
+    input.next(clicked());
+    input.next(doubleClicked(2));
+    input.next(tripleClicked("other"));
+    expect(received).toEqual([clicked(), doubleClicked(2)]);
+  } finally {
+    subscription.unsubscribe();
+    injector.destroy();
+  }
 });

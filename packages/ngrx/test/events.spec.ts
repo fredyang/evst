@@ -198,36 +198,3 @@ describe("events compatibility", () => {
     expectTypeOf(checkInvalidDeclarations).toBeFunction();
   });
 });
-
-it("exposes readonly literal metadata only on event creators", () => {
-  const group = events("Books Page", {
-    bookSelected: props<{ source: string; name: string }>(),
-    entered: emptyProps(),
-    customLabel: (value: number) => ({ value }),
-  });
-  expect(group.bookSelected.eventSource).toBe("Books Page");
-  expect(group.bookSelected.eventName).toBe("Book Selected");
-  expectTypeOf(group.bookSelected.eventSource).toEqualTypeOf<"Books Page">();
-  expectTypeOf(group.bookSelected.eventName).toEqualTypeOf<"Book Selected">();
-  expectTypeOf(group.entered.eventName).toEqualTypeOf<"Entered">();
-  expectTypeOf(group.customLabel.eventName).toEqualTypeOf<"Custom Label">();
-  expect(group.customLabel.eventName).toBe("Custom Label");
-  expect(() =>
-    Object.assign(group.bookSelected, { eventSource: "Other" }),
-  ).toThrow();
-  expect(() =>
-    Object.assign(group.bookSelected, { eventName: "Other" }),
-  ).toThrow();
-  expect(group.entered()).not.toHaveProperty("eventSource");
-  expect(group.entered()).not.toHaveProperty("eventName");
-  const event = group.bookSelected({ source: "recommendation", name: "Title" });
-  expect(event).not.toHaveProperty("eventSource");
-  expect(event).not.toHaveProperty("eventName");
-  function invalid() {
-    // @ts-expect-error Creator metadata is readonly.
-    group.bookSelected.eventSource = "Books Page";
-    // @ts-expect-error Creator metadata is readonly.
-    group.bookSelected.eventName = "Book Selected";
-  }
-  expectTypeOf(invalid).toBeFunction();
-});
