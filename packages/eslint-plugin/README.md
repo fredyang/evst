@@ -105,6 +105,66 @@ export default [
 ];
 ```
 
+### Configuring an Angular CommonJS application
+
+The examples above use ES modules (`eslint.config.mjs`). An Angular
+`eslint.config.js` in a CommonJS package uses `require()` and
+`module.exports` instead. The EVST plugin registration and preset rules belong
+inside the existing TypeScript configuration object, alongside `extends` and
+`processor`. Spreading preset rules into `rules` preserves Angular rules.
+
+```js
+// @ts-check
+const eslint = require("@eslint/js");
+const { defineConfig } = require("eslint/config");
+const tseslint = require("typescript-eslint");
+const angular = require("angular-eslint");
+const evst = require("@evst/eslint-plugin");
+
+module.exports = defineConfig([
+  {
+    files: ["**/*.ts"],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: __dirname,
+      },
+    },
+    plugins: {
+      evst: /** @type {import("eslint").ESLint.Plugin} */ (
+        /** @type {unknown} */ (evst)
+      ),
+    },
+    extends: [
+      eslint.configs.recommended,
+      tseslint.configs.recommended,
+      tseslint.configs.stylistic,
+      angular.configs.tsRecommended,
+    ],
+    processor: angular.processInlineTemplates,
+    rules: {
+      .../** @type {import("eslint").Linter.RulesRecord} */ (
+        evst.configs.ngrx.rules
+      ),
+      // Existing Angular rule overrides belong here.
+    },
+  },
+  {
+    files: ["**/*.html"],
+    extends: [
+      angular.configs.templateRecommended,
+      angular.configs.templateAccessibility,
+    ],
+  },
+]);
+```
+
+This example uses the plain-NgRx preset. Applications using `@evst/ngrx-store`
+can replace `evst.configs.ngrx.rules` with
+`evst.configs["evst-ngrx"].rules`. The JSDoc casts adapt the plugin's preset
+severity declarations and linked ESLint types for configs using `// @ts-check`.
+
 The consuming project needs ESLint 9 and `typescript-eslint`. Rule behavior and limitations are described in the [event-group source-prefix guide](docs/rules/event-group-source-prefix.md), [event publisher ownership guide](docs/rules/event-publisher-ownership.md), [duplicate event handlers guide](docs/rules/no-duplicate-event-handlers.md), [sequential event publication guide](docs/rules/no-sequential-event-publishes.md), [unpublished event guide](docs/rules/no-unpublished-events.md), [unsubscribed event guide](docs/rules/no-unsubscribed-events.md), [manual View subscription guide](docs/rules/no-view-subscription.md), [event-driven task guide](docs/rules/require-task-event.md), and [unused state views guide](docs/rules/no-unused-views.md). The unused-views rule requires type-aware linting with a `parserOptions.project` setting.
 
 ## Developing
