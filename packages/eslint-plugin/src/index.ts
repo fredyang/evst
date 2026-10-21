@@ -58,6 +58,7 @@ const plugin = {
     },
     ngrx: {
       rules: {
+        "evst/event-group-source-prefix": "warn",
         "evst/event-publisher-ownership": "warn",
         "evst/no-duplicate-event-handlers": "warn",
         "evst/no-sequential-event-publishes": "warn",

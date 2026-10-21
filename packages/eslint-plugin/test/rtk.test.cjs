@@ -48,7 +48,7 @@ describe("RTK preset", () => {
     assert.equal(evst.configs.evst.rules["evst/no-view-subscription"], "warn");
     assert.equal(
       evst.configs.ngrx.rules["evst/event-group-source-prefix"],
-      undefined,
+      "warn",
     );
     assert.deepEqual(evst.configs["evst-ngrx"].rules, {
       ...evst.configs.evst.rules,
