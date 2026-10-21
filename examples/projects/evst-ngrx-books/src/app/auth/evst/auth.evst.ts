@@ -50,14 +50,14 @@ export const authBundle = evst("auth", {
   status: initialStatusState,
   loginPage: initialLoginPageState,
 })
-  .view(({ status, loginPage }) => ({
-    user: view(status, (value) => value.user),
+  .view((builtInViews) => ({
+    user: view(builtInViews.status, (value) => value.user),
 
-    loggedIn: view(status, (value) => Boolean(value.user)),
+    loggedIn: view(builtInViews.status, (value) => Boolean(value.user)),
 
-    loginPageError: view(loginPage, (value) => value.error),
+    loginPageError: view(builtInViews.loginPage, (value) => value.error),
 
-    loginPagePending: view(loginPage, (value) => value.pending),
+    loginPagePending: view(builtInViews.loginPage, (value) => value.pending),
   }))
   .state((on) => ({
     beginLogin: on(fromLoginPage.login, (current) => ({

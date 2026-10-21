@@ -81,10 +81,14 @@ export interface EvstBuilder<
   ): EvstDefinition<State, ExtraViews, Effects>;
   /**
    * Adds derived, read-only data projections, independent of UI rendering.
-   * Existing field, root, and derived names cannot be overwritten.
+   * The builtInViews parameter includes generated field and root Views plus all
+   * previously declared derived Views. Property access exposes available Views
+   * through editor completion. Existing names cannot be overwritten.
    */
   view<Added extends Record<string, MemoizedSelector<object, any>>>(
-    build: (views: StateViews<State> & InjectableViews<ExtraViews>) => Added,
+    build: (
+      builtInViews: StateViews<State> & InjectableViews<ExtraViews>,
+    ) => Added,
   ): EvstDefinition<State, ExtraViews & Added, Effects>;
   /** Adds named tasks using all currently declared views. Duplicate labels throw. */
   task<Added extends NamedTasks>(

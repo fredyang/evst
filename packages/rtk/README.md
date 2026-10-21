@@ -94,10 +94,10 @@ const initialState = {
 };
 
 export const booksState = evst("books", initialState)
-  .view(({ books, selectedId }) => ({
+  .view((builtInViews) => ({
     selectedBook: view(
-      books,
-      selectedId,
+      builtInViews.books,
+      builtInViews.selectedId,
       (books, id) => books.find((book) => book.id === id) ?? null,
     ),
   }))
@@ -342,16 +342,20 @@ exports the extended definition; registration uses the final result:
 export const booksBase = evst("books", { count: 0 });
 
 // books.views.ts
-export const booksWithViews = booksBase.view(({ count }) => ({
-  doubled: view(count, (count) => count * 2),
+export const booksWithViews = booksBase.view((builtInViews) => ({
+  doubled: view(builtInViews.count, (count) => count * 2),
 }));
 
 // books.evst.ts
 export const booksEvst = booksWithViews
   .task((on, views) => ({/* tasks using doubled */}))
-  .view(({ doubled }) => ({ text: view(doubled, String) }))
+  .view((builtInViews) => ({ text: view(builtInViews.doubled, String) }))
   .task((on, views) => ({/* tasks using doubled and text */}));
 ```
+
+The `.view()` callback receives `builtInViews`, including generated field and
+`root` Views and all previously declared derived Views. Using property access
+(such as `builtInViews.count`) exposes available Views through editor completion.
 
 Earlier definitions remain unchanged. Discarding a method's return value also
 discards that extension. Existing views and task objects retain their identities.

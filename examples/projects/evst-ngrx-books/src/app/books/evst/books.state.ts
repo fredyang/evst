@@ -33,40 +33,40 @@ const initialState: BooksState = {
 };
 
 export const booksState = evst("books", initialState)
-  .view(({ books, search, collection }) => ({
-    selectedBookId: view(books, (x) => x.selectedBookId),
+  .view((builtInViews) => ({
+    selectedBookId: view(builtInViews.books, (x) => x.selectedBookId),
 
-    bookEntities: view(books, (x) => x.entities),
+    bookEntities: view(builtInViews.books, (x) => x.entities),
 
-    selectedBook: view(books, (x) =>
+    selectedBook: view(builtInViews.books, (x) =>
       x.selectedBookId ? x.entities[x.selectedBookId] : undefined,
     ),
 
-    searchQuery: view(search, (x) => x.query),
+    searchQuery: view(builtInViews.search, (x) => x.query),
 
-    searchLoading: view(search, (x) => x.loading),
+    searchLoading: view(builtInViews.search, (x) => x.loading),
 
-    searchError: view(search, (x) => x.error),
+    searchError: view(builtInViews.search, (x) => x.error),
 
-    searchResults: view(books, search, (b, s) =>
+    searchResults: view(builtInViews.books, builtInViews.search, (b, s) =>
       s.ids
         .map((id) => b.entities[id])
         .filter((book): book is Book => book !== undefined),
     ),
 
-    collectionLoaded: view(collection, (x) => x.loaded),
+    collectionLoaded: view(builtInViews.collection, (x) => x.loaded),
 
-    collectionBookIds: view(collection, (x) => x.ids),
+    collectionBookIds: view(builtInViews.collection, (x) => x.ids),
 
-    bookCollection: view(books, collection, (b, c) =>
+    bookCollection: view(builtInViews.books, builtInViews.collection, (b, c) =>
       c.ids
         .map((id) => b.entities[id])
         .filter((book): book is Book => book !== undefined),
     ),
 
     isSelectedBookInCollection: view(
-      books,
-      collection,
+      builtInViews.books,
+      builtInViews.collection,
       (b, c) => !!b.selectedBookId && c.ids.includes(b.selectedBookId),
     ),
   }))

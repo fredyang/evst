@@ -104,10 +104,10 @@ const initialState = {
 export const booksState = evst("books", initialState)
   // Generated Views: books, selectedId, loading, and error.
   // Additional Views can compose these generated Views.
-  .view(({ books, selectedId }) => ({
+  .view((builtInViews) => ({
     selectedBook: view(
-      books,
-      selectedId,
+      builtInViews.books,
+      builtInViews.selectedId,
       (books, id) => books.find((book) => book.id === id) ?? null,
     ),
   }))
@@ -278,7 +278,9 @@ const fromCounterPage = events("Counter Page", { clicked: emptyProps() });
 const fromCounterTask = events("Counter Task", { counted: emptyProps() });
 
 export const counter = evst("counter", { count: 0 })
-  .view(({ count }) => ({ doubled: view(count, (count) => count * 2) }))
+  .view((builtInViews) => ({
+    doubled: view(builtInViews.count, (count) => count * 2),
+  }))
   .state((on) => ({
     increment: on(fromCounterTask.counted, (current) => ({
       count: current.count + 1,
@@ -299,6 +301,9 @@ The returned definition exposes `views`, `reducer`, `effects`, and `provide()`.
 functional effects for testing. Every `.view()`, `.state()`, and `.task()` call
 returns a new composable `EvstDefinition`; none ends the chain. Calls may be
 repeated in any order. Each Task callback receives all Views declared before it.
+The `.view()` callback receives `builtInViews`, including generated field and
+`root` Views and all previously declared derived Views. Using property access
+(such as `builtInViews.count`) exposes available Views through editor completion.
 Later composition retains existing effects without rerunning earlier callbacks.
 Definitions without `.task()` have no `effects` property.
 
@@ -318,14 +323,14 @@ exports the extended definition; registration uses the final result:
 export const booksBase = evst("books", { count: 0 });
 
 // books.views.ts
-export const booksWithViews = booksBase.view(({ count }) => ({
-  doubled: view(count, (count) => count * 2),
+export const booksWithViews = booksBase.view((builtInViews) => ({
+  doubled: view(builtInViews.count, (count) => count * 2),
 }));
 
 // books.evst.ts
 export const booksEvst = booksWithViews
   .task((on, views) => ({/* tasks using doubled */}))
-  .view(({ doubled }) => ({ text: view(doubled, String) }))
+  .view((builtInViews) => ({ text: view(builtInViews.doubled, String) }))
   .task((on, views) => ({/* tasks using doubled and text */}));
 ```
 

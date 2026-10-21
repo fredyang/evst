@@ -130,21 +130,26 @@ export const booksState = evst("books", initialState)
       s.collection.error = p.error;
     }),
   }))
-  .view(({ books, search, detail, collection }) => ({
-    results: view(books, search, (books, search) =>
+  .view((builtInViews) => ({
+    results: view(builtInViews.books, builtInViews.search, (books, search) =>
       search.ids
         .map((id) => books.entities[id])
         .filter((book): book is Book => Boolean(book)),
     ),
 
-    selectedBook: view(books, detail, (books, detail) =>
-      detail.id ? books.entities[detail.id] : undefined,
+    selectedBook: view(
+      builtInViews.books,
+      builtInViews.detail,
+      (books, detail) => (detail.id ? books.entities[detail.id] : undefined),
     ),
 
-    collectionBooks: view(books, collection, (books, collection) =>
-      collection.ids
-        .map((id) => books.entities[id])
-        .filter((book): book is Book => Boolean(book)),
+    collectionBooks: view(
+      builtInViews.books,
+      builtInViews.collection,
+      (books, collection) =>
+        collection.ids
+          .map((id) => books.entities[id])
+          .filter((book): book is Book => Boolean(book)),
     ),
   }));
 

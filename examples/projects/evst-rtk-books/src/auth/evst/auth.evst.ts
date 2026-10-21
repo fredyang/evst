@@ -52,8 +52,8 @@ export const authBundle = evst("auth", {
       current.confirmingLogout = false;
     }),
   }))
-  .view(({ user }) => ({
-    loggedIn: view(user, (currentUser) => Boolean(currentUser)),
+  .view((builtInViews) => ({
+    loggedIn: view(builtInViews.user, (currentUser) => Boolean(currentUser)),
   }))
   .task((on) => ({
     login: on(fromLoginPage.login, ({ credentials }) => {
