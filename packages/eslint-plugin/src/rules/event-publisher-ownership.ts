@@ -59,7 +59,7 @@ export default createRule<readonly [], typeof messageId>({
             add(
               event,
               location(
-                context.getPhysicalFilename(),
+                context.physicalFilename,
                 node.loc.start.line,
                 node.loc.start.column + 1,
               ),
@@ -88,7 +88,7 @@ export default createRule<readonly [], typeof messageId>({
     };
     function location(filename: string, line: number, column: number): string {
       const normalized = filename.replaceAll("\\", "/");
-      const cwd = context.getCwd().replaceAll("\\", "/").replace(/\/$/, "");
+      const cwd = context.cwd.replaceAll("\\", "/").replace(/\/$/, "");
       const relative = normalized.startsWith(`${cwd}/`)
         ? normalized.slice(cwd.length + 1)
         : normalized;
