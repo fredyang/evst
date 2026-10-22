@@ -138,6 +138,32 @@ export const booksState = evst("books", initialState)
 export const booksViews = booksState.views;
 ```
 
+The state `on()` builder checks inferred handler return types for extra
+properties, including nested properties and array items. An explicit return-type
+annotation is not required:
+
+```ts
+const initialState = { search: { query: "", loading: false } };
+
+const searchState = evst("search", initialState).state((on) => ({
+  beginLoading: on(fromBooksPage.entered, (current) => ({
+    ...current,
+    search: {
+      ...current.search,
+      loading: true,
+      name: "john", // Error: Type 'string' is not assignable to type 'never'.
+    },
+  })),
+}));
+```
+
+The `never` diagnostic means that `name` is not allowed in `search`. This is a
+compile-time check of the inferred return type; assertions, `any`, or values
+already widened to the declared state type can hide extra properties. The
+stricter return checking applies to `@evst/ngrx-store`. The
+[`@evst/rtk` package](../rtk/README.md) retains standard Redux Toolkit return
+typing; Immer draft property assignments are checked against the state shape.
+
 ### Implementing Tasks
 
 A Task can subscribe to an entire event group. It matches the types of that

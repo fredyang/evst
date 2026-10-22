@@ -36,10 +36,35 @@ type StateViews<State> = {
    */
   root: MemoizedSelector<object, State> & ViewMethods<State>;
 };
-/** Associates events with pure state handlers, inferring state and payload types. */
-type StateOn<State> = <Creators extends readonly ActionCreator[]>(
-  ...args: [...Creators, ReducerTypes<State, Creators>["reducer"]]
+/**
+ * Associates events with pure state handlers, inferring state and payload types.
+ * Inferred returns reject extra properties recursively without an explicit return
+ * annotation. An extra property is typed as `never`, producing an assignment error.
+ * Assertions, `any`, and values widened to State can hide extra properties.
+ */
+type StateOn<State> = <
+  Creators extends readonly ActionCreator[],
+  Result extends State,
+>(
+  ...args: [
+    ...Creators,
+    (
+      state: State,
+      event: Parameters<ReducerTypes<State, Creators>["reducer"]>[1],
+    ) => Result & ExactState<State, Result>,
+  ]
 ) => ReducerTypes<State, Creators>;
+
+/** Rejects additional fields in inferred state transitions, including nested fields. */
+type ExactState<State, Result> = Result extends State
+  ? State extends object
+    ? {
+        [Key in keyof Result]: Key extends keyof State
+          ? ExactState<State[Key], Result[Key]>
+          : never;
+      }
+    : Result
+  : never;
 /** Associates subscribed events with a pure state transition. */
 export type StateHandler<State extends object> = ReducerTypes<State, any>;
 /** State handlers keyed by descriptive transition names. */
@@ -75,7 +100,13 @@ export interface EvstBuilder<
   readonly views: StateViews<State> & InjectableViews<ExtraViews>;
   /** Registers the reducer and all accumulated tasks using NgRx providers. */
   provide(): EnvironmentProviders;
-  /** Adds named handlers. Duplicate labels or event types throw. */
+  /**
+   * Adds named handlers. Duplicate labels or event types throw.
+   * The on builder checks inferred returns for extra properties, including nested
+   * properties and array items, without requiring a return-type annotation.
+   * Extra properties produce a `not assignable to type 'never'` diagnostic.
+   * Assertions, `any`, and values widened to State can bypass this check.
+   */
   state(
     build: (on: StateOn<State>) => NamedStateHandlers<State>,
   ): EvstDefinition<State, ExtraViews, Effects>;
