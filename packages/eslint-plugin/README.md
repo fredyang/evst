@@ -24,6 +24,9 @@ In a consuming application:
 npm install --save-dev @evst/eslint-plugin eslint typescript-eslint
 ```
 
+ESLint 9 and 10 are supported. ESLint 10 requires Node.js 20.19+, 22.13+, or
+24+ and a compatible `typescript-eslint` version.
+
 ## Configuring ESLint
 
 All presets use the same `evst/` rule namespace. The framework presets include

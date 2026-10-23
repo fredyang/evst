@@ -12,6 +12,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  eslint-compatibility:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        eslint: [9, 10]
+    env:
+      HUSKY: "0"
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install --global npm@12.2.0
+      - run: npm ci
+      - run: npm install --no-save --package-lock=false --workspace @evst/eslint-plugin eslint@^${{ matrix.eslint }}
+      - name: Check installed ESLint major
+        working-directory: packages/eslint-plugin
+        env:
+          EXPECTED_ESLINT_MAJOR: ${{ matrix.eslint }}
+        run: node -e 'const version = require("eslint/package.json").version; console.log(version); if (version.split(".")[0] !== process.env.EXPECTED_ESLINT_MAJOR) process.exit(1);'
+      - run: npm run build --workspace @evst/ngrx-store
+      - run: npm test --workspace @evst/eslint-plugin
+
   verify:
     runs-on: ubuntu-latest
     env:
