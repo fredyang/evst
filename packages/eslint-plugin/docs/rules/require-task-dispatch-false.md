@@ -11,7 +11,7 @@ const checks = task((on) => ({
 }));
 ```
 
-The rule is enabled as an error in the `evst-ngrx` and `evst` presets. Analysis
+The rule is enabled as an error in the `evst-ngrx` preset. Analysis
 requires a TypeScript project in ESLint parser options. Without type information,
 the rule performs no checks. It recognizes the first callback parameter of
 `task(...)` and `.task(...)`, including renamed builder parameters.

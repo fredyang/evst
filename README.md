@@ -135,12 +135,11 @@ happened, while States and Tasks independently determine how to respond.
 
 ### Checking conventions with ESLint
 
-`@evst/eslint-plugin` checks these conventions through a shared `core` preset
-and complete `evst-ngrx` and `rtk` presets under the same `evst/` rule namespace.
+`@evst/eslint-plugin` checks these conventions through complete `evst-ngrx` and `rtk` presets under the same `evst/` rule namespace.
 Shared checks cover source naming, explicit publisher ownership, sequential
 publication, duplicate state handlers, and unused events and derived Views.
 
-The NgRx preset adds Angular View-subscription and Task-source checks.
+The `evst-ngrx` preset adds Angular View-subscription and Task-source checks.
 Static analysis does not prove every convention: for example, returned Task
 outcomes are recognized by usage analysis but are not checked for publisher
 ownership. Configuration and limitations are documented in the

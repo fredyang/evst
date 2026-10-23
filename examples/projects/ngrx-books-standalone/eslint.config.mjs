@@ -1,4 +1,4 @@
-import evst from "@evst/eslint-plugin";
+import ngrx from "@ngrx/eslint-plugin";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
@@ -12,7 +12,10 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    plugins: { evst },
-    ...evst.configs.ngrx,
+    plugins: { "@ngrx": ngrx },
+    rules: {
+      "@ngrx/avoid-dispatching-multiple-actions-sequentially": "warn",
+      "@ngrx/avoid-duplicate-actions-in-reducer": "warn",
+    },
   },
 );

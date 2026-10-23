@@ -12,7 +12,6 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
-    plugins: { evst },
-    ...evst.configs.evst,
+    extends: [evst.configs["evst-ngrx"]],
   },
 );

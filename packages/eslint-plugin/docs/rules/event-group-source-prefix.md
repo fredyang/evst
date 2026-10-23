@@ -2,7 +2,7 @@
 
 Event groups created with `events()` must use a `fromXxx` variable name. The name makes the authoritative source of the events visible at each publication site.
 
-The rule is enabled as a warning in every preset, including `ngrx`.
+The rule is enabled as a warning in both EVST presets.
 
 ## Invalid
 

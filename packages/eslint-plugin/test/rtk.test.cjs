@@ -13,7 +13,6 @@ describe("RTK preset", () => {
         {
           files: ["**/*.tsx"],
           languageOptions: { parser },
-          plugins: { evst },
           ...evst.configs.rtk,
         },
       ],
@@ -34,8 +33,8 @@ describe("RTK preset", () => {
     ]);
   });
 
-  it("includes shared rules without Angular-only rules and preserves legacy presets", () => {
-    assert.deepEqual(evst.configs.rtk.rules, evst.configs.core.rules);
+  it("exposes only the two EVST framework presets", () => {
+    assert.deepEqual(Object.keys(evst.configs).sort(), ["evst-ngrx", "rtk"]);
     assert.equal(
       evst.configs.rtk.rules["evst/no-duplicate-event-handlers"],
       "warn",
@@ -45,15 +44,21 @@ describe("RTK preset", () => {
       undefined,
     );
     assert.equal(evst.configs.rtk.rules["evst/require-task-event"], undefined);
-    assert.equal(evst.configs.evst.rules["evst/no-view-subscription"], "warn");
+    for (const [name, severity] of Object.entries(evst.configs.rtk.rules)) {
+      assert.equal(evst.configs["evst-ngrx"].rules[name], severity);
+    }
     assert.equal(
-      evst.configs.ngrx.rules["evst/event-group-source-prefix"],
+      evst.configs["evst-ngrx"].rules["evst/no-view-subscription"],
       "warn",
     );
-    assert.deepEqual(evst.configs["evst-ngrx"].rules, {
-      ...evst.configs.evst.rules,
-      "evst/no-duplicate-event-handlers": "warn",
-    });
+    assert.equal(
+      evst.configs["evst-ngrx"].rules["evst/require-task-event"],
+      "warn",
+    );
+    assert.equal(
+      evst.configs["evst-ngrx"].rules["evst/require-task-dispatch-false"],
+      "error",
+    );
   });
 
   it("recognizes NgRx state and both task forms, including callback View usage", async () => {
@@ -68,7 +73,6 @@ describe("RTK preset", () => {
             parser,
             parserOptions: { project: "./tsconfig.json", tsconfigRootDir: cwd },
           },
-          plugins: { evst },
           ...evst.configs["evst-ngrx"],
         },
       ],
@@ -100,7 +104,6 @@ describe("RTK preset", () => {
               tsconfigRootDir: cwd,
             },
           },
-          plugins: { evst },
           ...evst.configs.rtk,
         },
       ],
