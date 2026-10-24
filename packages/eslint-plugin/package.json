@@ -1,6 +1,6 @@
 {
   "name": "@evst/eslint-plugin",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "ESLint rules for EVST event-first state management.",
   "license": "MIT",
   "homepage": "https://github.com/fredyang/evst#readme",

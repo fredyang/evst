@@ -34,7 +34,7 @@ type Preset = Linter.Config & {
 /** ESLint plugin providing rules for EVST applications using NgRx or RTK. */
 const plugin = {
   /** Package identity reported to ESLint. */
-  meta: { name: "@evst/eslint-plugin", version: "0.5.2" },
+  meta: { name: "@evst/eslint-plugin", version: "0.5.3" },
   /** Available rules, keyed by their names within the plugin namespace. */
   rules: {
     "event-publisher-ownership": eventPublisherOwnership,
