@@ -3,16 +3,18 @@ import * as ts from "typescript";
 
 export default ESLintUtils.RuleCreator.withoutDocs<
   readonly [],
-  "nonEventOutput"
+  "nonEventOutput" | "cyclicEventOutput"
 >({
   meta: {
     type: "problem",
     docs: {
       description:
-        "Requires dispatch: false for Tasks emitting non-event values.",
+        "Requires dispatch: false for Tasks emitting non-event values or subscribed events.",
     },
     schema: [],
     messages: {
+      cyclicEventOutput:
+        "This task can re-emit a subscribed event and trigger itself repeatedly. Return a different outcome event or set { dispatch: false }.",
       nonEventOutput:
         "This task emits a non-event value. Return events or set { dispatch: false } to prevent NgRx from dispatching its output.",
     },
@@ -52,13 +54,34 @@ export default ESLintUtils.RuleCreator.withoutDocs<
           checker.getTypeAtLocation(source),
           ts.SignatureKind.Call,
         );
+        const subscribedTypes = new Set<string>();
+        for (const input of args.slice(0, hasOptions ? -2 : -1)) {
+          collectInputTypes(
+            checker.getTypeAtLocation(input),
+            input,
+            checker,
+            subscribedTypes,
+          );
+        }
         for (const signature of signatures) {
-          const output = observableOutput(
+          const outputs = observableOutputs(
             checker.getReturnTypeOfSignature(signature),
             checker,
           );
-          if (output && invalidOutput(output, source, checker)) {
+          if (
+            outputs.some((output) => invalidOutput(output, source, checker))
+          ) {
             context.report({ node, messageId: "nonEventOutput" });
+            return;
+          }
+          if (
+            outputs.some((output) =>
+              eventTypes(output, source, checker).some((type) =>
+                subscribedTypes.has(type),
+              ),
+            )
+          ) {
+            context.report({ node, messageId: "cyclicEventOutput" });
             return;
           }
         }
@@ -88,21 +111,14 @@ function isTaskBuilder(
   });
 }
 
-function observableOutput(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-): ts.Type | undefined {
+function observableOutputs(type: ts.Type, checker: ts.TypeChecker): ts.Type[] {
   if (type.isUnion()) {
-    // Each possible observable return type is checked by invalidOutput below.
-    const outputs = type.types.map((part) => observableOutput(part, checker));
-    return outputs.find(
-      (output) => output && invalidOutput(output, undefined, checker),
-    );
+    return type.types.flatMap((part) => observableOutputs(part, checker));
   }
   const subscribe = checker.getPropertyOfType(type, "subscribe");
   const declaration =
     subscribe?.valueDeclaration ?? subscribe?.declarations?.[0];
-  if (!subscribe || !declaration) return;
+  if (!subscribe || !declaration) return [];
   const subscribeType = checker.getTypeOfSymbolAtLocation(
     subscribe,
     declaration,
@@ -125,11 +141,12 @@ function observableOutput(
         ts.SignatureKind.Call,
       )) {
         const value = callback.parameters[0];
-        if (value) return checker.getTypeOfSymbolAtLocation(value, declaration);
+        if (value)
+          return [checker.getTypeOfSymbolAtLocation(value, declaration)];
       }
     }
   }
-  return;
+  return [];
 }
 
 function invalidOutput(
@@ -161,4 +178,48 @@ function invalidOutput(
   )
     return false;
   return !checker.isTypeAssignableTo(propertyType, checker.getStringType());
+}
+
+/** Only literal event names establish a known cycle; broad strings are inconclusive. */
+function eventTypes(
+  type: ts.Type,
+  location: ts.Node,
+  checker: ts.TypeChecker,
+): string[] {
+  if (type.isUnion())
+    return type.types.flatMap((part) => eventTypes(part, location, checker));
+  if (
+    type.flags &
+    (ts.TypeFlags.Any |
+      ts.TypeFlags.Unknown |
+      ts.TypeFlags.Never |
+      ts.TypeFlags.TypeParameter)
+  )
+    return [];
+  const property = checker.getPropertyOfType(type, "type");
+  if (!property || property.flags & ts.SymbolFlags.Optional) return [];
+  const name = checker.getTypeOfSymbolAtLocation(property, location);
+  return (name.isUnion() ? name.types : [name]).flatMap((part) =>
+    part.isStringLiteral() ? [part.value] : [],
+  );
+}
+
+function collectInputTypes(
+  type: ts.Type,
+  location: ts.Node,
+  checker: ts.TypeChecker,
+  names: Set<string>,
+): void {
+  if (checker.getSignaturesOfType(type, ts.SignatureKind.Call).length) {
+    for (const name of eventTypes(type, location, checker)) names.add(name);
+    return;
+  }
+  // Event groups contain event creators; their group label is not an event type.
+  for (const property of checker.getPropertiesOfType(type)) {
+    const creator = checker.getTypeOfSymbolAtLocation(property, location);
+    if (checker.getSignaturesOfType(creator, ts.SignatureKind.Call).length) {
+      for (const name of eventTypes(creator, location, checker))
+        names.add(name);
+    }
+  }
 }

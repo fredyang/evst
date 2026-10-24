@@ -47,3 +47,49 @@ it("can run without type information", async () => {
   );
   assert.deepEqual(result.messages, []);
 });
+
+it("reports subscribed event outputs, including groups and attached Tasks", async () => {
+  const fs = require("node:fs");
+  const root = path.join(__dirname, "fixtures/task-dispatch");
+  const file = path.join(root, "cycles.ts");
+  const eslint = new ESLint({
+    overrideConfigFile: true,
+    overrideConfig: [
+      {
+        files: ["**/*.ts"],
+        languageOptions: {
+          parser,
+          parserOptions: { project: path.join(root, "tsconfig.json") },
+        },
+        plugins: { evst: plugin },
+        rules: { "evst/require-task-dispatch-false": "error" },
+      },
+    ],
+  });
+  const [result] = await eslint.lintFiles([file]);
+  const invalidNames = new Set([
+    "tap",
+    "passthrough",
+    "filtered",
+    "group",
+    "multiple",
+    "mixed",
+    "explicit",
+    "conditionalObservable",
+    "attached",
+  ]);
+  const expected = fs
+    .readFileSync(file, "utf8")
+    .split("\n")
+    .flatMap((line, index) => {
+      const name = line.trim().match(/^(\w+): on\(/)?.[1];
+      return (name && invalidNames.has(name)) ||
+        line.includes("renamed: subscribe(")
+        ? [{ line: index + 1, messageId: "cyclicEventOutput" }]
+        : [];
+    });
+  assert.deepEqual(
+    result.messages.map(({ line, messageId }) => ({ line, messageId })),
+    expected,
+  );
+});
