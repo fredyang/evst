@@ -3,17 +3,49 @@
 An event should have one publishing boundary. Publishing the same event from
 different components can indicate a command shared across callers.
 
+## Failing example
+
+Both components publish the same event from different boundaries. Each publication
+is reported.
+
 ```ts
-// collection-page.ts - reported
-BooksPageEvents.entered.publish();
+// collection-page.ts
+function enterCollectionPage() {
+  fromBooksPage.entered.publish();
+}
 
-// find-book-page.ts - reported
-BooksPageEvents.entered.publish();
-
-// Accepted
-BooksPageEvents.entered.publish();
-BooksPageEvents.bookSelected.publish({ id: "42" });
+// find-book-page.ts
+function enterFindBookPage() {
+  fromBooksPage.entered.publish();
+}
 ```
+
+## Passing example
+
+Each page declares and publishes its own entry event. A shared Task can subscribe
+to both events when they require the same operation.
+
+```ts
+// collection-page.ts
+const fromCollectionPage = events("Collection Page", {
+  entered: emptyProps(),
+});
+
+function enterCollectionPage() {
+  fromCollectionPage.entered.publish();
+}
+
+// find-book-page.ts
+const fromFindBookPage = events("Find Book Page", {
+  entered: emptyProps(),
+});
+
+function enterFindBookPage() {
+  fromFindBookPage.entered.publish();
+}
+```
+
+## Analysis scope
 
 With type-aware linting (`parserOptions.project` or `projectService`), the rule
 checks publishers throughout the TypeScript program and reports every conflicting

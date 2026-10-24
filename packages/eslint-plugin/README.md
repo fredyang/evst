@@ -154,5 +154,6 @@ The consuming project needs ESLint 9 or 10 and `typescript-eslint`. Rule behavio
 
 The `evst-ngrx` preset includes
 [`require-task-dispatch-false`](docs/rules/require-task-dispatch-false.md), which
-uses TypeScript output types to report Tasks emitting non-event values without
-`{ dispatch: false }`. This check requires a TypeScript project.
+uses TypeScript output types to report Tasks emitting non-event values or
+re-emitting subscribed event types without `{ dispatch: false }`. This check
+requires a TypeScript project in ESLint parser options.

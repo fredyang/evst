@@ -3,23 +3,43 @@
 An event declaration without a publication cannot affect application state or
 start a task. `no-unpublished-events` reports those declarations.
 
+## Failing example
+
+`entered` is declared but never published or returned by a Task. The declaration
+is reported.
+
 ```ts
-const BooksEvents = events("Books", {
-  loaded: emptyProps(), // Reported when no publication exists.
+const fromBooksPage = events("Books Page", {
+  entered: emptyProps(),
 });
 ```
 
-The rule recognizes direct publications and events emitted from EVST tasks.
+## Passing example
+
+Publishing the event from the page entry handler gives it a publishing boundary.
+Removing an unused declaration is also a valid fix when the event is unnecessary.
 
 ```ts
-BooksEvents.loaded.publish();
+const fromBooksPage = events("Books Page", {
+  entered: emptyProps(),
+});
 
+function enterBooksPage() {
+  fromBooksPage.entered.publish();
+}
+```
+
+Events returned by Tasks also count as publications:
+
+```ts
 const booksTasks = task((on) => ({
-  load: on(BooksPageEvents.entered, (pipe) =>
-    pipe(map(() => BooksEvents.loaded())),
+  markLoaded: on(fromBooksPage.entered, (pipe) =>
+    pipe(map(() => fromBooksApi.loaded())),
   ),
 }));
 ```
+
+## Analysis scope
 
 Conditional publication recognizes both possible event creators, including
 nested conditions and parenthesized expressions:

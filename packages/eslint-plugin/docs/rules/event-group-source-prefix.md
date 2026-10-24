@@ -4,7 +4,9 @@ Event groups created with `events()` must use a `fromXxx` variable name. The nam
 
 The rule is enabled as a warning in both EVST presets.
 
-## Invalid
+## Failing example
+
+`booksEvents` does not follow the required `fromXxx` naming convention.
 
 ```ts
 const booksEvents = events("Books API", {
@@ -12,7 +14,9 @@ const booksEvents = events("Books API", {
 });
 ```
 
-## Valid
+## Passing example
+
+Renaming the group to `fromBooksApi` makes its event source visible.
 
 ```ts
 const fromBooksApi = events("Books API", {
