@@ -73,12 +73,12 @@
     <text x="227" y="215">.use() - RTK</text>
     <rect x="498" y="178" width="113" height="29" fill="#e8edf1" />
     <text x="500" y="201">.publish()</text>
-    <rect x="49" y="377" width="245" height="29" fill="#ecf4e4" />
-    <text x="51" y="400">exposes / .view()</text>
-    <rect x="311" y="334" width="130" height="29" fill="#ecf4e4" />
-    <text x="313" y="357">.subscribe()</text>
-    <rect x="425" y="378" width="130" height="29" fill="#ecf4e4" />
-    <text x="427" y="401">.subscribe()</text>
+    <rect x="150" y="377" width="178" height="29" fill="#ecf4e4" />
+    <text x="239" y="400" text-anchor="middle">exposes / .view()</text>
+    <rect x="405" y="334" width="54" height="29" fill="#ecf4e4" />
+    <text x="432" y="357" text-anchor="middle">.on()</text>
+    <rect x="463" y="378" width="54" height="29" fill="#ecf4e4" />
+    <text x="490" y="401" text-anchor="middle">.on()</text>
     <rect x="518" y="345" width="258" height="29" fill="#ecf4e4" />
     <text x="520" y="368">returns an outcome event</text>
   </g>
