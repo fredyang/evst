@@ -1,4 +1,8 @@
-# EVST
+<h1 align="center">EVST</h1>
+
+<p align="center">
+  <img src="images/evst-logo.png" alt="EVST logo: four keyboard keys arranged E V above S T" width="240" />
+</p>
 
 **Event, View, State, Task**
 
@@ -20,25 +24,29 @@ pattern, with implementations for Angular/NgRx and React/Redux Toolkit.
 
 ## Why EVST?
 
-The Redux pattern is event-driven at its core, but its APIs also allow actions
-to act as commands that coordinate specific responses. EVST makes the
-event-driven model explicit: Events describe what happened, while State and
-Task independently define how the application responds.
+- **An explicit event-driven model.** The Redux pattern is event-driven at its
+  core, but its APIs also allow actions to act as commands that coordinate
+  specific responses. EVST makes the event-driven model explicit: Events
+  describe what happened, while State and Task independently define how the
+  application responds.
 
-Reducers, selectors, side effects, and component interactions are usually
-defined through separate APIs and spread across files. Understanding a feature
-means tracing the connections between them. EVST organizes these primitives
-around four concepts - Event, View, State, and Task - to make those relationships
-explicit and feature behavior easier to follow.
+- **A cohesive, minimal API.** Reducers, selectors, side effects, and component
+  interactions are usually defined through separate APIs and spread across
+  files. Understanding a feature means tracing the connections between them.
+  EVST organizes these primitives around four concepts - Event, View, State,
+  and Task - and provides a cohesive, minimal API for defining and registering
+  them. This makes their relationships explicit and feature behavior easier to
+  follow.
 
-EVST's event-driven programming model depends on two essential rules:
+- **Event-driven discipline, reinforced by ESLint.** Preserving the event-driven
+  model requires coding discipline:
 
-1. Each event is published from only one place in the code.
-2. Each occurrence is reported with a single event. States and Tasks independently
-   decide how to respond.
+  - Each event is published from only one place in the code.
+  - Each occurrence is reported with a single event.
 
-Breaking either rule can lead back to command-driven code, even with EVST.
-`@evst/eslint-plugin` provides checks to help keep these rules from being broken.
+  Breaking either rule can lead back to command-driven code, even with EVST.
+  `@evst/eslint-plugin` helps enforce these conventions and keep the model
+  consistent as the application grows.
 
 ## Understanding the programming model
 
