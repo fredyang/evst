@@ -123,3 +123,35 @@ it("recognizes NgRx Store dispatches as publications", () => {
     unused: false,
   });
 });
+
+it("recognizes NgRx ofType calls inside Tasks as subscriptions", () => {
+  const ts = require("typescript");
+  const { isSubscription } = require("../dist/rules/event-usage");
+  const source = ts.createSourceFile(
+    "tasks.ts",
+    `task((on) => ({
+      restore: on(() => actions$.pipe(
+        ofType(fromPage.restoreClicked, fromPage.entered),
+      )),
+    }));
+    ofType(fromPage.outsideTask);`,
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  const subscriptions = new Map();
+  source.forEachChild(function visit(node) {
+    if (
+      ts.isPropertyAccessExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === "fromPage"
+    ) {
+      subscriptions.set(node.name.text, isSubscription(node, undefined));
+    }
+    ts.forEachChild(node, visit);
+  });
+  assert.deepEqual(Object.fromEntries(subscriptions), {
+    restoreClicked: true,
+    entered: true,
+    outsideTask: false,
+  });
+});

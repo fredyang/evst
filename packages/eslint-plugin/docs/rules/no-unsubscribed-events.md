@@ -43,6 +43,19 @@ An event-driven Task also counts as a subscriber. A Task using
 `on(fromCounterWidget, ...)` subscribes to every event in that group. Removing an
 unnecessary event and its publications is another valid fix.
 
+Events passed to NgRx `ofType(...)` inside a Task also count as subscriptions:
+
+```ts
+const counterTasks = task((on) => ({
+  restore: on((actions$ = inject(Actions)) =>
+    actions$.pipe(
+      ofType(fromCounterWidget.restoreRequested),
+      map(() => fromCounterApi.restored()),
+    ),
+  ),
+}));
+```
+
 ## Analysis scope
 
 The rule requires type-aware linting with `parserOptions.project` or

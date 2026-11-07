@@ -144,6 +144,13 @@ export function isSubscription(
   if (!ts.isCallExpression(parent) || !parent.arguments.includes(node)) {
     return false;
   }
+  if (
+    ts.isIdentifier(parent.expression) &&
+    parent.expression.text === "ofType" &&
+    isWithinTask(parent)
+  ) {
+    return true;
+  }
   return (
     ts.isIdentifier(parent.expression) &&
     parent.expression.text === "on" &&
