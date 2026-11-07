@@ -94,7 +94,12 @@ if (manifest().version !== nextVersion) {
 run("npm", ["run", "build", "--workspace", selected.name]);
 run("npm", ["pack", "--workspace", selected.name, "--dry-run"]);
 
-const changedFiles = output("git", ["status", "--porcelain"])
+// Preserve the two leading porcelain status columns before extracting paths.
+// The general output helper trims them from entries such as " M package.json".
+const changedFiles = execFileSync("git", ["status", "--porcelain"], {
+  encoding: "utf8",
+})
+  .trimEnd()
   .split("\n")
   .filter(Boolean)
   .map((line) => line.slice(3));
