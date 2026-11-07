@@ -13,6 +13,7 @@
     "format:check": "prettier --check .",
     "prepare": "husky",
     "pack:all": "npm pack --workspaces",
+    "release": "node scripts/release-package.cjs",
     "version:all": "node scripts/version-all.cjs",
     "publish:all": "npm publish --workspace @evst/ngrx-store --access public && npm publish --workspace @evst/eslint-plugin --access public && npm publish --workspace @evst/rtk --access public",
     "build:ngrx-books": "ng build ngrx-books",
