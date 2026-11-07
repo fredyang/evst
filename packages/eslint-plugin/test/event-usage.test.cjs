@@ -93,3 +93,33 @@ it("recognizes imported groups as Task subscriptions without treating state grou
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+it("recognizes NgRx Store dispatches as publications", () => {
+  const ts = require("typescript");
+  const { isPublication } = require("../dist/rules/event-usage");
+  const source = ts.createSourceFile(
+    "component.ts",
+    `store.dispatch(fromPage.entered());
+    store.dispatch(ready ? fromPage.loaded() : fromPage.failed());
+    fromPage.unused();`,
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  const publications = new Map();
+  source.forEachChild(function visit(node) {
+    if (
+      ts.isPropertyAccessExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === "fromPage"
+    ) {
+      publications.set(node.name.text, isPublication(node));
+    }
+    ts.forEachChild(node, visit);
+  });
+  assert.deepEqual(Object.fromEntries(publications), {
+    entered: true,
+    loaded: true,
+    failed: true,
+    unused: false,
+  });
+});

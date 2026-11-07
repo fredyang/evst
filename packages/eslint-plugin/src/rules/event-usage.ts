@@ -84,7 +84,36 @@ export function isGroupSubscription(
 }
 
 export function isPublication(node: ts.PropertyAccessExpression): boolean {
-  let target: ts.Expression = node;
+  let target = unwrapExpression(node);
+  const invocation = target.parent;
+  if (ts.isCallExpression(invocation) && invocation.expression === target) {
+    if (isWithinTask(invocation)) return true;
+    target = unwrapExpression(invocation);
+    const dispatch = target.parent;
+    if (
+      ts.isCallExpression(dispatch) &&
+      dispatch.arguments.includes(target) &&
+      ts.isPropertyAccessExpression(dispatch.expression) &&
+      dispatch.expression.name.text === "dispatch"
+    ) {
+      return true;
+    }
+  }
+  const parent = target.parent;
+  if (
+    ts.isPropertyAccessExpression(parent) &&
+    parent.expression === target &&
+    parent.name.text === "publish" &&
+    ts.isCallExpression(parent.parent) &&
+    parent.parent.expression === parent
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function unwrapExpression(expression: ts.Expression): ts.Expression {
+  let target = expression;
   while (true) {
     const wrapper = target.parent;
     if (
@@ -104,21 +133,7 @@ export function isPublication(node: ts.PropertyAccessExpression): boolean {
       break;
     }
   }
-  const parent = target.parent;
-  if (
-    ts.isPropertyAccessExpression(parent) &&
-    parent.expression === target &&
-    parent.name.text === "publish" &&
-    ts.isCallExpression(parent.parent) &&
-    parent.parent.expression === parent
-  ) {
-    return true;
-  }
-  return (
-    ts.isCallExpression(parent) &&
-    parent.expression === target &&
-    isWithinTask(parent)
-  );
+  return target;
 }
 
 export function isSubscription(

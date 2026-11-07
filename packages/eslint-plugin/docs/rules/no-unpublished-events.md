@@ -39,6 +39,13 @@ const booksTasks = task((on) => ({
 }));
 ```
 
+NgRx Store dispatches also count as publications when native action creators are
+used:
+
+```ts
+this.store.dispatch(fromBooksPage.entered());
+```
+
 ## Analysis scope
 
 Conditional publication recognizes both possible event creators, including
