@@ -8,8 +8,8 @@ type MessageIds = typeof messageId;
 type Options = readonly [];
 
 /**
- * An executable boundary represents one command. Multiple event publications
- * from that boundary turn events into an imperative command sequence.
+ * An executable boundary reports one occurrence. Multiple event publications
+ * from that boundary turn events into an imperative sequence.
  */
 export default createRule<Options, MessageIds>({
   meta: {
@@ -21,7 +21,7 @@ export default createRule<Options, MessageIds>({
     schema: [],
     messages: {
       [messageId]:
-        "Publish one event per executable boundary. Model this sequence as a service command instead.",
+        "Avoid publishing multiple events from the same executable boundary. Publish one event describing what happened, and let separate handlers react to it.",
     },
   },
   defaultOptions: [],

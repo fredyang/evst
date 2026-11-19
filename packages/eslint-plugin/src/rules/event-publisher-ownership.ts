@@ -15,7 +15,7 @@ export default createRule<readonly [], typeof messageId>({
     schema: [],
     messages: {
       [messageId]:
-        "Event `{{ event }}` has multiple publishers:\n{{ publishers }}\nPublish it from one boundary, or model the shared operation as a service command.",
+        "Event `{{ event }}` has multiple publishers:\n{{ publishers }}\nPublish a source-specific event from each boundary, and let shared handlers react to those events.",
     },
   },
   defaultOptions: [],
