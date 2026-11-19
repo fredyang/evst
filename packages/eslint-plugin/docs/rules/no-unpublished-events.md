@@ -46,6 +46,22 @@ used:
 this.store.dispatch(fromBooksPage.entered());
 ```
 
+Action creators emitted by NgRx effects, including functional effects, count as
+publications as well:
+
+```ts
+export const restoreCounter = createEffect(
+  (actions$ = inject(Actions), api = inject(ApiService)) =>
+    actions$.pipe(
+      ofType(counterActions.restore),
+      switchMap(() => api.restoreCounter()),
+      map((count) => counterActions.setCount({ count })),
+      catchError(() => of(counterActions.reset())),
+    ),
+  { functional: true },
+);
+```
+
 ## Analysis scope
 
 Conditional publication recognizes both possible event creators, including

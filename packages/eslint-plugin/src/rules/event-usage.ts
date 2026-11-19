@@ -87,7 +87,8 @@ export function isPublication(node: ts.PropertyAccessExpression): boolean {
   let target = unwrapExpression(node);
   const invocation = target.parent;
   if (ts.isCallExpression(invocation) && invocation.expression === target) {
-    if (isWithinTask(invocation)) return true;
+    if (isWithinTask(invocation) || isWithinCreateEffect(invocation))
+      return true;
     target = unwrapExpression(invocation);
     const dispatch = target.parent;
     if (

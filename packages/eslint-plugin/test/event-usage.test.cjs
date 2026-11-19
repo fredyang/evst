@@ -194,3 +194,41 @@ it("recognizes NgRx ofType calls inside functional effects as subscriptions", ()
     outsideEffect: false,
   });
 });
+
+it("recognizes action creators emitted by functional effects as publications", () => {
+  const ts = require("typescript");
+  const { isPublication } = require("../dist/rules/event-usage");
+  const source = ts.createSourceFile(
+    "effects.ts",
+    `export const restoreCounter = createEffect(
+      (actions$ = inject(Actions), api = inject(ApiService)) =>
+        actions$.pipe(
+          ofType(counterActions.restore),
+          switchMap(() => api.restoreCounter()),
+          map((count) => counterActions.setCount({ count })),
+          catchError(() => of(counterActions.reset())),
+        ),
+      { functional: true },
+    );
+    counterActions.outsideEffect();`,
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  const publications = new Map();
+  source.forEachChild(function visit(node) {
+    if (
+      ts.isPropertyAccessExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === "counterActions"
+    ) {
+      publications.set(node.name.text, isPublication(node));
+    }
+    ts.forEachChild(node, visit);
+  });
+  assert.deepEqual(Object.fromEntries(publications), {
+    restore: false,
+    setCount: true,
+    reset: true,
+    outsideEffect: false,
+  });
+});
