@@ -38,15 +38,18 @@ pattern, with implementations for Angular/NgRx and React/Redux Toolkit.
   them. This makes their relationships explicit and feature behavior easier to
   follow.
 
-- **Event-driven discipline, reinforced by ESLint.** Preserving the event-driven
-  model requires coding discipline:
+- **Event-driven discipline, reinforced by ESLint.** Two publishing constraints
+  are fundamental to the event-driven model:
 
-  - Each event is published from only one place in the code.
-  - Each occurrence is reported with a single event.
+  - **[One event, one publisher.](packages/eslint-plugin/docs/rules/event-publisher-ownership.md)**
+    In the code, an event can be published from one place, and one place only.
+  - **[One fact, one event.](packages/eslint-plugin/docs/rules/no-sequential-event-publishes.md)**
+    A publisher reports a fact with one event instead of multiple events;
+    interested State and Task handlers react independently.
 
-  Breaking either rule can lead back to command-driven code, even with EVST.
-  `@evst/eslint-plugin` helps enforce these conventions and keep the model
-  consistent as the application grows.
+  Together, these constraints keep orchestration out of publishers and prevent
+  events from becoming shared commands or command sequences.
+  `@evst/eslint-plugin` enforces both constraints as the application grows.
 
 ## Understanding the programming model
 

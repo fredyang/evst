@@ -5,42 +5,47 @@ different components can indicate a command shared across callers.
 
 ## Failing example
 
-Both components publish the same event from different boundaries. Each publication
-is reported.
+Both components publish the same event from different boundaries. Each
+publication is reported.
 
 ```ts
+// ❌ don't do this
 // collection-page.ts
-function enterCollectionPage() {
+function ngOnInit() {
   fromBooksPage.entered.publish();
 }
 
 // find-book-page.ts
-function enterFindBookPage() {
+function ngOnInit() {
   fromBooksPage.entered.publish();
+}
+
+// ✅ do this
+// collection-page.ts
+function ngOnInit() {
+  fromCollectionPage.entered.publish();
+}
+
+// find-book-page.ts
+function ngOnInit() {
+  fromFindBookPage.entered.publish();
 }
 ```
 
 ## Passing example
 
-Each page declares and publishes its own entry event. A shared Task can subscribe
-to both events when they require the same operation.
+Each page declares and publishes its own entry event. A shared Task can
+subscribe to both events when they require the same operation.
 
 ```ts
+// ✅ do this
 // collection-page.ts
-const fromCollectionPage = events("Collection Page", {
-  entered: emptyProps(),
-});
-
-function enterCollectionPage() {
+function ngOnInit() {
   fromCollectionPage.entered.publish();
 }
 
 // find-book-page.ts
-const fromFindBookPage = events("Find Book Page", {
-  entered: emptyProps(),
-});
-
-function enterFindBookPage() {
+function ngOnInit() {
   fromFindBookPage.entered.publish();
 }
 ```
@@ -48,15 +53,16 @@ function enterFindBookPage() {
 ## Analysis scope
 
 With type-aware linting (`parserOptions.project` or `projectService`), the rule
-checks publishers throughout the TypeScript program and reports every conflicting
-call in the file being linted. Each message lists all publisher paths with line
-and column numbers. Imports with different aliases resolve to the same event.
-Without a TypeScript program, the check covers only calls within the current file.
+checks publishers throughout the TypeScript program and reports every
+conflicting call in the file being linted. Each message lists all publisher
+paths with line and column numbers. Imports with different aliases resolve to
+the same event. Without a TypeScript program, the check covers only calls within
+the current file.
 
 Each reported call produces a separate navigable Problems entry in VS Code when
-its file is linted. Paths within the message are plain text. After a publisher is
-removed, the diagnostics clear on the next lint of the affected files. VS Code
-may retain diagnostics in other files until those files are revalidated; a
-project-wide ESLint run checks all files against the updated program. Declaration
-files and external libraries are excluded, but other files included by the
-TypeScript project are checked even if ESLint ignores them.
+its file is linted. Paths within the message are plain text. After a publisher
+is removed, the diagnostics clear on the next lint of the affected files. VS
+Code may retain diagnostics in other files until those files are revalidated; a
+project-wide ESLint run checks all files against the updated program.
+Declaration files and external libraries are excluded, but other files included
+by the TypeScript project are checked even if ESLint ignores them.
