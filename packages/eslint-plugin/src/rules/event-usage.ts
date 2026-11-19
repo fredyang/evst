@@ -147,7 +147,7 @@ export function isSubscription(
   if (
     ts.isIdentifier(parent.expression) &&
     parent.expression.text === "ofType" &&
-    isWithinTask(parent)
+    (isWithinTask(parent) || isWithinCreateEffect(parent))
   ) {
     return true;
   }
@@ -156,6 +156,26 @@ export function isSubscription(
     parent.expression.text === "on" &&
     (isWithinTask(parent) || isWithinStateSubscription(parent, checker))
   );
+}
+
+function isWithinCreateEffect(node: ts.Node): boolean {
+  let child: ts.Node = node;
+  let current: ts.Node | undefined = node.parent;
+  while (current) {
+    if (
+      ts.isCallExpression(current) &&
+      current.arguments.some((argument) => argument === child) &&
+      ((ts.isIdentifier(current.expression) &&
+        current.expression.text === "createEffect") ||
+        (ts.isPropertyAccessExpression(current.expression) &&
+          current.expression.name.text === "createEffect"))
+    ) {
+      return true;
+    }
+    child = current;
+    current = current.parent;
+  }
+  return false;
 }
 
 export function declarationNode(

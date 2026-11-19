@@ -155,3 +155,42 @@ it("recognizes NgRx ofType calls inside Tasks as subscriptions", () => {
     outsideTask: false,
   });
 });
+
+it("recognizes NgRx ofType calls inside functional effects as subscriptions", () => {
+  const ts = require("typescript");
+  const { isSubscription } = require("../dist/rules/event-usage");
+  const source = ts.createSourceFile(
+    "effects.ts",
+    `export const restoreCounter = createEffect(
+      (actions$ = inject(Actions), api = inject(ApiService)) => {
+        return actions$.pipe(
+          ofType(counterActions.restore),
+          switchMap(() => api.restoreCounter()),
+          map((count) => counterActions.setCount({ count })),
+          catchError(() => of(counterActions.reset())),
+        );
+      },
+      { functional: true },
+    );
+    ofType(counterActions.outsideEffect);`,
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  const subscriptions = new Map();
+  source.forEachChild(function visit(node) {
+    if (
+      ts.isPropertyAccessExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === "counterActions"
+    ) {
+      subscriptions.set(node.name.text, isSubscription(node, undefined));
+    }
+    ts.forEachChild(node, visit);
+  });
+  assert.deepEqual(Object.fromEntries(subscriptions), {
+    restore: true,
+    setCount: false,
+    reset: false,
+    outsideEffect: false,
+  });
+});

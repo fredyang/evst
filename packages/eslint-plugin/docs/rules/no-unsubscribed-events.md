@@ -56,6 +56,21 @@ const counterTasks = task((on) => ({
 }));
 ```
 
+NgRx effects, including functional effects, also count as subscribers:
+
+```ts
+export const restoreCounter = createEffect(
+  (actions$ = inject(Actions), api = inject(ApiService)) =>
+    actions$.pipe(
+      ofType(counterActions.restore),
+      switchMap(() => api.restoreCounter()),
+      map((count) => counterActions.setCount({ count })),
+      catchError(() => of(counterActions.reset())),
+    ),
+  { functional: true },
+);
+```
+
 ## Analysis scope
 
 The rule requires type-aware linting with `parserOptions.project` or
